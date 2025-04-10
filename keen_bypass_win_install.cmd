@@ -8,7 +8,7 @@ IF %ERRORLEVEL% NEQ 0 (
     EXIT /B
 )
 
-SET "SCRIPT_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/keen_bypass_for_windows.cmd"
+SET "SCRIPT_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/keen_bypass_win.cmd"
 SET "SAVE_PATH=%TEMP%\keen_bypass.cmd"
 
 PowerShell -Command "[IO.File]::WriteAllText('%SAVE_PATH%', (Invoke-WebRequest -Uri '%SCRIPT_URL%').Content, [Text.Encoding]::GetEncoding(1251))"
