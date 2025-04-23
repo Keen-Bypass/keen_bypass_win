@@ -31,7 +31,7 @@ set "WINDIVERT_SERVICE=WinDivert"
 :MAIN_MENU
 cls
 echo ===================================
-echo  Keen Bypass для Windows v1.0
+echo  Keen Bypass для Windows v1.1
 echo ===================================
 echo.
 echo 1. Установить или обновить проект
