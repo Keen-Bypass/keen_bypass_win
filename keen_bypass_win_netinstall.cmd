@@ -21,7 +21,7 @@ echo.
 :: ## ПАРАМЕТРЫ И ПЕРЕМЕННЫЕ ##
 :: ############################
 set "ARCHIVE=%TEMP%\master.zip"
-set "TARGET_DIR=C:\keen_bypass_for_windows"
+set "TARGET_DIR=C:\keen_bypass_win"
 set "SERVICE_NAME=winws1"
 set "WINDIVERT_SERVICE=WinDivert"
 
@@ -31,7 +31,7 @@ set "WINDIVERT_SERVICE=WinDivert"
 :MAIN_MENU
 cls
 echo ===================================
-echo  Keen DPI для Windows v1.0
+echo  Keen Bypass для Windows v1.0
 echo ===================================
 echo.
 echo 1. Установить или обновить проект
@@ -98,8 +98,8 @@ sc delete %WINDIVERT_SERVICE% >nul 2>&1
 timeout /t 2 >nul
 
 echo Запуск стратегии %STRATEGY%...
-cd /d "%TARGET_DIR%\keen-dpi-for-windows"
-powershell -Command "Start-Process -Verb RunAs -FilePath '%TARGET_DIR%\keen-dpi-for-windows\!STRATEGY!_*.cmd' -Wait"
+cd /d "%TARGET_DIR%\keen_bypass_win"
+powershell -Command "Start-Process -Verb RunAs -FilePath '%TARGET_DIR%\keen_bypass_win\!STRATEGY!_*.cmd' -Wait"
 
 echo [УСПЕХ] Службы запущены
 pause
@@ -274,10 +274,10 @@ echo.
 echo ===================================
 echo  Настройка окружения
 echo ===================================
-mkdir "%TARGET_DIR%\keen-dpi-for-windows" >nul 2>&1
-mkdir "%TARGET_DIR%\keen-dpi-for-windows\files" >nul 2>&1
+mkdir "%TARGET_DIR%\keen_bypass_win" >nul 2>&1
+mkdir "%TARGET_DIR%\keen_bypass_win\files" >nul 2>&1
 
-set "BASE_DIR=%TARGET_DIR%\keen-dpi-for-windows"
+set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
 set "GITHUB_RAW=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/"
 
 :: Список файлов для загрузки
