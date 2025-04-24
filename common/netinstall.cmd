@@ -310,7 +310,8 @@ mkdir "%TARGET_DIR%\keen_bypass_win" >nul 2>&1
 mkdir "%TARGET_DIR%\keen_bypass_win\files" >nul 2>&1
 
 set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
-set "GITHUB_RAW=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/"
+set "GITHUB_STRATEGY=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/strategy/"
+set "GITHUB_HOSTLISTS=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/hostlists/"
 
 :: Список файлов для загрузки
 set "FILES[1]=1_easy.cmd"
@@ -325,14 +326,17 @@ set "FILES[8]=list-exclude.txt"
 for /L %%i in (1,1,8) do (
     set "FILE=!FILES[%%i]!"
     set "SAVE_PATH="
+    set "DOWNLOAD_URL="
     
     if %%i leq 4 (
         set "SAVE_PATH=%BASE_DIR%\!FILE!"
+        set "DOWNLOAD_URL=%GITHUB_STRATEGY%!FILE!"
     ) else (
         set "SAVE_PATH=%BASE_DIR%\files\!FILE!"
+        set "DOWNLOAD_URL=%GITHUB_HOSTLISTS%!FILE!"
     )
 
-    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%GITHUB_RAW%!FILE!', '!SAVE_PATH!')"
+    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!DOWNLOAD_URL!', '!SAVE_PATH!')"
 
     if exist "!SAVE_PATH!" (
         echo [УСПЕХ] Загружен !FILE!
