@@ -31,7 +31,7 @@ set "WINDIVERT_SERVICE=WinDivert"
 :MAIN_MENU
 cls
 echo ===================================
-echo  Keen Bypass для Windows v1.1
+echo  Keen Bypass для Windows v1.2
 echo ===================================
 echo.
 echo 1. Установить или обновить проект
@@ -108,9 +108,41 @@ goto :CHOICE_MAIN
 :AUTO_UPDATE
 echo.
 echo ===================================
-echo  Функция в разработке
+echo  Настройка автоматического обновления
 echo ===================================
-echo Автоматическое обновление пока недоступно
+echo Проверка существующей задачи...
+schtasks /Query /TN "keen_bypass_win_autoupdate" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Удаление существующей задачи...
+    schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
+)
+
+echo Проверка директории...
+if not exist "%TARGET_DIR%\keen_bypass_win" (
+    mkdir "%TARGET_DIR%\keen_bypass_win"
+)
+
+echo Загрузка скрипта...
+set "AUTOUPDATE_SCRIPT=%TARGET_DIR%\keen_bypass_win\autoupdate.cmd"
+set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
+
+powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference='SilentlyContinue'; try { $response = Invoke-WebRequest -Uri '%GITHUB_URL%' -OutFile '%AUTOUPDATE_SCRIPT%' -ErrorAction Stop; Write-Host '[УСПЕХ] Скрипт загружен' } catch { Write-Host '[ОШИБКА] Причина: ' + $_.Exception.Message; exit 1 }"
+
+if not exist "%AUTOUPDATE_SCRIPT%" (
+    echo [ОШИБКА] Скрипт автообновления не найден после загрузки!
+    pause
+    goto :CHOICE_MAIN
+)
+
+echo Создание задачи...
+schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 5 /TR "powershell -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_SCRIPT%'\"" /RU SYSTEM /RL HIGHEST /F >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ОШИБКА] Ошибка при создании задачи. Проверьте права.
+    pause
+    goto :CHOICE_MAIN
+)
+
+echo [УСПЕХ] Автообновление настроено (проверка каждые 5 минут)
 pause
 goto :CHOICE_MAIN
 
@@ -395,6 +427,9 @@ reg delete "HKLM\SYSTEM\CurrentControlSet\Services\%SERVICE_NAME%" /f >nul 2>&1
 net stop %WINDIVERT_SERVICE% >nul 2>&1
 sc delete %WINDIVERT_SERVICE% >nul 2>&1
 reg delete "HKLM\SYSTEM\CurrentControlSet\Services\%WINDIVERT_SERVICE%" /f >nul 2>&1
+
+echo Удаление автообновления...
+schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
 
 echo Удаление файлов...
 powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
