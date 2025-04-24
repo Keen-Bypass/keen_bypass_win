@@ -108,29 +108,9 @@ goto :CHOICE_MAIN
 :AUTO_UPDATE
 echo.
 echo ===================================
-echo  Настройка автообновления
+echo  Функция в разработке
 echo ===================================
-echo Создание задачи в планировщике...
-
-set "TASK_NAME=KeenBypassAutoUpdate"
-set "UPDATE_CMD=powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-    """$url='https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/keen_bypass_win.cmd'; ^
-    $tempFile=[System.IO.Path]::GetTempFileName() + '.cmd'; ^
-    (Invoke-WebRequest -Uri $url -UseBasicParsing).Content | Out-File $tempFile; ^
-    Start-Process -FilePath $tempFile -ArgumentList '/auto' -Verb RunAs -Wait; ^
-    Remove-Item $tempFile""""
-
-schtasks /Delete /TN "%TASK_NAME%" /F >nul 2>&1
-schtasks /Create /TN "%TASK_NAME%" /TR "%UPDATE_CMD%" /SC MINUTE /MO 5 /RU SYSTEM /RL HIGHEST /F >nul
-
-if errorlevel 1 (
-    echo [ОШИБКА] Не удалось создать задачу!
-    pause
-    goto :CHOICE_MAIN
-)
-
-echo [УСПЕХ] Задача создана: обновление каждые 5 минут
-echo Для отмены используйте пункт 5 (деинсталляция)
+echo Автоматическое обновление пока недоступно
 pause
 goto :CHOICE_MAIN
 
