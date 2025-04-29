@@ -56,18 +56,20 @@ echo 1. Установить или обновить проект
 echo 2. Сменить стратегию
 echo 3. Остановить и удалить службы
 echo 4. Запустить службу
-echo 5. Включить автоматическое обновление проекта (В разработке)
-echo 6. Деинсталлировать проект
+echo 5. Активация автообновления
+echo 6. Удалить автообновление
+echo 7. Деинсталлировать проект
 echo.
 
 :CHOICE_MAIN
-choice /C 123456 /N /M "Выберите действие [1-6]: "
+choice /C 1234567 /N /M "Выберите действие [1-7]: "
 if %errorlevel% equ 1 goto INSTALL
 if %errorlevel% equ 2 goto CHANGE_STRATEGY
 if %errorlevel% equ 3 goto STOP_AND_REMOVE_SERVICES
 if %errorlevel% equ 4 goto START_SERVICE
 if %errorlevel% equ 5 goto AUTO_UPDATE
-if %errorlevel% equ 6 goto UNINSTALL
+if %errorlevel% equ 6 goto REMOVE_AUTO_UPDATE
+if %errorlevel% equ 7 goto UNINSTALL
 goto CHOICE_MAIN
 
 :: ##############################
@@ -167,8 +169,26 @@ echo [УСПЕХ] Службы запущены
 pause
 goto :CHOICE_MAIN
 
+:: ###############################
+:: ## УДАЛЕНИЕ АВТООБНОВЛЕНИЯ ##
+:: ###############################
+:REMOVE_AUTO_UPDATE
+echo.
+echo ===================================
+echo  Удаление задачи автообновления
+echo ===================================
+schtasks /Query /TN "keen_bypass_win_autoupdate" >nul 2>&1
+if %errorlevel% equ 0 (
+    schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
+    echo [УСПЕХ] Задача автообновления удалена
+) else (
+    echo [ИНФО] Задача автообновления не найдена
+)
+pause
+goto :CHOICE_MAIN
+
 :: ################################
-:: ## АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ ##
+:: ## АКТИВАЦИЯ АВТООБНОВЛЕНИЯ ##
 :: ################################
 :AUTO_UPDATE
 echo.
@@ -328,8 +348,22 @@ if %FOLDER_EXISTS% equ 1 (
 )
 echo.
 
+:: #########################################
+:: ## ШАГ 4: АКТИВАЦИЯ АВТООБНОВЛЕНИЯ ##
+:: #########################################
+echo ===================================
+echo  Активация автообновления
+echo ===================================
+call :AUTO_UPDATE_SILENT
+if %ERRORLEVEL% neq 0 (
+    echo [ОШИБКА] Не удалось настроить автообновление
+    pause
+    exit /b 1
+)
+echo.
+
 :: ##########################
-:: ## ШАГ 4: ЗАГРУЗКА
+:: ## ШАГ 5: ЗАГРУЗКА
 :: ##########################
 echo ===================================
 echo  Загрузка
@@ -346,7 +380,7 @@ if not exist "%ARCHIVE%" (
 echo.
 
 :: ############################
-:: ## ШАГ 5: РАСПАКОВКА
+:: ## ШАГ 6: РАСПАКОВКА
 :: ############################
 echo ===================================
 echo  Распаковка
@@ -374,7 +408,7 @@ if exist "%TARGET_DIR%\zapret-win-bundle-master" (
 echo.
 
 :: ##############################
-:: ## ШАГ 6: НАСТРОЙКА
+:: ## ШАГ 7: НАСТРОЙКА
 :: ##############################
 echo ===================================
 echo  Настройка окружения
@@ -421,7 +455,7 @@ for /L %%i in (1,1,8) do (
 echo.
 
 :: ##############################
-:: ## ШАГ 7: ВЫБОР СТРАТЕГИИ
+:: ## ШАГ 8: ВЫБОР СТРАТЕГИИ
 :: ##############################
 :STRATEGY_MENU
 echo.
@@ -460,7 +494,7 @@ cd /d "%BASE_DIR%"
 powershell -Command "Start-Process -Verb RunAs -FilePath '%BASE_DIR%\!STRATEGY!_*.cmd' -Wait"
 
 :: ##############################
-:: ## ШАГ 8: ФИНАЛ И ПЕРЕВЫБОР
+:: ## ШАГ 9: ФИНАЛ И ПЕРЕВЫБОР
 :: ##############################
 :FINAL_MENU
 echo.
@@ -480,7 +514,7 @@ mkdir "%VERSION_PATH%" >nul 2>&1
 powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
 
 if exist "%VERSION_FILE%" (
-    echo [УСПЕХ] Версия сохранена: %PROJECT_VERSION%
+    echo [УСПЕХ] Отпечаток версии сохранен: %PROJECT_VERSION%
 ) else (
     echo [ОШИБКА] Не удалось записать файл версии
 )
@@ -516,6 +550,33 @@ if %errorlevel% equ 3 (
 )
 
 goto CHOICE_FINAL
+
+:: ################################
+:: ## СКРЫТАЯ НАСТРОЙКА АВТООБНОВЛЕНИЯ ##
+:: ################################
+:AUTO_UPDATE_SILENT
+setlocal
+:: Получение пути к Документам
+for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DOCUMENTS_PATH=%%i"
+
+:: Загрузка скрипта автообновления
+set "AUTOUPDATE_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+set "AUTOUPDATE_SCRIPT=!AUTOUPDATE_FOLDER!\autoupdate.cmd"
+set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
+
+mkdir "!AUTOUPDATE_FOLDER!" >nul 2>&1
+powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%GITHUB_URL%', '!AUTOUPDATE_SCRIPT!')" >nul 2>&1
+
+if not exist "!AUTOUPDATE_SCRIPT!" exit /b 1
+
+:: Создание задачи
+schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 5 ^
+/TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" ^
+/RU SYSTEM /RL HIGHEST /F >nul 2>&1
+if %errorlevel% neq 0 exit /b 1
+
+endlocal
+exit /b 0
 
 :: ##########################
 :: ## ДЕИНСТАЛЛЯЦИЯ ##
