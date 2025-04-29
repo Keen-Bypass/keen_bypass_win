@@ -11,19 +11,22 @@ if %errorlevel% neq 0 (
     exit /b
 )
 
-:: ############################
-:: ## ПОЛУЧЕНИЕ ВЕРСИИ ##
-:: ############################
+:: ##############################
+:: ## ПОЛУЧЕНИЕ ВЕРСИИ С GITHUB ##
+:: ##############################
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "VERSION_FILE=%TEMP%\keen_version.txt"
 
+echo Получение актуальной версии...
 powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE%')" >nul 2>&1
 
 if exist "%VERSION_FILE%" (
-    set /p "PROJECT_VERSION=" < "%VERSION_FILE%"
+    :: Чтение версии и удаление пробелов/переводов строк
+    for /f "delims=" %%i in ('type "%VERSION_FILE%" ^| powershell -Command "$input.Trim()"') do set "PROJECT_VERSION=%%i"
     del /q "%VERSION_FILE%" >nul 2>&1
 ) else (
-    set "PROJECT_VERSION=unknown"
+    set "PROJECT_VERSION=v1.3"
+    echo [ОШИБКА] Не удалось получить версию. Используется значение по умолчанию.
 )
 
 :: ############################
@@ -149,10 +152,22 @@ timeout /t 2 >nul
 :: Запуск стратегии
 powershell -Command "Start-Process -Verb RunAs -FilePath '!BASE_DIR!\!STRATEGY!_*.cmd' -Wait"
 
-set "VERSION_PATH=!TARGET_DIR!\keen_bypass_win\sys"
-set "VERSION_FILE=!VERSION_PATH!\version.txt"
-mkdir "!VERSION_PATH!" >nul 2>&1
-echo !PROJECT_VERSION! > "!VERSION_FILE!"
+:: ####################################
+:: ## СОХРАНЕНИЕ ВЕРСИИ В ФАЙЛ ##
+:: ####################################
+set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
+set "VERSION_FILE=%VERSION_PATH%\version.txt"
+
+echo Сохранение версии проекта...
+mkdir "%VERSION_PATH%" >nul 2>&1
+:: Запись без пробелов через PowerShell
+powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
+
+if exist "%VERSION_FILE%" (
+    echo [УСПЕХ] Версия сохранена: %PROJECT_VERSION%
+) else (
+    echo [ОШИБКА] Не удалось записать файл версии
+)
 
 echo [УСПЕХ] Стратегия !STRATEGY! активирована.
 exit /b 0
