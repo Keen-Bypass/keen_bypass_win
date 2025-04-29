@@ -123,6 +123,17 @@ echo.
 choice /C 1234 /N /M "Выберите стратегию [1-4]: "
 set "STRATEGY=%errorlevel%"
 
+:: Получение пути к папке "Документы"
+for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DOCUMENTS_PATH=%%i"
+
+:: Создание целевой папки и очистка старых файлов
+set "STRATEGY_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+mkdir "!STRATEGY_FOLDER!" >nul 2>&1
+del /Q /F "!STRATEGY_FOLDER!\*.txt" >nul 2>&1
+
+:: Создание файла стратегии
+echo. > "!STRATEGY_FOLDER!\!STRATEGY!.txt"
+
 echo Остановка служб...
 net stop %SERVICE_NAME% >nul 2>&1
 net stop %WINDIVERT_SERVICE% >nul 2>&1
@@ -153,25 +164,30 @@ if %errorlevel% equ 0 (
     schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
 )
 
-echo Проверка директории...
-if not exist "%TARGET_DIR%\keen_bypass_win" (
-    mkdir "%TARGET_DIR%\keen_bypass_win"
-)
+:: Получение пути к Документам и создание папки
+for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DOCUMENTS_PATH=%%i"
+set "AUTOUPDATE_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+mkdir "!AUTOUPDATE_FOLDER!" >nul 2>&1
 
-echo Загрузка скрипта...
-set "AUTOUPDATE_SCRIPT=%TARGET_DIR%\keen_bypass_win\autoupdate.cmd"
+:: Загрузка скрипта автообновления (совместимый метод)
+set "AUTOUPDATE_SCRIPT=!AUTOUPDATE_FOLDER!\autoupdate.cmd"
 set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
 
-powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $ProgressPreference='SilentlyContinue'; try { $response = Invoke-WebRequest -Uri '%GITHUB_URL%' -OutFile '%AUTOUPDATE_SCRIPT%' -ErrorAction Stop; Write-Host '[УСПЕХ] Скрипт загружен' } catch { Write-Host '[ОШИБКА] Причина: ' + $_.Exception.Message; exit 1 }"
+echo Загрузка скрипта автообновления...
+powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%GITHUB_URL%', '!AUTOUPDATE_SCRIPT!')"
 
-if not exist "%AUTOUPDATE_SCRIPT%" (
-    echo [ОШИБКА] Скрипт автообновления не найден после загрузки!
+if not exist "!AUTOUPDATE_SCRIPT!" (
+    echo [ОШИБКА] Скрипт автообновления не найден!
     pause
     goto :CHOICE_MAIN
 )
 
+:: Создание задачи в планировщике с правами администратора
 echo Создание задачи...
-schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 5 /TR "powershell -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_SCRIPT%'\"" /RU SYSTEM /RL HIGHEST /F >nul 2>&1
+schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 5 ^
+/TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" ^
+/RU SYSTEM /RL HIGHEST /F >nul 2>&1
+
 if %errorlevel% neq 0 (
     echo [ОШИБКА] Ошибка при создании задачи. Проверьте права.
     pause
@@ -400,6 +416,17 @@ echo.
 
 choice /C 1234 /N /M "Ваш выбор [1-4]: "
 set "STRATEGY=%errorlevel%"
+
+:: Получение пути к папке "Документы"
+for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DOCUMENTS_PATH=%%i"
+
+:: Создание целевой папки и очистка старых файлов
+set "STRATEGY_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+mkdir "!STRATEGY_FOLDER!" >nul 2>&1
+del /Q /F "!STRATEGY_FOLDER!\*.txt" >nul 2>&1
+
+:: Создание файла стратегии
+echo. > "!STRATEGY_FOLDER!\!STRATEGY!.txt"
 
 :: Остановка служб перед применением
 echo Остановка служб...
