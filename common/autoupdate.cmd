@@ -1,6 +1,7 @@
 @echo off
 chcp 1251 >nul
 SETLOCAL ENABLEEXTENSIONS
+SETLOCAL ENABLEDELAYEDEXPANSION
 
 :: Проверка прав администратора
 NET FILE >NUL 2>&1
@@ -21,7 +22,6 @@ powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest 
 
 if not exist "%REMOTE_VERSION_FILE%" (
     echo [ОШИБКА] Не удалось проверить версию. Обновление пропущено.
-    del /q "%REMOTE_VERSION_FILE%" >nul 2>&1
     exit /b 0
 )
 
@@ -36,7 +36,7 @@ if exist "%LOCAL_VERSION_FILE%" (
 
 :: Сравнение версий
 if "!REMOTE_VERSION!" == "!LOCAL_VERSION!" (
-    echo Версия актуальна (!LOCAL_VERSION!). Обновление не требуется.
+    echo Версия актуальна: !LOCAL_VERSION!
     exit /b 0
 )
 
@@ -46,15 +46,17 @@ if "!REMOTE_VERSION!" == "!LOCAL_VERSION!" (
 SET "SCRIPT_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/netupdate.cmd"
 SET "SAVE_PATH=%TEMP%\keen_bypass.cmd"
 
-echo Обнаружена новая версия: !REMOTE_VERSION! (было !LOCAL_VERSION!). Запуск обновления...
+echo Обнаружена новая версия: !REMOTE_VERSION! (текущая: !LOCAL_VERSION!).
+echo Запуск обновления...
+
 powershell -Command "[IO.File]::WriteAllText('%SAVE_PATH%', (Invoke-WebRequest -Uri '%SCRIPT_URL%' -UseBasicParsing).Content, [Text.Encoding]::GetEncoding(1251))"
 
 IF NOT EXIST "%SAVE_PATH%" (
-    echo Ошибка загрузки netupdate.cmd
-    PAUSE
-    EXIT /B 1
+    echo [ОШИБКА] Не удалось загрузить netupdate.cmd
+    exit /B 1
 )
 
 cmd /c chcp 1251>nul & call "%SAVE_PATH%"
 DEL /F /Q "%SAVE_PATH%" >NUL 2>&1
-EXIT /B
+
+exit /b 0
