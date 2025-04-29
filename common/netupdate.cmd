@@ -12,6 +12,21 @@ if %errorlevel% neq 0 (
 )
 
 :: ############################
+:: ## ПОЛУЧЕНИЕ ВЕРСИИ ##
+:: ############################
+set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
+set "VERSION_FILE=%TEMP%\keen_version.txt"
+
+powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE%')" >nul 2>&1
+
+if exist "%VERSION_FILE%" (
+    set /p "PROJECT_VERSION=" < "%VERSION_FILE%"
+    del /q "%VERSION_FILE%" >nul 2>&1
+) else (
+    set "PROJECT_VERSION=unknown"
+)
+
+:: ############################
 :: ## ПАРАМЕТРЫ И ПЕРЕМЕННЫЕ ##
 :: ############################
 set "ARCHIVE=%TEMP%\master.zip"
@@ -133,6 +148,11 @@ timeout /t 2 >nul
 
 :: Запуск стратегии
 powershell -Command "Start-Process -Verb RunAs -FilePath '!BASE_DIR!\!STRATEGY!_*.cmd' -Wait"
+
+set "VERSION_PATH=!TARGET_DIR!\keen_bypass_win\sys"
+set "VERSION_FILE=!VERSION_PATH!\version.txt"
+mkdir "!VERSION_PATH!" >nul 2>&1
+echo !PROJECT_VERSION! > "!VERSION_FILE!"
 
 echo [УСПЕХ] Стратегия !STRATEGY! активирована.
 exit /b 0
