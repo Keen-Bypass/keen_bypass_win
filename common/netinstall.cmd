@@ -17,6 +17,23 @@ echo [УСПЕХ] Привилегии администратора подтве
 echo -----------------------------------
 echo.
 
+:: ##############################
+:: ## ПОЛУЧЕНИЕ ВЕРСИИ С GITHUB ##
+:: ##############################
+set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
+set "VERSION_FILE=%TEMP%\keen_version.txt"
+
+echo Получение актуальной версии...
+powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE%')" >nul 2>&1
+
+if exist "%VERSION_FILE%" (
+    set /p "PROJECT_VERSION=" < "%VERSION_FILE%"
+    del /q "%VERSION_FILE%" >nul 2>&1
+) else (
+    set "PROJECT_VERSION=v1.3"
+    echo [ОШИБКА] Не удалось получить версию. Используется значение по умолчанию.
+)
+
 :: ############################
 :: ## ПАРАМЕТРЫ И ПЕРЕМЕННЫЕ ##
 :: ############################
@@ -31,7 +48,7 @@ set "WINDIVERT_SERVICE=WinDivert"
 :MAIN_MENU
 cls
 echo ===================================
-echo  Keen Bypass для Windows v1.3
+echo  Keen Bypass для Windows v%PROJECT_VERSION%
 echo ===================================
 echo.
 echo 1. Установить или обновить проект
@@ -449,6 +466,23 @@ echo.
 echo ====================================
 echo  УСТАНОВКА УСПЕШНО ЗАВЕРШЕНА!
 echo ====================================
+
+:: ####################################
+:: ## СОХРАНЕНИЕ ВЕРСИИ В ФАЙЛ ##
+:: ####################################
+set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
+set "VERSION_FILE=%VERSION_PATH%\version.txt"
+
+echo Сохранение версии проекта...
+mkdir "%VERSION_PATH%" >nul 2>&1
+echo %PROJECT_VERSION% > "%VERSION_FILE%"
+
+if exist "%VERSION_FILE%" (
+    echo [УСПЕХ] Версия сохранена: %PROJECT_VERSION%
+) else (
+    echo [ОШИБКА] Не удалось записать файл версии
+)
+
 echo.
 echo ====================================
 echo Проверьте необходимые ресурсы
