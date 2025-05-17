@@ -26,8 +26,7 @@ if exist "%VERSION_FILE%" (
     for /f "delims=" %%i in ('type "%VERSION_FILE%" ^| powershell -Command "$input.Trim()"') do set "PROJECT_VERSION=%%i"
     del /q "%VERSION_FILE%" >nul 2>&1
 ) else (
-    set "PROJECT_VERSION=v1.3"
-    echo [ОШИБКА] Не удалось получить версию. Используется значение по умолчанию.
+    echo [ОШИБКА] Не удалось получить версию.
 )
 
 :: Основные переменные
@@ -165,13 +164,13 @@ if not exist "!AUTOUPDATE_SCRIPT!" (
     goto MAIN_MENU
 )
 echo Создание задачи...
-schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 5 /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" /RU SYSTEM /RL HIGHEST /F >nul 2>&1
+schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 10 /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" /RU SYSTEM /RL HIGHEST /F >nul 2>&1
 if %errorlevel% neq 0 (
     echo [ОШИБКА] Ошибка при создании задачи. Проверьте права.
     pause
     goto MAIN_MENU
 )
-echo [УСПЕХ] Автообновление настроено (проверка каждые 5 минут)
+echo [УСПЕХ] Автообновление настроено (проверка каждые 10 минут)
 pause
 goto MAIN_MENU
 
