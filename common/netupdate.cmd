@@ -29,14 +29,17 @@ set "WINDIVERT_SERVICE=WinDivert"
 set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
 
 :: Определение стратегии
-for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do set "DOCUMENTS_PATH=%%i"
-set "STRATEGY_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('LocalApplicationData')"`) do set "LOCALAPPDATA_PATH=%%i"
+set "STRATEGY_FOLDER=%LOCALAPPDATA_PATH%\keen_bypass_win"
 set "STRATEGY=1"
-if exist "!STRATEGY_FOLDER!\*.txt" (
-    for /f %%F in ('dir /b "!STRATEGY_FOLDER!\*.txt"') do (
+if exist "%STRATEGY_FOLDER%\*.txt" (
+    for /f %%F in ('dir /b "%STRATEGY_FOLDER%\*.txt"') do (
         set "FILENAME=%%~nF"
         set "STRATEGY=!FILENAME:~0,1!"
     )
+) else (
+    mkdir "%STRATEGY_FOLDER%" >nul 2>&1
+    echo. > "%STRATEGY_FOLDER%\1.txt"
 )
 
 :: Удаление предыдущих установок
@@ -67,6 +70,17 @@ mkdir "!TARGET_DIR!" >nul 2>&1
 powershell -Command "Expand-Archive -Path '!ARCHIVE!' -DestinationPath '!TARGET_DIR!' -Force"
 mkdir "!BASE_DIR!" >nul 2>&1
 mkdir "!BASE_DIR!\files" >nul 2>&1
+mkdir "!BASE_DIR!\sys" >nul 2>&1
+
+:: Загрузка autoupdate.cmd
+echo Загрузка скрипта автообновления...
+set "AUTOUPDATE_SCRIPT=%BASE_DIR%\sys\autoupdate.cmd"
+set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
+powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!GITHUB_URL!', '!AUTOUPDATE_SCRIPT!')"
+if not exist "!AUTOUPDATE_SCRIPT!" (
+    echo [ОШИБКА] Не удалось загрузить autoupdate.cmd
+    exit /b 1
+)
 
 :: Настройка стратегии
 echo [4/5] Настройка стратегии !STRATEGY!...
@@ -123,6 +137,26 @@ if exist "%VERSION_FILE%" (
     echo [УСПЕХ] Версия сохранена: %PROJECT_VERSION%
 ) else (
     echo [ОШИБКА] Не удалось записать файл версии
+)
+
+:: Удаление временной папки
+echo Удаление временной папки стратегии...
+if exist "%STRATEGY_FOLDER%" (
+    rmdir /s /q "%STRATEGY_FOLDER%" >nul 2>&1
+    echo [УСПЕХ] Временная папка %STRATEGY_FOLDER% удалена
+)
+
+:: Настройка автообновления
+echo Настройка автообновления...
+schtasks /Query /TN "keen_bypass_win_autoupdate" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo Удаление существующей задачи...
+    schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
+)
+schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 5 /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" /RU SYSTEM /RL HIGHEST /F >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ОШИБКА] Ошибка при создании задачи автообновления
+    exit /b 1
 )
 
 echo [УСПЕХ] Стратегия !STRATEGY! активирована.
