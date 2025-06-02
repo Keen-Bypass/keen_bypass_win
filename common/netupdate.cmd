@@ -119,13 +119,29 @@ if defined ERROR_FLAG (
 
 :: Применение стратегии
 echo [5/5] Применение стратегии !STRATEGY!...
+set "STRATEGY_FILE="
+if !STRATEGY! equ 1 set "STRATEGY_FILE=1_easy.cmd"
+if !STRATEGY! equ 2 set "STRATEGY_FILE=2_medium.cmd"
+if !STRATEGY! equ 3 set "STRATEGY_FILE=3_hard.cmd"
+if !STRATEGY! equ 4 set "STRATEGY_FILE=4_extreme.cmd"
+
+:: Проверка существования файла стратегии
+if not exist "!BASE_DIR!\!STRATEGY_FILE!" (
+    echo [ОШИБКА] Файл стратегии !STRATEGY_FILE! не найден в !BASE_DIR!
+    exit /b 1
+)
+
 cd /d "!BASE_DIR!"
 net stop !SERVICE_NAME! >nul 2>&1
 net stop !WINDIVERT_SERVICE! >nul 2>&1
 sc delete !SERVICE_NAME! >nul 2>&1
 sc delete !WINDIVERT_SERVICE! >nul 2>&1
 timeout /t 2 >nul
-powershell -Command "Start-Process -Verb RunAs -FilePath '!BASE_DIR!\!STRATEGY!_*.cmd' -Wait"
+powershell -Command "Start-Process -Verb RunAs -FilePath '!BASE_DIR!\!STRATEGY_FILE!' -Wait"
+if %errorlevel% neq 0 (
+    echo [ОШИБКА] Не удалось запустить стратегию !STRATEGY!. Проверьте файл !STRATEGY_FILE!
+    exit /b 1
+)
 
 :: Сохранение версии
 set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
