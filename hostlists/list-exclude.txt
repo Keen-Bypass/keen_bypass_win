@@ -22,6 +22,12 @@ keenetic.link
 keenetic.name
 keenetic.pro
 keenetic.ru
+netcraze.com
+netcraze.link
+netcraze.name
+netcraze.pro
+netcraze.ru
+crazedns.ru
 mos.ru
 mts.ru
 mycdn.me
