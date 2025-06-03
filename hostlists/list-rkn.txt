@@ -19,6 +19,7 @@ i.ytimg.com
 jnn-pa.googleapis.com
 nhacmp3youtube.com
 play.google.com
+repack.info
 static.rutracker.cc
 studio.youtube.com
 wide-youtube.l.google.com
@@ -36,4 +37,3 @@ yt3.ggpht.com
 yt4.ggpht.com
 ytimg.com
 ytimg.l.google.com
-zfilms-hd.by
