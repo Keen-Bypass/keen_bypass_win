@@ -278,10 +278,9 @@ set "FILES[2]=2_medium.cmd"
 set "FILES[3]=3_hard.cmd"
 set "FILES[4]=4_extreme.cmd"
 set "FILES[5]=list-antifilter.txt"
-set "FILES[6]=list-googlevideo.txt"
-set "FILES[7]=list-rkn.txt"
-set "FILES[8]=list-exclude.txt"
-for /L %%i in (1,1,8) do (
+set "FILES[6]=list-rkn.txt"
+set "FILES[7]=list-exclude.txt"
+for /L %%i in (1,1,7) do (
     set "FILE=!FILES[%%i]!"
     if %%i leq 4 (
         set "SAVE_PATH=%BASE_DIR%\!FILE!"
