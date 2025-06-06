@@ -315,6 +315,7 @@ set "STRATEGY_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
 mkdir "!STRATEGY_FOLDER!" >nul 2>&1
 del /Q /F "!STRATEGY_FOLDER!\*.txt" >nul 2>&1
 echo. > "!STRATEGY_FOLDER!\!STRATEGY!.txt"
+set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
 echo Остановка служб...
 net stop %SERVICE_NAME% >nul 2>&1
 net stop %WINDIVERT_SERVICE% >nul 2>&1
@@ -322,8 +323,9 @@ sc delete %SERVICE_NAME% >nul 2>&1
 sc delete %WINDIVERT_SERVICE% >nul 2>&1
 timeout /t 2 >nul
 echo Запуск стратегии %STRATEGY%...
+set "STRATEGY_FILE=%BASE_DIR%\%STRATEGY%_*.cmd"
 cd /d "%BASE_DIR%"
-powershell -Command "Start-Process -Verb RunAs -FilePath '%BASE_DIR%\!STRATEGY!_*.cmd' -Wait"
+powershell -Command "Start-Process -Verb RunAs -FilePath '%STRATEGY_FILE%' -Wait"
 goto FINAL_MENU
 
 :: Финальное меню
