@@ -1,4 +1,3 @@
-adservice.google.com
 cloudflare-ech.com
 cloudflareclient.com
 cloudflarestatus.com
