@@ -10,17 +10,10 @@ discordapp.com
 discordapp.net
 discordcdn.com
 discordstatus.com
-doubleclick.net
-ggpht.com
-googleadservices.com
-googleapis.com
-googlesyndication.com
-gvt1.com
 i.ytimg.com
 jnn-pa.googleapis.com
 nhacmp3youtube.com
 play.google.com
-static.rutracker.cc
 studio.youtube.com
 txnhh.com
 vercel.app
@@ -36,7 +29,6 @@ youtubeembeddedplayer.googleapis.com
 youtubei.googleapis.com
 youtubekids.com
 yt-video-upload.l.google.com
-yt.be
 yt3.ggpht.com
 yt4.ggpht.com
 ytimg.com
