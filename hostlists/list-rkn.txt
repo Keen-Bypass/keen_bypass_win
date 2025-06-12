@@ -1,6 +1,7 @@
 adservice.google.com
-api.cloudflareclient.com
 cloudflare-ech.com
+cloudflareclient.com
+cloudflarestatus.com
 discord-attachments-uploads-prd.storage.googleapis.com
 discord.com
 discord.gg
@@ -19,10 +20,13 @@ i.ytimg.com
 jnn-pa.googleapis.com
 nhacmp3youtube.com
 play.google.com
-repack.info
 static.rutracker.cc
 studio.youtube.com
+txnhh.com
+vercel.app
 wide-youtube.l.google.com
+xn-app1.com
+xnxx-cdn.com
 youtu.be
 youtube-nocookie.com
 youtube-ui.l.google.com
@@ -37,3 +41,4 @@ yt3.ggpht.com
 yt4.ggpht.com
 ytimg.com
 ytimg.l.google.com
+zfilms-hd.by
