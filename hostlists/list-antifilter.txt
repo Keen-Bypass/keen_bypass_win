@@ -22,6 +22,7 @@ alberta.ca
 amnezia.org
 anilibria.tv
 animestars.org
+ansys.com
 antizapret.prostovpn.org
 api.app.prod.grazie.aws.intellij.net
 api.github.com
@@ -52,6 +53,7 @@ bard.google.com
 bbc.co.uk
 bbc.com
 bbci.co.uk
+bestchange.ru
 bitbucket.org
 bitcoin.org
 bitru.org
@@ -92,6 +94,7 @@ czx.to
 d.docs.live.net
 data-cdn.mbamupdates.com
 database.clamav.net
+deepl.com
 deezer.com
 dell.com
 deviantart.com
@@ -123,6 +126,7 @@ edgeservices.bing.com
 ehorussia.com
 ej.ru
 envato.com
+epg.one
 etsy.com
 eu-iot-prod.aws.tcljd.com
 euronews.com
@@ -148,6 +152,7 @@ gallery.zetalliance.org
 game.brawlstarsgame.com
 gateway.discord.gg
 geekyfuroshiki.com
+gemini.google.com
 geni.us
 genius.com
 gitlab.io
