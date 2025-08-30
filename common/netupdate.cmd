@@ -20,25 +20,23 @@ echo.
 
 :: Проверка прав администратора
 call :CHECK_ADMIN_RIGHTS
-if errorlevel 1 (
-    exit /b 1
-)
+if errorlevel 1 exit /b 1
 
-:: Получение версии проекта
+:: Получение версии Keen Bypass
 call :GET_PROJECT_VERSION
 if errorlevel 1 (
     echo [ОШИБКА] Не удалось получить версию.
     set "PROJECT_VERSION=unknown"
 )
 
-:: Определение текущей стратегии
-call :GET_CURRENT_STRATEGY
+:: Определение текущего пресета
+call :GET_CURRENT_PRESET
 
 :: Основной процесс обновления
-echo [1/5] Удаление предыдущих установок...
+echo Удаление предыдущих установок...
 call :CLEANUP_PREVIOUS_INSTALLATION
 
-echo [2/5] Загрузка проекта...
+echo Загрузка Zapret...
 call :DOWNLOAD_PROJECT
 if errorlevel 1 (
     echo [ОШИБКА] Загрузка не удалась
@@ -46,7 +44,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [3/5] Распаковка...
+echo Распаковка...
 call :EXTRACT_ARCHIVE
 if errorlevel 1 (
     echo [ОШИБКА] Распаковка не удалась
@@ -54,23 +52,26 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [4/5] Настройка стратегии %STRATEGY%...
-call :DOWNLOAD_STRATEGY_FILES
+echo Настройка пресета %PRESET%...
+call :DOWNLOAD_PRESET_FILES
 if errorlevel 1 (
-    echo [ОШИБКА] Загрузка файлов стратегии не удалась
+    echo [ОШИБКА] Загрузка файлов пресета не удалась
     pause
     exit /b 1
 )
 
-echo [5/5] Применение стратегии %STRATEGY%...
-call :APPLY_STRATEGY
+echo Применение пресета %PRESET%...
+call :APPLY_PRESET
+
+echo Настройка автообновления...
+call :SETUP_AUTO_UPDATE
 
 :: Финализация обновления
 call :SAVE_VERSION_INFO
 call :CLEANUP_TEMP_FILES
 
 echo.
-echo [УСПЕХ] Стратегия %STRATEGY% активирована.
+echo [УСПЕХ] Пресет %PRESET% активирован.
 echo.
 exit /b 0
 
@@ -103,20 +104,20 @@ exit /b 0
     )
     exit /b 1
 
-:GET_CURRENT_STRATEGY
+:GET_CURRENT_PRESET
     for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
         set "DOCUMENTS_PATH=%%i"
     )
-    set "STRATEGY_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    set "STRATEGY=1"
+    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+    set "PRESET=1"
     
-    if exist "!STRATEGY_FOLDER!\*.txt" (
-        for /f %%F in ('dir /b "!STRATEGY_FOLDER!\*.txt"') do (
+    if exist "!PRESET_FOLDER!\*.txt" (
+        for /f %%F in ('dir /b "!PRESET_FOLDER!\*.txt"') do (
             set "FILENAME=%%~nF"
-            set "STRATEGY=!FILENAME:~0,1!"
+            set "PRESET=!FILENAME:~0,1!"
         )
     )
-    echo Текущая стратегия: !STRATEGY!
+    echo Текущий пресет: !PRESET!
     exit /b 0
 
 :CLEANUP_PREVIOUS_INSTALLATION
@@ -130,11 +131,7 @@ exit /b 0
         rmdir /s /q "%TARGET_DIR%" 2>nul
         if not exist "%TARGET_DIR%" (
             echo [УСПЕХ] Директория удалена
-        ) else (
-            echo [ПРЕДУПРЕЖДЕНИЕ] Не удалось полностью удалить директорию
         )
-    ) else (
-        echo Директория не найдена, пропускаем удаление
     )
     exit /b 0
 
@@ -188,17 +185,17 @@ exit /b 0
         exit /b 1
     )
 
-:DOWNLOAD_STRATEGY_FILES
-    set "GITHUB_STRATEGY=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/strategy/"
-    set "GITHUB_HOSTLISTS=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/hostlists/"
+:DOWNLOAD_PRESET_FILES
+    set "GITHUB_PRESET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/presets/"
+    set "GITHUB_IPSET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/ipset/"
     
-    set "FILES[1]=1_easy.cmd"
-    set "FILES[2]=2_medium.cmd"
-    set "FILES[3]=3_hard.cmd"
-    set "FILES[4]=4_extreme.cmd"
-    set "FILES[5]=list-antifilter.txt"
-    set "FILES[6]=list-rkn.txt"
-    set "FILES[7]=list-exclude.txt"
+    set "FILES[1]=strategy1.cmd"
+    set "FILES[2]=strategy2.cmd"
+    set "FILES[3]=strategy3.cmd"
+    set "FILES[4]=strategy4.cmd"
+    set "FILES[5]=hosts-antifilter.txt"
+    set "FILES[6]=hosts-rkn.txt"
+    set "FILES[7]=hosts-exclude.txt"
     
     mkdir "%BASE_DIR%" >nul 2>&1
     mkdir "%BASE_DIR%\files" >nul 2>&1
@@ -209,10 +206,10 @@ exit /b 0
         set "FILE=!FILES[%%i]!"
         if %%i leq 4 (
             set "SAVE_PATH=%BASE_DIR%\!FILE!"
-            set "DOWNLOAD_URL=%GITHUB_STRATEGY%!FILE!"
+            set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
         ) else (
             set "SAVE_PATH=%BASE_DIR%\files\!FILE!"
-            set "DOWNLOAD_URL=%GITHUB_HOSTLISTS%!FILE!"
+            set "DOWNLOAD_URL=%GITHUB_IPSET%!FILE!"
         )
         
         echo Загрузка: !FILE!
@@ -251,31 +248,63 @@ exit /b 0
         exit /b 1
     )
 
-:APPLY_STRATEGY
-    echo Применение стратегии %STRATEGY%...
+:APPLY_PRESET
+    echo Применение пресета %PRESET%...
     cd /d "%BASE_DIR%"
     
     call :STOP_SERVICE %SERVICE_NAME%
     call :STOP_SERVICE %WINDIVERT_SERVICE%
     timeout /t 2 >nul
     
-    echo Запуск скрипта стратегии...
-    powershell -Command "Start-Process -Verb RunAs -FilePath '%BASE_DIR%\%STRATEGY%_*.cmd' -Wait"
+    echo Запуск скрипта пресета...
+    set "PRESET_FILE=%BASE_DIR%\strategy%PRESET%.cmd"
+    powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -Wait"
+    exit /b 0
+
+:SETUP_AUTO_UPDATE
+    echo Настройка автообновления...
+    
+    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
+        set "DOCUMENTS_PATH=%%i"
+    )
+    set "AUTOUPDATE_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+    set "AUTOUPDATE_SCRIPT=!AUTOUPDATE_FOLDER!\autoupdate.cmd"
+    set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
+    
+    :: Удаляем существующую задачу
+    schtasks /Query /TN "keen_bypass_win_autoupdate" >nul 2>&1
+    if %errorlevel% equ 0 (
+        schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
+    )
+    
+    mkdir "!AUTOUPDATE_FOLDER!" >nul 2>&1
+    
+    :: Загружаем скриpt автообновления
+    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!GITHUB_URL!', '!AUTOUPDATE_SCRIPT!')" >nul 2>&1
+    
+    :: Создаем задачу в планировщике
+    schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 10 ^
+        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" ^
+        /RU SYSTEM /RL HIGHEST /F >nul 2>&1
+    
+    if %errorlevel% equ 0 (
+        echo [УСПЕХ] Автообновление настроено
+    ) else (
+        echo [ОШИБКА] Не удалось создать задачу автообновления
+    )
     exit /b 0
 
 :SAVE_VERSION_INFO
     set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
     set "VERSION_FILE=%VERSION_PATH%\version.txt"
     
-    echo Сохранение версии проекта...
+    echo Сохранение версии Keen Bypass...
     mkdir "%VERSION_PATH%" >nul 2>&1
     
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
     
     if exist "%VERSION_FILE%" (
         echo [УСПЕХ] Версия сохранена: %PROJECT_VERSION%
-    ) else (
-        echo [ОШИБКА] Не удалось записать файл версии
     )
     exit /b 0
 

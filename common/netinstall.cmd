@@ -3,21 +3,22 @@ chcp 1251 >nul
 setlocal enabledelayedexpansion
 
 :: Основные константы
-set "PROJECT_NAME=Keen Bypass для Windows"
+set "PROJECT_NAME=Keen Bypass"
 set "SERVICE_NAME=winws1"
 set "WINDIVERT_SERVICE=WinDivert"
 set "TARGET_DIR=C:\keen_bypass_win"
 set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
+set "BLOCKCHECK_PATH=%TARGET_DIR%\zapret-win-bundle-master\blockcheck\blockcheck.cmd"
 
 :: Проверка прав администратора
 call :CHECK_ADMIN_RIGHTS
 if errorlevel 1 exit /b 1
 
-:: Получение версии проекта
+:: Получение версии Keen Bypass
 call :GET_PROJECT_VERSION
 if errorlevel 1 (
-    echo [ОШИБКА] Не удалось получить версию проекта
+    echo [ОШИБКА] Не удалось получить версию Keen Bypass
     set "PROJECT_VERSION=unknown"
 )
 
@@ -28,37 +29,38 @@ echo ===================================
 echo  %PROJECT_NAME% v%PROJECT_VERSION%
 echo ===================================
 echo.
-echo 1. Установить или обновить проект
-echo 2. Сменить стратегию
-echo 3. Остановить и удалить службы
-echo 4. Запустить службу
-echo 5. Активация автообновления
-echo 6. Удалить автообновление
-echo 7. Деинсталлировать проект
+echo 1. Установить Keen Bypass.
+echo 2. Обновить Keen Bypass.
 echo.
-choice /C 1234567 /N /M "Выберите действие [1-7]: "
-goto MENU_OPTION_%errorlevel%
+echo 3. Пресеты (Выбор пресета из заранее подготовленных стратегий).
+echo 4. Запустить blockcheck.
+echo.
+echo 5. Остановить Zapret.
+echo 6. Запустить Zapret.
+echo.
+echo 7. Выключить автообновление.
+echo 8. Включить автообновление.
+echo.
+echo 99. Деинсталлировать Keen Bypass.
+echo 00. Выход.
+echo.
+set /p CHOICE="Выберите действие: "
 
-:MENU_OPTION_1
-    goto INSTALL_PROJECT
+if "%CHOICE%"=="1" goto INSTALL_KEEN_BYPASS
+if "%CHOICE%"=="2" goto UPDATE_KEEN_BYPASS
+if "%CHOICE%"=="3" goto PRESETS_MENU
+if "%CHOICE%"=="4" goto RUN_BLOCKCHECK
+if "%CHOICE%"=="5" goto STOP_ZAPRET
+if "%CHOICE%"=="6" goto START_ZAPRET
+if "%CHOICE%"=="7" goto DISABLE_AUTO_UPDATE
+if "%CHOICE%"=="8" goto ENABLE_AUTO_UPDATE
+if "%CHOICE%"=="99" goto UNINSTALL_KEEN_BYPASS
+if "%CHOICE%"=="00" exit /b 0
 
-:MENU_OPTION_2
-    goto CHANGE_STRATEGY
-
-:MENU_OPTION_3
-    goto STOP_REMOVE_SERVICES
-
-:MENU_OPTION_4
-    goto START_SERVICE
-
-:MENU_OPTION_5
-    goto ENABLE_AUTO_UPDATE
-
-:MENU_OPTION_6
-    goto DISABLE_AUTO_UPDATE
-
-:MENU_OPTION_7
-    goto UNINSTALL_PROJECT
+echo.
+echo [ОШИБКА] Неверный выбор: %CHOICE%
+pause
+goto MENU_MAIN
 
 :: ============ ОСНОВНЫЕ ФУНКЦИИ ============
 
@@ -80,7 +82,6 @@ goto MENU_OPTION_%errorlevel%
     set "VERSION_FILE=%TEMP%\keen_version.txt"
     echo Получение актуальной версии...
     
-    :: Используем оригинальную логику из вашего кода
     powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE%')" >nul 2>&1
 
     if exist "%VERSION_FILE%" (
@@ -93,7 +94,7 @@ goto MENU_OPTION_%errorlevel%
 
 :VALIDATE_PROJECT_INSTALLED
     if not exist "%TARGET_DIR%" (
-        echo [ОШИБКА] Проект не установлен!
+        echo [ОШИБКА] Keen Bypass не установлен!
         echo Установите его через пункт 1
         pause
         goto MENU_MAIN
@@ -104,7 +105,7 @@ goto MENU_OPTION_%errorlevel%
     sc query %SERVICE_NAME% >nul 2>&1
     if %errorlevel% neq 0 (
         echo [ОШИБКА] Служба %SERVICE_NAME% не найдена!
-        echo Установите проект через пункт 1
+        echo Установите Keen Bypass через пункт 1
         pause
         goto MENU_MAIN
     )
@@ -114,6 +115,14 @@ goto MENU_OPTION_%errorlevel%
     net stop %1 >nul 2>&1
     sc delete %1 >nul 2>&1
     reg delete "HKLM\SYSTEM\CurrentControlSet\Services\%1" /f >nul 2>&1
+    exit /b 0
+
+:STOP_SERVICE_ONLY
+    net stop %1 >nul 2>&1
+    exit /b 0
+
+:START_SERVICE
+    sc start %1 >nul 2>&1
     exit /b 0
 
 :REMOVE_AUTOUPDATE_TASK
@@ -151,116 +160,105 @@ goto MENU_OPTION_%errorlevel%
     )
     exit /b 0
 
-:: ============ ОСНОВНЫЕ ОПЕРАЦИИ ============
+:: ============ НОВЫЕ ОПЕРАЦИИ МЕНЮ ============
 
-:INSTALL_PROJECT
+:INSTALL_KEEN_BYPASS
     echo.
     echo ===================================
-    echo  Проверка существующей установки
+    echo  Установка Keen Bypass
     echo ===================================
     
-    set "SERVICE_EXISTS=0"
-    set "FOLDER_EXISTS=0"
-    set "WINDIVERT_EXISTS=0"
-    
-    sc query %SERVICE_NAME% >nul 2>&1 && set "SERVICE_EXISTS=1"
-    sc query %WINDIVERT_SERVICE% >nul 2>&1 && set "WINDIVERT_EXISTS=1"
-    if exist "%TARGET_DIR%" set "FOLDER_EXISTS=1"
-    
-    echo [УСПЕХ] Проверка завершена
-    echo.
-
-    echo ===================================
-    echo  Удаление предыдущих установок
-    echo ===================================
-    
-    if %SERVICE_EXISTS% equ 1 call :STOP_SERVICE %SERVICE_NAME%
-    if %WINDIVERT_EXISTS% equ 1 call :STOP_SERVICE %WINDIVERT_SERVICE%
-    echo.
-
-    echo ===================================
-    echo  Очистка файловой системы
-    echo ===================================
-    
-    if %FOLDER_EXISTS% equ 1 (
-        powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
-        timeout /t 2 >nul
-        rmdir /s /q "%TARGET_DIR%" 2>nul
-        
-        if exist "%TARGET_DIR%" (
-            echo [ОШИБКА] Не удалось удалить директорию %TARGET_DIR%
-            pause
-            goto MENU_MAIN
-        ) else (
-            echo [УСПЕХ] Директория %TARGET_DIR% удалена
-        )
-    )
-    echo.
-
-    echo ===================================
-    echo  Настройка автообновления
-    echo ===================================
-    
-    call :SETUP_AUTO_UPDATE
-    if errorlevel 1 (
-        echo [ОШИБКА] Не удалось настроить автообновление
-        pause
-        goto MENU_MAIN
-    )
-    echo.
-
-    echo ===================================
-    echo  Загрузка и установка
-    echo ===================================
-    
-    call :DOWNLOAD_AND_EXTRACT
-    if errorlevel 1 (
+    if exist "%TARGET_DIR%" (
+        echo [ИНФО] Keen Bypass уже установлен
+        echo Используйте пункт 2 для обновления
         pause
         goto MENU_MAIN
     )
     
-    call :DOWNLOAD_STRATEGY_FILES
-    if errorlevel 1 (
-        echo [ПРЕДУПРЕЖДЕНИЕ] Не все файлы стратегий загружены
-    )
-    echo.
+    call :FULL_INSTALLATION
+    goto MENU_MAIN
 
-    goto STRATEGY_SELECTION
-
-:CHANGE_STRATEGY
+:UPDATE_KEEN_BYPASS
     echo.
     echo ===================================
-    echo  Смена стратегии
+    echo  Обновление Keen Bypass
+    echo ===================================
+    
+    call :FULL_INSTALLATION
+    goto MENU_MAIN
+
+:RUN_BLOCKCHECK
+    echo.
+    echo ===================================
+    echo  Запуск Blockcheck
+    echo ===================================
+    
+    call :VALIDATE_PROJECT_INSTALLED
+    if not exist "%BLOCKCHECK_PATH%" (
+        echo [ОШИБКА] Файл blockcheck.cmd не найден
+        pause
+        goto MENU_MAIN
+    )
+    
+    echo Запуск blockcheck...
+    cd /d "%TARGET_DIR%\zapret-win-bundle-master\blockcheck"
+    call "%BLOCKCHECK_PATH%"
+    pause
+    goto MENU_MAIN
+
+:STOP_ZAPRET
+    echo.
+    echo ===================================
+    echo  Остановка Zapret
+    echo ===================================
+    
+    echo Остановка службы %SERVICE_NAME%...
+    call :STOP_SERVICE_ONLY %SERVICE_NAME%
+    echo Остановка службы %WINDIVERT_SERVICE%...
+    call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
+    echo [УСПЕХ] Службы остановлены
+    pause
+    goto MENU_MAIN
+
+:START_ZAPRET
+    echo.
+    echo ===================================
+    echo  Запуск Zapret
+    echo ===================================
+    
+    echo Запуск службы %SERVICE_NAME%...
+    call :START_SERVICE %SERVICE_NAME%
+    echo Запуск службы %WINDIVERT_SERVICE%...
+    call :START_SERVICE %WINDIVERT_SERVICE%
+    echo [УСПЕХ] Службы запущены
+    pause
+    goto MENU_MAIN
+
+:PRESETS_MENU
+    echo.
+    echo ===================================
+    echo  Пресеты стратегий
     echo ===================================
     
     call :VALIDATE_PROJECT_INSTALLED
     call :VALIDATE_SERVICE_EXISTS
     
-    goto STRATEGY_SELECTION
+    goto PRESET_SELECTION
 
-:STOP_REMOVE_SERVICES
+:DISABLE_AUTO_UPDATE
     echo.
     echo ===================================
-    echo  Остановка и удаление службы
+    echo  Выключение автообновления
     echo ===================================
     
-    call :STOP_SERVICE %SERVICE_NAME%
-    call :STOP_SERVICE %WINDIVERT_SERVICE%
-    
-    echo [УСПЕХ] Службы остановлены и удалены
-    echo.
+    call :REMOVE_AUTOUPDATE_TASK
     pause
     goto MENU_MAIN
-
-:START_SERVICE
-    echo.
-    call :VALIDATE_PROJECT_INSTALLED
-    goto STRATEGY_SELECTION
 
 :ENABLE_AUTO_UPDATE
     echo.
     echo ===================================
-    echo  Настройка автоматического обновления
+    echo  Включение автообновления
     echo ===================================
     
     call :SETUP_AUTO_UPDATE
@@ -272,20 +270,10 @@ goto MENU_OPTION_%errorlevel%
     pause
     goto MENU_MAIN
 
-:DISABLE_AUTO_UPDATE
+:UNINSTALL_KEEN_BYPASS
     echo.
     echo ===================================
-    echo  Удаление задачи автообновления
-    echo ===================================
-    
-    call :REMOVE_AUTOUPDATE_TASK
-    pause
-    goto MENU_MAIN
-
-:UNINSTALL_PROJECT
-    echo.
-    echo ===================================
-    echo  Деинсталляция
+    echo  Деинсталляция Keen Bypass
     echo ===================================
     
     echo Остановка служб...
@@ -294,7 +282,6 @@ goto MENU_OPTION_%errorlevel%
     
     echo Удаление автообновления...
     call :REMOVE_AUTOUPDATE_TASK
-    
     echo Удаление файлов...
     powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
     timeout /t 2 >nul
@@ -313,10 +300,61 @@ goto MENU_OPTION_%errorlevel%
     echo  УДАЛЕНИЕ УСПЕШНО ЗАВЕРШЕНО!
     echo ===================================
     echo.
-    timeout /t 3
+    pause
     exit /b 0
 
 :: ============ ВСПОМОГАТЕЛЬНЫЕ ПРОЦЕДУРЫ ============
+
+:FULL_INSTALLATION
+    echo Проверка существующей установки...
+    set "SERVICE_EXISTS=0"
+    set "FOLDER_EXISTS=0"
+    set "WINDIVERT_EXISTS=0"
+    
+    sc query %SERVICE_NAME% >nul 2>&1 && set "SERVICE_EXISTS=1"
+    sc query %WINDIVERT_SERVICE% >nul 2>&1 && set "WINDIVERT_EXISTS=1"
+    if exist "%TARGET_DIR%" set "FOLDER_EXISTS=1"
+    
+    echo Удаление предыдущих установок...
+    if %SERVICE_EXISTS% equ 1 call :STOP_SERVICE %SERVICE_NAME%
+    if %WINDIVERT_EXISTS% equ 1 call :STOP_SERVICE %WINDIVERT_SERVICE%
+    
+    if %FOLDER_EXISTS% equ 1 (
+        powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+        timeout /t 2 >nul
+        rmdir /s /q "%TARGET_DIR%" 2>nul
+        
+        if exist "%TARGET_DIR%" (
+            echo [ОШИБКА] Не удалось удалить директорию %TARGET_DIR%
+            pause
+            exit /b 1
+        )
+    )
+
+    echo Настройка автообновления...
+    call :SETUP_AUTO_UPDATE
+    if errorlevel 1 (
+        echo [ОШИБКА] Не удалось настроить автообновление
+        pause
+        exit /b 1
+    )
+
+    echo Загрузка и установка...
+    call :DOWNLOAD_AND_EXTRACT
+    if errorlevel 1 (
+        pause
+        exit /b 1
+    )
+    
+    call :DOWNLOAD_PRESET_FILES
+    if errorlevel 1 (
+        echo [ПРЕДУПРЕЖДЕНИЕ] Не все файлы пресетов загружены
+    )
+
+    :: Автоматически применяем пресет 1
+    set "PRESET=1"
+    call :APPLY_PRESET
+    goto MENU_MAIN
 
 :SETUP_AUTO_UPDATE
     call :GET_DOCUMENTS_FOLDER
@@ -340,61 +378,55 @@ goto MENU_OPTION_%errorlevel%
 :DOWNLOAD_AND_EXTRACT
     set "ARCHIVE=%TEMP%\master.zip"
     
-    echo Загрузка проекта...
+    echo Загрузка Zapret...
     call :DOWNLOAD_FILE "https://github.com/nikrays/zapret-win-bundle/archive/refs/heads/master.zip" "%ARCHIVE%"
     if errorlevel 1 (
         echo [ОШИБКА] Не удалось загрузить
         exit /b 1
     )
-    echo [УСПЕХ] Загружено
-    echo.
 
-    echo ===================================
-    echo  Распаковка
-    echo ===================================
-    
+    echo Распаковка...
     if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
     powershell -Command "Expand-Archive -Path '%ARCHIVE%' -DestinationPath '%TARGET_DIR%' -Force"
     
     if not exist "%TARGET_DIR%\zapret-win-bundle-master" (
-        echo Исправление структуры...
         for /f "delims=" %%i in ('dir /b "%TARGET_DIR%"') do (
             ren "%TARGET_DIR%\%%i" "zapret-win-bundle-master"
         )
     )
     
     if exist "%TARGET_DIR%\zapret-win-bundle-master" (
-        echo [УСПЕХ] Распаковано
+        echo [УСПЕХ] Установка завершена
         exit /b 0
     ) else (
         echo [ОШИБКА] Не удалось распаковать
         exit /b 1
     )
 
-:DOWNLOAD_STRATEGY_FILES
+:DOWNLOAD_PRESET_FILES
     set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
-    set "GITHUB_STRATEGY=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/strategy/"
-    set "GITHUB_HOSTLISTS=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/hostlists/"
+    set "GITHUB_PRESET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/presets/"
+    set "GITHUB_IPSET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/ipset/"
     
     mkdir "%BASE_DIR%" >nul 2>&1
     mkdir "%BASE_DIR%\files" >nul 2>&1
     
-    set "FILES[1]=1_easy.cmd"
-    set "FILES[2]=2_medium.cmd"
-    set "FILES[3]=3_hard.cmd"
-    set "FILES[4]=4_extreme.cmd"
-    set "FILES[5]=list-antifilter.txt"
-    set "FILES[6]=list-rkn.txt"
-    set "FILES[7]=list-exclude.txt"
+    set "FILES[1]=strategy1.cmd"
+    set "FILES[2]=strategy2.cmd"
+    set "FILES[3]=strategy3.cmd"
+    set "FILES[4]=strategy4.cmd"
+    set "FILES[5]=hosts-antifilter.txt"
+    set "FILES[6]=hosts-rkn.txt"
+    set "FILES[7]=hosts-exclude.txt"
     
     for /L %%i in (1,1,7) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 4 (
             set "SAVE_PATH=%BASE_DIR%\!FILE!"
-            set "DOWNLOAD_URL=%GITHUB_STRATEGY%!FILE!"
+            set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
         ) else (
             set "SAVE_PATH=%BASE_DIR%\files\!FILE!"
-            set "DOWNLOAD_URL=%GITHUB_HOSTLISTS%!FILE!"
+            set "DOWNLOAD_URL=%GITHUB_IPSET%!FILE!"
         )
         
         call :DOWNLOAD_FILE "!DOWNLOAD_URL!" "!SAVE_PATH!"
@@ -406,22 +438,45 @@ goto MENU_OPTION_%errorlevel%
     )
     exit /b 0
 
-:STRATEGY_SELECTION
+:PRESET_SELECTION
     echo.
-    echo Выберите стратегию:
-    echo 1. Легкая (Подходит для большинства провайдеров).
-    echo 2. Средняя (Подходит к провайдерам где стоят несколько ТСПУ).
-    echo 3. Сложная (Подходит к провайдерам где заблокирован tls1.2).
-    echo 4. Экстремальная (Подходит к провайдерам где заблокирован tls1.2).
+    echo ====================================
+    echo  Выберите пресет
+    echo ====================================
     echo.
-    choice /C 1234 /N /M "Ваш выбор [1-4]: "
-    set "STRATEGY=%errorlevel%"
+    echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo 3. Пресет 3 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 4. Пресет 4 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo.
+    echo 0. Вернуться в главное меню.
+    echo 00. Выход.
+    echo.
+    set /p PRESET_CHOICE="Выберите пресет: "
+
+    if "%PRESET_CHOICE%"=="1" set "PRESET=1" & goto APPLY_PRESET
+    if "%PRESET_CHOICE%"=="2" set "PRESET=2" & goto APPLY_PRESET
+    if "%PRESET_CHOICE%"=="3" set "PRESET=3" & goto APPLY_PRESET
+    if "%PRESET_CHOICE%"=="4" set "PRESET=4" & goto APPLY_PRESET
+    if "%PRESET_CHOICE%"=="0" goto MENU_MAIN
+    if "%PRESET_CHOICE%"=="00" exit /b 0
+
+    echo.
+    echo [ОШИБКА] Неверный выбор: %PRESET_CHOICE%
+    pause
+    goto PRESET_SELECTION
+
+:APPLY_PRESET
+    echo.
+    echo ====================================
+    echo  Применение пресета %PRESET%
+    echo ====================================
     
     call :GET_DOCUMENTS_FOLDER
-    set "STRATEGY_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    mkdir "!STRATEGY_FOLDER!" >nul 2>&1
-    del /Q /F "!STRATEGY_FOLDER!\*.txt" >nul 2>&1
-    echo. > "!STRATEGY_FOLDER!\!STRATEGY!.txt"
+    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+    mkdir "!PRESET_FOLDER!" >nul 2>&1
+    del /Q /F "!PRESET_FOLDER!\*.txt" >nul 2>&1
+    echo. > "!PRESET_FOLDER!\!PRESET!.txt"
     
     set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
     echo Остановка служб...
@@ -430,11 +485,11 @@ goto MENU_OPTION_%errorlevel%
     call :STOP_SERVICE %WINDIVERT_SERVICE%
     timeout /t 2 >nul
     
-    echo Запуск стратегии %STRATEGY%...
-    set "STRATEGY_FILE=%BASE_DIR%\%STRATEGY%_*.cmd"
+    echo Запуск пресета %PRESET%...
+    set "PRESET_FILE=%BASE_DIR%\strategy%PRESET%.cmd"
     cd /d "%BASE_DIR%"
     
-    powershell -Command "Start-Process -Verb RunAs -FilePath '%STRATEGY_FILE%' -Wait"
+    powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -Wait"
     goto FINAL_SETUP
 
 :FINAL_SETUP
@@ -446,7 +501,7 @@ goto MENU_OPTION_%errorlevel%
     set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
     set "VERSION_FILE=%VERSION_PATH%\version.txt"
     
-    echo Сохранение версии проекта...
+    echo Сохранение версии Keen Bypass...
     mkdir "%VERSION_PATH%" >nul 2>&1
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
     
@@ -457,20 +512,9 @@ goto MENU_OPTION_%errorlevel%
     )
     
     echo.
-    echo ====================================
-    echo Проверьте необходимые ресурсы
-    echo Если все работает, нажмите "3" или закройте скрипт
-    echo Если есть проблемы, нажмите "1", чтобы сменить стратегию:
-    echo 1. Сменить стратегию
-    echo 2. Вернуться в главное меню
-    echo 3. Выход
-    echo ====================================
-    echo.
-    
-    choice /C 123 /N /M "Выберите действие [1-3]: "
-    if %errorlevel% equ 1 goto STRATEGY_SELECTION
-    if %errorlevel% equ 2 goto MENU_MAIN
-    if %errorlevel% equ 3 exit /b 0
+    echo Автоматический возврат в главное меню...
+    timeout /t 2 >nul
+    goto MENU_MAIN
 
 :: Точка входа
 if "%~1"=="" goto MENU_MAIN
