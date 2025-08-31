@@ -155,9 +155,9 @@ exit /b 0
     if !errorlevel! equ 0 (
         net start | find /i "%SERVICE_NAME%" >nul 2>&1
         if !errorlevel! equ 0 (
-            set "WINWS_STATUS=Запущена"
+            set "WINWS_STATUS=Запущен"
         ) else (
-            set "WINWS_STATUS=Остановлена"
+            set "WINWS_STATUS=Остановлен"
         )
     )
     echo Статус WINWS:         !WINWS_STATUS!
