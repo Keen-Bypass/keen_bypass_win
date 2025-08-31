@@ -2,45 +2,38 @@
 chcp 1251 >nul
 setlocal enabledelayedexpansion
 
-:: Конфигурация
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "LOCAL_VERSION_FILE=C:\keen_bypass_win\keen_bypass_win\sys\version.txt"
 set "REMOTE_VERSION_FILE=%TEMP%\remote_version.txt"
 set "SCRIPT_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/netupdate.cmd"
 set "SAVE_PATH=%TEMP%\keen_bypass.cmd"
 
-:: Проверка прав администратора
 net file >nul 2>&1
 if %errorlevel% neq 0 (
     powershell -Command "Start-Process cmd -ArgumentList '/c chcp 1251>nul & %~dpnx0' -Verb RunAs"
     exit /b
 )
 
-:: Основной процесс
 call :Main
 exit /b %errorlevel%
 
 :Main
-    :: Получение удаленной версии
     call :GetRemoteVersion
     if !errorlevel! neq 0 (
         echo [ОШИБКА] Не удалось проверить версию. Обновление пропущено.
         exit /b 0
     )
 
-    :: Получение локальной версии
     set "LOCAL_VERSION=unknown"
     if exist "%LOCAL_VERSION_FILE%" (
         set /p LOCAL_VERSION= < "%LOCAL_VERSION_FILE%"
     )
 
-    :: Сравнение версий
     if "!REMOTE_VERSION!" == "!LOCAL_VERSION!" (
         echo Версия актуальна: !LOCAL_VERSION!
         exit /b 0
     )
 
-    :: Загрузка и запуск обновления
     echo Обнаружена новая версия: !REMOTE_VERSION! (текущая: !LOCAL_VERSION!).
     echo Запуск обновления...
 
@@ -51,7 +44,6 @@ exit /b %errorlevel%
         exit /b 1
     )
 
-    :: Запуск обновления
     cmd /c chcp 1251>nul & call "%SAVE_PATH%"
     del /f /q "%SAVE_PATH%" >nul 2>&1
 

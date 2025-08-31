@@ -2,7 +2,6 @@
 chcp 1251 >nul
 setlocal enabledelayedexpansion
 
-:: Основные константы
 set "PROJECT_NAME=Keen Bypass"
 set "SERVICE_NAME=winws1"
 set "WINDIVERT_SERVICE=WinDivert"
@@ -13,23 +12,19 @@ set "BLOCKCHECK_PATH=%TARGET_DIR%\zapret-win-bundle-master\blockcheck\blockcheck
 set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
 set "VERSION_FILE=%VERSION_PATH%\version.txt"
 
-:: Автоматическое определение размера на основе количества строк
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
 powershell -command "&{$H=get-host;$W=$H.ui.rawui;$B=$W.buffersize;$B.width=120;$B.height=85;$W.buffersize=$B;$S=$W.windowsize;$S.width=120;$S.height=%LINES%;$W.windowsize=$S;}"
 
-:: Проверка прав администратора
 call :CHECK_ADMIN_RIGHTS
 if errorlevel 1 exit /b 1
 
-:: Получение версии Keen Bypass
 call :GET_PROJECT_VERSION
 if errorlevel 1 (
     call :PRINT_ERROR "Не удалось получить версию Keen Bypass"
     set "PROJECT_VERSION=unknown"
 )
 
-:: Главное меню
 :MENU_MAIN
 cls
 call :GET_SYSTEM_INFO
@@ -39,7 +34,7 @@ echo.
 echo 1.  Установить Keen Bypass
 echo 2.  Обновить Keen Bypass
 echo.
-echo 3.  Пресеты стратегий
+echo 3.  Пресеты (Выбор пресета из заранее подготовленных стратегий).
 echo 4.  Запустить blockcheck
 echo.
 echo 5.  Остановить Zapret
@@ -49,7 +44,7 @@ echo 7.  Выключить автообновление
 echo 8.  Включить автообновление
 echo.
 echo 99. Деинсталлировать Keen Bypass
-echo 00.  Выход
+echo 00. Выход
 echo.
 set /p CHOICE="Выберите действие: "
 
@@ -68,7 +63,6 @@ call :PRINT_ERROR "Неверный выбор: %CHOICE%"
 pause
 goto MENU_MAIN
 
-:: ============ ФУНКЦИИ ОФОРМЛЕНИЯ ============
 :PRINT_HEADER
 echo.
 echo ==================================================
@@ -110,10 +104,8 @@ exit /b 0
     echo                Keen Bypass
     echo ==================================================
     
-    :: Сетевая информация
     call :PRINT_SECTION "Сеть"
 
-    :: Получение информации о провайдере
     set "IP_INFO_FILE=%TEMP%\ip_info.txt"
     set "PROVIDER_INFO=Не определено"
 
@@ -124,21 +116,16 @@ exit /b 0
 
     echo Провайдер:            !PROVIDER_INFO!
 
-    :: Системная информация
     call :PRINT_SECTION "Система"
     
-    :: Получение информации об ОС
     for /f "tokens=*" %%i in ('powershell -Command "Get-WmiObject -Class Win32_OperatingSystem | Select-Object -ExpandProperty Caption"') do set "OS_NAME=%%i"
     echo ОС:                   !OS_NAME!
     
-    :: Статус Keen Bypass
     call :PRINT_SECTION "DPI bypass multi platform"
     
-    :: Получаем версию с GitHub
     set "GITHUB_VERSION=N/A"
     set "VERSION_FILE_TMP=%TEMP%\keen_git_version.txt"
     
-    :: Получаем версию
     powershell -Command "$ProgressPreference='SilentlyContinue'; try {(Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE_TMP%').Content.Trim()} catch {'N/A'}" >nul 2>&1
     
     if exist "%VERSION_FILE_TMP%" (
@@ -148,7 +135,6 @@ exit /b 0
         del /q "%VERSION_FILE_TMP%" >nul 2>&1
     )
     
-    :: Версия Keen Bypass (локальная установка)
     set "KB_STATUS=Не установлен"
     set "KB_VERSION=N/A"
     set "KB_DATE=N/A"
@@ -157,20 +143,16 @@ exit /b 0
         set "KB_STATUS=Установлен"
         for /f "delims=" %%i in ('type "%VERSION_FILE%" 2^>nul') do set "KB_VERSION=%%i"
         
-        :: Правильное получение даты изменения файла
         for /f "tokens=1,2,3,4,5" %%a in ('dir "%VERSION_FILE%" /TC ^| find /i "version.txt"') do (
             if "%%c" neq "" set "KB_DATE=%%a"
         )
     )
     
-    :: Форматируем вывод версий
     echo Keen Bypass:          !KB_STATUS! ^| !KB_VERSION! ^| !KB_DATE!     /     Доступен на GitHub: !GITHUB_VERSION!
     
-    :: Статус WINWS - проверяем именно СОСТОЯНИЕ службы
     set "WINWS_STATUS=Не установлена"
     sc query %SERVICE_NAME% >nul 2>&1
     if !errorlevel! equ 0 (
-        :: Служба существует, проверяем ее состояние
         net start | find /i "%SERVICE_NAME%" >nul 2>&1
         if !errorlevel! equ 0 (
             set "WINWS_STATUS=Запущена"
@@ -180,7 +162,6 @@ exit /b 0
     )
     echo Статус WINWS:         !WINWS_STATUS!
     
-    :: Статус WinDivert - проверяем наличие службы
     set "WINDIVERT_STATUS=Не установлен"
     sc query %WINDIVERT_SERVICE% >nul 2>&1
     if !errorlevel! equ 0 (
@@ -188,7 +169,6 @@ exit /b 0
     )
     echo Статус WINDIVERT:     !WINDIVERT_STATUS!
     
-    :: Текущий пресет
     set "CURRENT_PRESET=N/A"
     call :GET_DOCUMENTS_FOLDER
     set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
@@ -203,7 +183,6 @@ exit /b 0
     endlocal
     exit /b 0
 
-:: ============ ОСНОВНЫЕ ФУНКЦИИ ============
 :CHECK_ADMIN_RIGHTS
     call :PRINT_SECTION "Проверка прав администратора"
     net session >nul 2>&1
@@ -297,7 +276,6 @@ exit /b 0
     )
     exit /b 0
 
-:: ============ ОПЕРАЦИИ МЕНЮ ============
 :INSTALL_KEEN_BYPASS
     call :PRINT_HEADER
     call :PRINT_SECTION "Установка Keen Bypass"
@@ -362,7 +340,7 @@ exit /b 0
 
 :PRESETS_MENU
     call :PRINT_HEADER
-    call :PRINT_SECTION "Пресеты стратегий"
+    call :PRINT_SECTION "Пресеты (Выбор пресета из заранее подготовленных стратегий)."
     
     call :VALIDATE_PROJECT_INSTALLED
     call :VALIDATE_SERVICE_EXISTS
@@ -421,7 +399,6 @@ exit /b 0
     pause
     exit /b 0
 
-:: ============ ВСПОМОГАТЕЛЬНЫЕ ПРОЦЕДУРЫ ============
 :FULL_INSTALLATION
     call :PRINT_SECTION "Проверка существующей установки"
     
@@ -469,7 +446,6 @@ exit /b 0
         call :PRINT_WARNING "Не все файлы пресетов загружены"
     )
 
-    :: Автоматически применяем пресет 1
     set "PRESET=1"
     call :APPLY_PRESET
     exit /b 0
@@ -565,7 +541,7 @@ exit /b 0
     echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
     echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
     echo 3. Пресет 3 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 4. Пресет 4 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 4. Пресet 4 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
@@ -631,6 +607,5 @@ exit /b 0
     timeout /t 2 >nul
     goto MENU_MAIN
 
-:: Точка входа
 if "%~1"=="" goto MENU_MAIN
 exit /b 0

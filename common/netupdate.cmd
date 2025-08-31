@@ -2,7 +2,6 @@
 chcp 1251 >nul
 setlocal enabledelayedexpansion
 
-:: Основные константы
 set "PROJECT_NAME=Keen Bypass для Windows"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "ARCHIVE=%TEMP%\master.zip"
@@ -13,26 +12,21 @@ set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
 set "MAX_RETRIES=3"
 set "FILE_RETRIES=3"
 
-:: Главная точка входа
 echo %PROJECT_NAME% - Автоматическое обновление
 echo ===================================
 echo.
 
-:: Проверка прав администратора
 call :CHECK_ADMIN_RIGHTS
 if errorlevel 1 exit /b 1
 
-:: Получение версии Keen Bypass
 call :GET_PROJECT_VERSION
 if errorlevel 1 (
     echo [ОШИБКА] Не удалось получить версию.
     set "PROJECT_VERSION=unknown"
 )
 
-:: Определение текущего пресета
 call :GET_CURRENT_PRESET
 
-:: Основной процесс обновления
 echo Удаление предыдущих установок...
 call :CLEANUP_PREVIOUS_INSTALLATION
 
@@ -66,7 +60,6 @@ call :APPLY_PRESET
 echo Настройка автообновления...
 call :SETUP_AUTO_UPDATE
 
-:: Финализация обновления
 call :SAVE_VERSION_INFO
 call :CLEANUP_TEMP_FILES
 
@@ -271,7 +264,6 @@ exit /b 0
     set "AUTOUPDATE_SCRIPT=!AUTOUPDATE_FOLDER!\autoupdate.cmd"
     set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
     
-    :: Удаляем существующую задачу
     schtasks /Query /TN "keen_bypass_win_autoupdate" >nul 2>&1
     if %errorlevel% equ 0 (
         schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
@@ -279,10 +271,8 @@ exit /b 0
     
     mkdir "!AUTOUPDATE_FOLDER!" >nul 2>&1
     
-    :: Загружаем скриpt автообновления
     powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!GITHUB_URL!', '!AUTOUPDATE_SCRIPT!')" >nul 2>&1
     
-    :: Создаем задачу в планировщике
     schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 10 ^
         /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
