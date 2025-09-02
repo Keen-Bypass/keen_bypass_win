@@ -2,7 +2,7 @@
 chcp 1251 >nul
 setlocal enabledelayedexpansion
 
-set "PROJECT_NAME=Keen Bypass"
+set "PROJECT_NAME=Keen Bypass for Windows"
 set "SERVICE_NAME=winws1"
 set "WINDIVERT_SERVICE=WinDivert"
 set "TARGET_DIR=C:\keen_bypass_win"
@@ -101,7 +101,7 @@ exit /b 0
     setlocal
     echo.
     echo ====================================================================================================
-    echo                                      Keen Bypass for Windows
+    echo                                    %PROJECT_NAME% v%PROJECT_VERSION%
     echo ====================================================================================================
     
     call :PRINT_SECTION "Сеть"
