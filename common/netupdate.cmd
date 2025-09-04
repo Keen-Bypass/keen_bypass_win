@@ -247,6 +247,12 @@ exit /b 0
         exit /b 1
     )
 
+:GET_DOCUMENTS_FOLDER
+    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
+        set "DOCUMENTS_PATH=%%i"
+    )
+    exit /b 0
+
 :APPLY_PRESET
     echo Применение пресета %PRESET%...
     cd /d "%BASE_DIR%"
@@ -257,8 +263,10 @@ exit /b 0
     
     echo Сохранение выбора пресета...
     for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
-        set "PRESET_FOLDER=%%i\keen_bypass_win"
+        set "DOCUMENTS_PATH=%%i"
     )
+    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+    
     mkdir "!PRESET_FOLDER!" >nul 2>&1
     del /Q /F "!PRESET_FOLDER!\*.txt" >nul 2>&1
     echo. > "!PRESET_FOLDER!\%PRESET%.txt"
