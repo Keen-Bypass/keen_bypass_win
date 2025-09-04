@@ -100,6 +100,14 @@ exit /b 0
 :GET_CURRENT_PRESET
     set "PRESET=1"
     echo Принудительно выбран пресет: 1
+    
+    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
+        set "PRESET_FOLDER=%%i\keen_bypass_win"
+    )
+    mkdir "!PRESET_FOLDER!" >nul 2>&1
+    del /Q /F "!PRESET_FOLDER!\*.txt" >nul 2>&1
+    echo. > "!PRESET_FOLDER!\1.txt"
+    
     exit /b 0
 
 :: :GET_CURRENT_PRESET
