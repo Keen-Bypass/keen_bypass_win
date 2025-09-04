@@ -98,20 +98,25 @@ exit /b 0
     exit /b 1
 
 :GET_CURRENT_PRESET
-    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
-        set "DOCUMENTS_PATH=%%i"
-    )
-    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
     set "PRESET=1"
-    
-    if exist "!PRESET_FOLDER!\*.txt" (
-        for /f %%F in ('dir /b "!PRESET_FOLDER!\*.txt"') do (
-            set "FILENAME=%%~nF"
-            set "PRESET=!FILENAME:~0,1!"
-        )
-    )
-    echo Текущий пресет: !PRESET!
+    echo Принудительно выбран пресет: 1
     exit /b 0
+
+:: :GET_CURRENT_PRESET
+::     for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
+::         set "DOCUMENTS_PATH=%%i"
+::     )
+::     set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
+::     set "PRESET=1"
+::     
+::     if exist "!PRESET_FOLDER!\*.txt" (
+::         for /f %%F in ('dir /b "!PRESET_FOLDER!\*.txt"') do (
+::             set "FILENAME=%%~nF"
+::             set "PRESET=!FILENAME:~0,1!"
+::         )
+::     )
+::     echo Текущий пресет: !PRESET!
+::     exit /b 0
 
 :CLEANUP_PREVIOUS_INSTALLATION
     call :STOP_SERVICE %SERVICE_NAME%
@@ -198,7 +203,7 @@ exit /b 0
     
     for /L %%i in (1,1,8) do (
         set "FILE=!FILES[%%i]!"
-        if %%i leq 4 (
+        if %%i leq 5 (
             set "SAVE_PATH=%BASE_DIR%\!FILE!"
             set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
         ) else (

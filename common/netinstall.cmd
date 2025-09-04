@@ -516,7 +516,7 @@ exit /b 0
     
     for /L %%i in (1,1,8) do (
         set "FILE=!FILES[%%i]!"
-        if %%i leq 4 (
+        if %%i leq 5 (
             set "SAVE_PATH=%BASE_DIR%\!FILE!"
             set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
         ) else (
@@ -542,10 +542,10 @@ exit /b 0
     echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
     echo.
     echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
-    echo 2. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo 3. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
     echo.
-    echo 3. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 4. Пресet 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 4. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 5. Пресет 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
