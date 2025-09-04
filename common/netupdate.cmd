@@ -186,16 +186,17 @@ exit /b 0
     set "FILES[2]=strategy2.cmd"
     set "FILES[3]=strategy3.cmd"
     set "FILES[4]=strategy4.cmd"
-    set "FILES[5]=hosts-antifilter.txt"
-    set "FILES[6]=hosts-rkn.txt"
-    set "FILES[7]=hosts-exclude.txt"
+    set "FILES[5]=strategy5.cmd"
+    set "FILES[6]=hosts-antifilter.txt"
+    set "FILES[7]=hosts-rkn.txt"
+    set "FILES[8]=hosts-exclude.txt"
     
     mkdir "%BASE_DIR%" >nul 2>&1
     mkdir "%BASE_DIR%\files" >nul 2>&1
     
     set "ERROR_FLAG=0"
     
-    for /L %%i in (1,1,7) do (
+    for /L %%i in (1,1,8) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 4 (
             set "SAVE_PATH=%BASE_DIR%\!FILE!"

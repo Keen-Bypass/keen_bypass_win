@@ -509,11 +509,12 @@ exit /b 0
     set "FILES[2]=strategy2.cmd"
     set "FILES[3]=strategy3.cmd"
     set "FILES[4]=strategy4.cmd"
-    set "FILES[5]=hosts-antifilter.txt"
-    set "FILES[6]=hosts-rkn.txt"
-    set "FILES[7]=hosts-exclude.txt"
+    set "FILES[5]=strategy5.cmd"
+    set "FILES[6]=hosts-antifilter.txt"
+    set "FILES[7]=hosts-rkn.txt"
+    set "FILES[8]=hosts-exclude.txt"
     
-    for /L %%i in (1,1,7) do (
+    for /L %%i in (1,1,8) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 4 (
             set "SAVE_PATH=%BASE_DIR%\!FILE!"
@@ -539,9 +540,12 @@ exit /b 0
     echo ====================================================================================================
     echo.
     echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo.
     echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
-    echo 3. Пресет 3 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 4. Пресet 4 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 2. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo.
+    echo 3. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 4. Пресet 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
@@ -552,6 +556,7 @@ exit /b 0
     if "%PRESET_CHOICE%"=="2" set "PRESET=2" & goto APPLY_PRESET
     if "%PRESET_CHOICE%"=="3" set "PRESET=3" & goto APPLY_PRESET
     if "%PRESET_CHOICE%"=="4" set "PRESET=4" & goto APPLY_PRESET
+    if "%PRESET_CHOICE%"=="5" set "PRESET=5" & goto APPLY_PRESET
     if "%PRESET_CHOICE%"=="0" goto MENU_MAIN
     if "%PRESET_CHOICE%"=="00" exit /b 0
 
