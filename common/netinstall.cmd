@@ -5,12 +5,17 @@ setlocal enabledelayedexpansion
 set "PROJECT_NAME=Keen Bypass for Windows"
 set "SERVICE_NAME=winws1"
 set "WINDIVERT_SERVICE=WinDivert"
-set "TARGET_DIR=C:\keen_bypass_win"
+set "TARGET_DIR=C:\ProgramData\keen_bypass_win"
+set "KEEN_BYPASS_DIR=%TARGET_DIR%\keen_bypass"
+set "ZAPRET_DIR=%TARGET_DIR%\zapret-win-bundle-master"
+set "SYS_DIR=%TARGET_DIR%\sys"
+set "AUTOUPDATE_DIR=%SYS_DIR%\autoupdate"
+set "LOGS_DIR=%SYS_DIR%\logs"
+set "BACKUP_DIR=%SYS_DIR%\backup"
 set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
-set "BLOCKCHECK_PATH=%TARGET_DIR%\zapret-win-bundle-master\blockcheck\blockcheck.cmd"
-set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
-set "VERSION_FILE=%VERSION_PATH%\version.txt"
+set "BLOCKCHECK_PATH=%ZAPRET_DIR%\blockcheck\blockcheck.cmd"
+set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
 
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
@@ -123,17 +128,7 @@ exit /b 0
     
     call :PRINT_SECTION "DPI bypass multi platform"
     
-    set "GITHUB_VERSION=N/A"
-    set "VERSION_FILE_TMP=%TEMP%\keen_git_version.txt"
-    
-    powershell -Command "$ProgressPreference='SilentlyContinue'; try {(Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE_TMP%').Content.Trim()} catch {'N/A'}" >nul 2>&1
-    
-    if exist "%VERSION_FILE_TMP%" (
-        for /f "delims=" %%i in ('type "%VERSION_FILE_TMP%" 2^>nul') do (
-            set "GITHUB_VERSION=%%i"
-        )
-        del /q "%VERSION_FILE_TMP%" >nul 2>&1
-    )
+    set "GITHUB_VERSION=!PROJECT_VERSION!"
     
     set "KB_STATUS=Не установлен"
     set "KB_VERSION=N/A"
@@ -170,12 +165,11 @@ exit /b 0
     echo Статус WINDIVERT:     !WINDIVERT_STATUS!
     
     set "CURRENT_PRESET=N/A"
-    call :GET_DOCUMENTS_FOLDER
-    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    
-    if exist "!PRESET_FOLDER!" (
-        for /f "delims=" %%f in ('dir /b "!PRESET_FOLDER!\*.txt" 2^>nul') do (
-            set "CURRENT_PRESET=%%~nf"
+    if exist "%BACKUP_DIR%" (
+        for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
+            set "FILENAME=%%~nf"
+            :: Извлекаем только цифру из имени файла (убираем "strategy")
+            for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "CURRENT_PRESET=%%n"
         )
     )
     echo Текущий пресет:       !CURRENT_PRESET!
@@ -188,7 +182,7 @@ exit /b 0
     net session >nul 2>&1
     if !errorlevel! neq 0 (
         echo Запрос прав администратора...
-        powershell -Command "Start-Process -Verb RunAs -FilePath \"%~f0\""
+        powershell -Command "Start-Process -Verb RunAs -FilePath \"%~f0\"" 
         exit /b 1
     )
     call :PRINT_SUCCESS "Привилегии администратора подтверждены"
@@ -256,7 +250,7 @@ exit /b 0
     if "!INTERVAL!"=="" set "INTERVAL=5"
     
     schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO !INTERVAL! ^
-        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" ^
+        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_DIR%\autoupdate.cmd' -ArgumentList '-silent'\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
     
     if !errorlevel! neq 0 exit /b 1
@@ -309,7 +303,7 @@ exit /b 0
     )
     
     echo Запуск blockcheck...
-    cd /d "%TARGET_DIR%\zapret-win-bundle-master\blockcheck"
+    cd /d "%ZAPRET_DIR%\blockcheck"
     call "%BLOCKCHECK_PATH%"
     pause
     goto MENU_MAIN
@@ -414,17 +408,33 @@ exit /b 0
     if !SERVICE_EXISTS! equ 1 call :STOP_SERVICE %SERVICE_NAME%
     if !WINDIVERT_EXISTS! equ 1 call :STOP_SERVICE %WINDIVERT_SERVICE%
     
-    if !FOLDER_EXISTS! equ 1 (
-        powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+    echo Остановка процессов и удаление папок keen_bypass и zapret...
+    
+    if exist "%KEEN_BYPASS_DIR%" (
+        powershell -Command "Get-Process | Where-Object { $_.Path -like '%KEEN_BYPASS_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
         timeout /t 2 >nul
-        rmdir /s /q "%TARGET_DIR%" 2>nul
-        
-        if exist "%TARGET_DIR%" (
-            call :PRINT_ERROR "Не удалось удалить директорию %TARGET_DIR%"
-            pause
-            exit /b 1
+        rmdir /s /q "%KEEN_BYPASS_DIR%" 2>nul
+        if not exist "%KEEN_BYPASS_DIR%" (
+            echo [УСПЕХ] Папка keen_bypass удалена
         )
     )
+    
+    if exist "%ZAPRET_DIR%" (
+        powershell -Command "Get-Process | Where-Object { $_.Path -like '%ZAPRET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+        timeout /t 2 >nul
+        rmdir /s /q "%ZAPRET_DIR%" 2>nul
+        if not exist "%ZAPRET_DIR%" (
+            echo [УСПЕХ] Папка zapret-win-bundle-master удалена
+        )
+    )
+
+    call :PRINT_SECTION "Создание структуры папок"
+    if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%" >nul 2>&1
+    if not exist "%KEEN_BYPASS_DIR%" mkdir "%KEEN_BYPASS_DIR%" >nul 2>&1
+    if not exist "%SYS_DIR%" mkdir "%SYS_DIR%" >nul 2>&1
+    if not exist "%AUTOUPDATE_DIR%" mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
+    if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%" >nul 2>&1
+    if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%" >nul 2>&1
 
     call :PRINT_SECTION "Настройка автообновления"
     call :SETUP_AUTO_UPDATE
@@ -451,18 +461,13 @@ exit /b 0
     exit /b 0
 
 :SETUP_AUTO_UPDATE
-    call :GET_DOCUMENTS_FOLDER
-    set "AUTOUPDATE_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    set "AUTOUPDATE_SCRIPT=!AUTOUPDATE_FOLDER!\autoupdate.cmd"
     set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
     
     echo Проверка существующей задачи...
     call :REMOVE_AUTOUPDATE_TASK >nul
     
-    mkdir "!AUTOUPDATE_FOLDER!" >nul 2>&1
-    
     echo Загрузка скрипта автообновления...
-    call :DOWNLOAD_FILE "!GITHUB_URL!" "!AUTOUPDATE_SCRIPT!"
+    call :DOWNLOAD_FILE "!GITHUB_URL!" "%AUTOUPDATE_DIR%\autoupdate.cmd"
     if errorlevel 1 exit /b 1
     
     echo Создание задачи...
@@ -480,16 +485,16 @@ exit /b 0
     )
 
     echo Распаковка...
-    if not exist "%TARGET_DIR%" mkdir "%TARGET_DIR%"
+    mkdir "%TARGET_DIR%" >nul 2>&1
     powershell -Command "Expand-Archive -Path '%ARCHIVE%' -DestinationPath '%TARGET_DIR%' -Force"
     
-    if not exist "%TARGET_DIR%\zapret-win-bundle-master" (
+    if not exist "%ZAPRET_DIR%" (
         for /f "delims=" %%i in ('dir /b "%TARGET_DIR%"') do (
             ren "%TARGET_DIR%\%%i" "zapret-win-bundle-master"
         )
     )
     
-    if exist "%TARGET_DIR%\zapret-win-bundle-master" (
+    if exist "%ZAPRET_DIR%" (
         call :PRINT_SUCCESS "Установка завершена"
         exit /b 0
     ) else (
@@ -498,12 +503,11 @@ exit /b 0
     )
 
 :DOWNLOAD_PRESET_FILES
-    set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
     set "GITHUB_PRESET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/presets/"
     set "GITHUB_IPSET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/ipset/"
     
-    mkdir "%BASE_DIR%" >nul 2>&1
-    mkdir "%BASE_DIR%\files" >nul 2>&1
+    mkdir "%KEEN_BYPASS_DIR%" >nul 2>&1
+    mkdir "%KEEN_BYPASS_DIR%\files" >nul 2>&1
     
     set "FILES[1]=strategy1.cmd"
     set "FILES[2]=strategy2.cmd"
@@ -517,10 +521,10 @@ exit /b 0
     for /L %%i in (1,1,8) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 5 (
-            set "SAVE_PATH=%BASE_DIR%\!FILE!"
+            set "SAVE_PATH=%KEEN_BYPASS_DIR%\!FILE!"
             set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
         ) else (
-            set "SAVE_PATH=%BASE_DIR%\files\!FILE!"
+            set "SAVE_PATH=%KEEN_BYPASS_DIR%\files\!FILE!"
             set "DOWNLOAD_URL=%GITHUB_IPSET%!FILE!"
         )
         
@@ -568,13 +572,6 @@ exit /b 0
     call :PRINT_HEADER
     call :PRINT_SECTION "Применение пресета %PRESET%"
     
-    call :GET_DOCUMENTS_FOLDER
-    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    mkdir "!PRESET_FOLDER!" >nul 2>&1
-    del /Q /F "!PRESET_FOLDER!\*.txt" >nul 2>&1
-    echo. > "!PRESET_FOLDER!\!PRESET!.txt"
-    
-    set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
     echo Остановка служб...
     
     call :STOP_SERVICE %SERVICE_NAME%
@@ -582,8 +579,14 @@ exit /b 0
     timeout /t 2 >nul
     
     echo Запуск пресета %PRESET%...
-    set "PRESET_FILE=%BASE_DIR%\strategy%PRESET%.cmd"
-    cd /d "%BASE_DIR%"
+    set "PRESET_FILE=%KEEN_BYPASS_DIR%\strategy%PRESET%.cmd"
+    cd /d "%KEEN_BYPASS_DIR%"
+    
+    echo Очистка предыдущих резервных копий...
+    del /Q "%BACKUP_DIR%\*.cmd" 2>nul
+    
+    echo Создание резервной копии новой стратегии...
+    copy "%PRESET_FILE%" "%BACKUP_DIR%\strategy%PRESET%.cmd" >nul 2>&1
     
     powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -Wait"
     goto FINAL_SETUP
@@ -594,11 +597,7 @@ exit /b 0
     echo                                   УСТАНОВКА УСПЕШНО ЗАВЕРШЕНА!
     echo ====================================================================================================
     
-    set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
-    set "VERSION_FILE=%VERSION_PATH%\version.txt"
-    
     echo Сохранение версии Keen Bypass...
-    mkdir "%VERSION_PATH%" >nul 2>&1
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
     
     if exist "%VERSION_FILE%" (

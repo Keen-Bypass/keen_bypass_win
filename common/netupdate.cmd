@@ -5,10 +5,14 @@ setlocal enabledelayedexpansion
 set "PROJECT_NAME=Keen Bypass для Windows"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "ARCHIVE=%TEMP%\master.zip"
-set "TARGET_DIR=C:\keen_bypass_win"
+set "TARGET_DIR=C:\ProgramData\keen_bypass_win"
+set "KEEN_BYPASS_DIR=%TARGET_DIR%\keen_bypass"
+set "ZAPRET_DIR=%TARGET_DIR%\zapret-win-bundle-master"
+set "SYS_DIR=%TARGET_DIR%\sys"
+set "AUTOUPDATE_DIR=%SYS_DIR%\autoupdate"
+set "BACKUP_DIR=%SYS_DIR%\backup"
 set "SERVICE_NAME=winws1"
 set "WINDIVERT_SERVICE=WinDivert"
-set "BASE_DIR=%TARGET_DIR%\keen_bypass_win"
 set "MAX_RETRIES=3"
 set "FILE_RETRIES=3"
 
@@ -60,6 +64,9 @@ call :APPLY_PRESET
 echo Настройка автообновления...
 call :SETUP_AUTO_UPDATE
 
+echo Очистка старых каталогов...
+call :CLEANUP_OLD
+
 call :SAVE_VERSION_INFO
 call :CLEANUP_TEMP_FILES
 
@@ -99,38 +106,41 @@ exit /b 0
 
 :GET_CURRENT_PRESET
     set "PRESET=1"
-    echo Принудительно выбран пресет: 1
+    if exist "%BACKUP_DIR%" (
+        for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
+            set "FILENAME=%%~nf"
+            for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "PRESET=%%n"
+        )
+    )
+    echo Текущий пресет: !PRESET!
     exit /b 0
-
-:: :GET_CURRENT_PRESET
-::     for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
-::         set "DOCUMENTS_PATH=%%i"
-::     )
-::     set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-::     set "PRESET=1"
-::     
-::     if exist "!PRESET_FOLDER!\*.txt" (
-::         for /f %%F in ('dir /b "!PRESET_FOLDER!\*.txt"') do (
-::             set "FILENAME=%%~nF"
-::             set "PRESET=!FILENAME:~0,1!"
-::         )
-::     )
-::     echo Текущий пресет: !PRESET!
-::     exit /b 0
 
 :CLEANUP_PREVIOUS_INSTALLATION
     call :STOP_SERVICE %SERVICE_NAME%
     call :STOP_SERVICE %WINDIVERT_SERVICE%
     
-    if exist "%TARGET_DIR%" (
-        echo Остановка процессов и удаление директории...
-        powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+    echo Удаление папок keen_bypass и zapret-win-bundle-master...
+    
+    if exist "%KEEN_BYPASS_DIR%" (
+        echo Остановка процессов и удаление папки keen_bypass...
+        powershell -Command "Get-Process | Where-Object { $_.Path -like '%KEEN_BYPASS_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
         timeout /t 2 >nul
-        rmdir /s /q "%TARGET_DIR%" 2>nul
-        if not exist "%TARGET_DIR%" (
-            echo [УСПЕХ] Директория удалена
+        rmdir /s /q "%KEEN_BYPASS_DIR%" 2>nul
+        if not exist "%KEEN_BYPASS_DIR%" (
+            echo [УСПЕХ] Папка keen_bypass удалена
         )
     )
+    
+    if exist "%ZAPRET_DIR%" (
+        echo Остановка процессов и удаление папки zapret...
+        powershell -Command "Get-Process | Where-Object { $_.Path -like '%ZAPRET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+        timeout /t 2 >nul
+        rmdir /s /q "%ZAPRET_DIR%" 2>nul
+        if not exist "%ZAPRET_DIR%" (
+            echo [УСПЕХ] Папка zapret-win-bundle-master удалена
+        )
+    )
+    
     exit /b 0
 
 :STOP_SERVICE
@@ -168,14 +178,14 @@ exit /b 0
     mkdir "%TARGET_DIR%" >nul 2>&1
     powershell -Command "Expand-Archive -Path '%ARCHIVE%' -DestinationPath '%TARGET_DIR%' -Force"
     
-    if not exist "%TARGET_DIR%\zapret-win-bundle-master" (
+    if not exist "%ZAPRET_DIR%" (
         echo Исправление структуры папок...
         for /f "delims=" %%i in ('dir /b "%TARGET_DIR%"') do (
             ren "%TARGET_DIR%\%%i" "zapret-win-bundle-master"
         )
     )
     
-    if exist "%TARGET_DIR%\zapret-win-bundle-master" (
+    if exist "%ZAPRET_DIR%" (
         echo [УСПЕХ] Архив распакован
         exit /b 0
     ) else (
@@ -196,18 +206,18 @@ exit /b 0
     set "FILES[7]=hosts-rkn.txt"
     set "FILES[8]=hosts-exclude.txt"
     
-    mkdir "%BASE_DIR%" >nul 2>&1
-    mkdir "%BASE_DIR%\files" >nul 2>&1
+    mkdir "%KEEN_BYPASS_DIR%" >nul 2>&1
+    mkdir "%KEEN_BYPASS_DIR%\files" >nul 2>&1
     
     set "ERROR_FLAG=0"
     
     for /L %%i in (1,1,8) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 5 (
-            set "SAVE_PATH=%BASE_DIR%\!FILE!"
+            set "SAVE_PATH=%KEEN_BYPASS_DIR%\!FILE!"
             set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
         ) else (
-            set "SAVE_PATH=%BASE_DIR%\files\!FILE!"
+            set "SAVE_PATH=%KEEN_BYPASS_DIR%\files\!FILE!"
             set "DOWNLOAD_URL=%GITHUB_IPSET%!FILE!"
         )
         
@@ -247,56 +257,44 @@ exit /b 0
         exit /b 1
     )
 
-:GET_DOCUMENTS_FOLDER
-    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
-        set "DOCUMENTS_PATH=%%i"
-    )
-    exit /b 0
-
 :APPLY_PRESET
     echo Применение пресета %PRESET%...
-    cd /d "%BASE_DIR%"
+    cd /d "%KEEN_BYPASS_DIR%"
     
     call :STOP_SERVICE %SERVICE_NAME%
     call :STOP_SERVICE %WINDIVERT_SERVICE%
     timeout /t 2 >nul
     
-    echo Сохранение выбора пресета...
-    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
-        set "DOCUMENTS_PATH=%%i"
-    )
-    set "PRESET_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    
-    mkdir "!PRESET_FOLDER!" >nul 2>&1
-    del /Q /F "!PRESET_FOLDER!\*.txt" >nul 2>&1
-    echo. > "!PRESET_FOLDER!\%PRESET%.txt"
+    echo Очистка предыдущих резервных копий...
+    del /Q "%BACKUP_DIR%\*.cmd" 2>nul
     
     echo Запуск скрипта пресета...
-    set "PRESET_FILE=%BASE_DIR%\strategy%PRESET%.cmd"
+    set "PRESET_FILE=%KEEN_BYPASS_DIR%\strategy%PRESET%.cmd"
+    
+    echo Создание резервной копии стратегии...
+    copy "%PRESET_FILE%" "%BACKUP_DIR%\strategy%PRESET%.cmd" >nul 2>&1
+    
     powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -Wait"
     exit /b 0
 
 :SETUP_AUTO_UPDATE
     echo Настройка автообновления...
     
-    for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
-        set "DOCUMENTS_PATH=%%i"
-    )
-    set "AUTOUPDATE_FOLDER=!DOCUMENTS_PATH!\keen_bypass_win"
-    set "AUTOUPDATE_SCRIPT=!AUTOUPDATE_FOLDER!\autoupdate.cmd"
+    set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
     set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
     
-    schtasks /Query /TN "keen_bypass_win_autoupdate" >nul 2>&1
+    schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
     if %errorlevel% equ 0 (
-        schtasks /Delete /TN "keen_bypass_win_autoupdate" /F >nul 2>&1
+        schtasks /Delete /TN "%AUTOUPDATE_TASK%" /F >nul 2>&1
     )
     
-    mkdir "!AUTOUPDATE_FOLDER!" >nul 2>&1
+    mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
     
-    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!GITHUB_URL!', '!AUTOUPDATE_SCRIPT!')" >nul 2>&1
+    echo Загрузка скрипта автообновления...
+    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!GITHUB_URL!', '%AUTOUPDATE_DIR%\autoupdate.cmd')" >nul 2>&1
     
-    schtasks /Create /TN "keen_bypass_win_autoupdate" /SC MINUTE /MO 10 ^
-        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '!AUTOUPDATE_SCRIPT!' -ArgumentList '-silent'\"" ^
+    schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO 10 ^
+        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_DIR%\autoupdate.cmd' -ArgumentList '-silent'\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
     
     if %errorlevel% equ 0 (
@@ -307,11 +305,10 @@ exit /b 0
     exit /b 0
 
 :SAVE_VERSION_INFO
-    set "VERSION_PATH=%TARGET_DIR%\keen_bypass_win\sys"
-    set "VERSION_FILE=%VERSION_PATH%\version.txt"
+    set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
     
     echo Сохранение версии Keen Bypass...
-    mkdir "%VERSION_PATH%" >nul 2>&1
+    mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
     
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
     
@@ -325,4 +322,53 @@ exit /b 0
         echo Очистка временных файлов...
         del /q "%ARCHIVE%" >nul 2>&1
     )
+    exit /b 0
+
+:: ============ МИГРАЦИЯ СТАРЫХ КАТАЛОГОВ ============
+
+:CLEANUP_OLD
+    echo Очистка старых каталогов для миграции...
+    
+    :: Старая основная папка
+    set "OLD_TARGET_DIR=C:\keen_bypass_win"
+    if exist "!OLD_TARGET_DIR!" (
+        echo Удаление старой папки: !OLD_TARGET_DIR!
+        powershell -Command "Get-Process | Where-Object { $_.Path -like '!OLD_TARGET_DIR!\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+        timeout /t 2 >nul
+        rmdir /s /q "!OLD_TARGET_DIR!" 2>nul
+        if not exist "!OLD_TARGET_DIR!" (
+            echo [УСПЕХ] Старая папка удалена: !OLD_TARGET_DIR!
+        ) else (
+            echo [ПРЕДУПРЕЖДЕНИЕ] Не удалось удалить: !OLD_TARGET_DIR!
+        )
+    )
+    
+    :: Старая папка в документах
+    set "DOCUMENTS_PATH="
+    for /f "skip=2 tokens=2*" %%i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v "Personal" 2^>nul') do (
+        set "DOCUMENTS_PATH=%%j"
+    )
+    
+    if "!DOCUMENTS_PATH!"=="" (
+        for /f "tokens=2*" %%i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Personal" 2^>nul') do (
+            set "DOCUMENTS_PATH=%%j"
+        )
+    )
+    
+    :: Если не нашли через реестр, используем стандартный путь
+    if "!DOCUMENTS_PATH!"=="" (
+        set "DOCUMENTS_PATH=%USERPROFILE%\Documents"
+    )
+    
+    set "OLD_DOCUMENTS_DIR=!DOCUMENTS_PATH!\keen_bypass_win"
+    if exist "!OLD_DOCUMENTS_DIR!" (
+        echo Удаление старой папки в документах: !OLD_DOCUMENTS_DIR!
+        rmdir /s /q "!OLD_DOCUMENTS_DIR!" 2>nul
+        if not exist "!OLD_DOCUMENTS_DIR!" (
+            echo [УСПЕХ] Старая папка в документах удалена
+        ) else (
+            echo [ПРЕДУПРЕЖДЕНИЕ] Не удалось удалить папку в документах
+        )
+    )
+    
     exit /b 0

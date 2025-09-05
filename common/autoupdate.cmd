@@ -3,7 +3,9 @@ chcp 1251 >nul
 setlocal enabledelayedexpansion
 
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
-set "LOCAL_VERSION_FILE=C:\keen_bypass_win\keen_bypass_win\sys\version.txt"
+set "TARGET_DIR=C:\ProgramData\keen_bypass_win"
+set "AUTOUPDATE_DIR=%TARGET_DIR%\sys\autoupdate"
+set "LOCAL_VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
 set "REMOTE_VERSION_FILE=%TEMP%\remote_version.txt"
 set "SCRIPT_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/netupdate.cmd"
 set "SAVE_PATH=%TEMP%\keen_bypass.cmd"
