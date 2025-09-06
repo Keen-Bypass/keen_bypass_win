@@ -4,7 +4,6 @@ cloudflarestatus.com
 comdiscord.com
 dis.gd
 discord-activities.com
-discord-attachments-uploads-prd.storage.googleapis.com
 discord.co
 discord.com
 discord.design
@@ -25,8 +24,8 @@ discordmerch.com
 discordpartygames.com
 discordsays.com
 discordstatus.com
+doubleclick.net
 i.ytimg.com
-jnn-pa.googleapis.com
 nhacmp3youtube.com
 play.google.com
 studio.youtube.com
@@ -35,13 +34,11 @@ vercel.app
 wide-youtube.l.google.com
 xn-app1.com
 xnxx-cdn.com
+xnxx-ru.com
 youtu.be
 youtube-nocookie.com
 youtube-ui.l.google.com
 youtube.com
-youtube.googleapis.com
-youtubeembeddedplayer.googleapis.com
-youtubei.googleapis.com
 youtubekids.com
 yt-video-upload.l.google.com
 yt3.ggpht.com
@@ -52,4 +49,3 @@ zfilms-hd.by
 protonvpn.com
 vpnly.com
 vpnlyru.com
-static.doubleclick.net

@@ -54,11 +54,10 @@ yastatic.net
 vokino.tv
 sh365.org
 app-measurement.com
-android.googleapis.com
-play-fe.googleapis.com
-content-autofill.googleapis.com
 www.google.com
-fonts.googleapis.com
-www.googleapis.com
 fonts.gstatic.com
+googleapis.com
+filmix.life
+filmixapp.cyou
+cdnsqu.com
 ru
