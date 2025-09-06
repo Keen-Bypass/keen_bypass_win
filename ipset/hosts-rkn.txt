@@ -40,6 +40,7 @@ youtube-nocookie.com
 youtube-ui.l.google.com
 youtube.com
 youtubekids.com
+youtubei.googleapis.com
 yt-video-upload.l.google.com
 yt3.ggpht.com
 yt4.ggpht.com

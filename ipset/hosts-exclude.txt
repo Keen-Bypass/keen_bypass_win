@@ -56,7 +56,6 @@ sh365.org
 app-measurement.com
 www.google.com
 fonts.gstatic.com
-googleapis.com
 filmix.life
 filmixapp.cyou
 cdnsqu.com
