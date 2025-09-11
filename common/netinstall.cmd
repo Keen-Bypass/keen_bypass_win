@@ -163,6 +163,16 @@ exit /b 0
         set "WINDIVERT_STATUS=Установлен"
     )
     echo Статус WINDIVERT:     !WINDIVERT_STATUS!
+
+    set "AUTOUPDATE_STATUS=Не установлен"
+    if exist "%TARGET_DIR%" (
+        set "AUTOUPDATE_STATUS=Не активно"
+        schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "AUTOUPDATE_STATUS=Активно"
+        )
+    )
+    echo Автообновление:       !AUTOUPDATE_STATUS!    
     
     set "CURRENT_PRESET=N/A"
     if exist "%BACKUP_DIR%" (
