@@ -13,6 +13,7 @@ dns.google
 elschool.ru
 entware.net
 github.com
+github.dev
 githubusercontent.com
 gosuslugi.ru
 gov.ru
