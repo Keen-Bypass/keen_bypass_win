@@ -36,20 +36,20 @@ call :GET_SYSTEM_INFO
 
 call :PRINT_MENU_HEADER
 echo.
-echo 1.  Установить Keen Bypass
-echo 2.  Обновить Keen Bypass
+echo 1.  Установить Keen Bypass.
+echo 2.  Обновить Keen Bypass.
 echo.
 echo 3.  Пресеты (Выбор пресета из заранее подготовленных стратегий).
-echo 4.  Запустить blockcheck
+echo 4.  Запустить blockcheck.
 echo.
-echo 5.  Остановить Zapret
-echo 6.  Запустить Zapret
+echo 5.  Остановить Zapret.
+echo 6.  Запустить Zapret.
 echo.
-echo 7.  Выключить автообновление
-echo 8.  Включить автообновление
+echo 7.  Выключить автообновление.
+echo 8.  Включить автообновление.
 echo.
-echo 99. Деинсталлировать Keen Bypass
-echo 00. Выход
+echo 99. Деинсталлировать Keen Bypass.
+echo 00. Выход.
 echo.
 set /p CHOICE="Выберите действие: "
 
@@ -145,6 +145,16 @@ exit /b 0
     
     echo Keen Bypass:          !KB_STATUS! ^| !KB_VERSION! ^| !KB_DATE!     /     Доступен на GitHub: !GITHUB_VERSION!
     
+    set "AUTOUPDATE_STATUS=Не установлен"
+    if exist "%TARGET_DIR%" (
+        set "AUTOUPDATE_STATUS=Не активно"
+        schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "AUTOUPDATE_STATUS=Активно"
+        )
+    )
+    echo Автообновление:       !AUTOUPDATE_STATUS!
+    
     set "WINWS_STATUS=Не установлен"
     sc query %SERVICE_NAME% >nul 2>&1
     if !errorlevel! equ 0 (
@@ -164,21 +174,10 @@ exit /b 0
     )
     echo Статус WINDIVERT:     !WINDIVERT_STATUS!
 
-    set "AUTOUPDATE_STATUS=Не установлен"
-    if exist "%TARGET_DIR%" (
-        set "AUTOUPDATE_STATUS=Не активно"
-        schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
-        if !errorlevel! equ 0 (
-            set "AUTOUPDATE_STATUS=Активно"
-        )
-    )
-    echo Автообновление:       !AUTOUPDATE_STATUS!    
-    
     set "CURRENT_PRESET=N/A"
     if exist "%BACKUP_DIR%" (
         for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
             set "FILENAME=%%~nf"
-            :: Извлекаем только цифру из имени файла (убираем "strategy")
             for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "CURRENT_PRESET=%%n"
         )
     )
@@ -295,14 +294,12 @@ exit /b 0
     goto MENU_MAIN
 
 :UPDATE_KEEN_BYPASS
-    call :PRINT_HEADER
     call :PRINT_SECTION "Обновление Keen Bypass"
     
     call :FULL_INSTALLATION
     goto MENU_MAIN
 
 :RUN_BLOCKCHECK
-    call :PRINT_HEADER
     call :PRINT_SECTION "Запуск Blockcheck"
     
     call :VALIDATE_PROJECT_INSTALLED
@@ -312,14 +309,20 @@ exit /b 0
         goto MENU_MAIN
     )
     
+    echo Останавливаю Zapret для проверки блокировок...
+    call :STOP_SERVICE_ONLY %SERVICE_NAME%
+    call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
+    timeout /t 2 >nul
+    call :PRINT_SUCCESS "Zapret остановлен"
+    
+    echo.
     echo Запуск blockcheck...
     cd /d "%ZAPRET_DIR%\blockcheck"
     call "%BLOCKCHECK_PATH%"
-    pause
+
     goto MENU_MAIN
 
 :STOP_ZAPRET
-    call :PRINT_HEADER
     call :PRINT_SECTION "Остановка Zapret"
     
     echo Остановка службы %SERVICE_NAME%...
@@ -327,11 +330,10 @@ exit /b 0
     echo Остановка службы %WINDIVERT_SERVICE%...
     call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
     call :PRINT_SUCCESS "Службы остановлены"
-    pause
+
     goto MENU_MAIN
 
 :START_ZAPRET
-    call :PRINT_HEADER
     call :PRINT_SECTION "Запуск Zapret"
     
     echo Запуск службы %SERVICE_NAME%...
@@ -339,28 +341,82 @@ exit /b 0
     echo Запуск службы %WINDIVERT_SERVICE%...
     call :START_SERVICE %WINDIVERT_SERVICE%
     call :PRINT_SUCCESS "Службы запущены"
-    pause
+
     goto MENU_MAIN
 
 :PRESETS_MENU
-    call :PRINT_HEADER
-    call :PRINT_SECTION "Пресеты (Выбор пресета из заранее подготовленных стратегий)."
+    cls
+    call :PRINT_SECTION "Меню выбора пресетов (Выбор пресета из заранее подготовленных стратегий)."
     
     call :VALIDATE_PROJECT_INSTALLED
     call :VALIDATE_SERVICE_EXISTS
     
+    call :GET_CURRENT_STATUS
+    
+    echo.
+    echo Статус WINWS:         !WINWS_STATUS!
+    echo Статус WINDIVERT:     !WINDIVERT_STATUS!
+    echo Текущий пресет:       !CURRENT_PRESET!
+    echo.
+    
+    :PRESET_SELECTION
+    echo ====================================================================================================
+    echo  Выберите пресет
+    echo ====================================================================================================
+    echo.
+    echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo.
+    echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo 3. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo.
+    echo 4. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 5. Пресет 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo.
+    echo 0. Вернуться в главное меню.
+    echo 00. Выход.
+    echo.
+    set /p PRESET_CHOICE="Выберите пресет: "
+
+    if "!PRESET_CHOICE!"=="1" set "PRESET=1" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="2" set "PRESET=2" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="3" set "PRESET=3" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="4" set "PRESET=4" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="5" set "PRESET=5" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="0" goto MENU_MAIN
+    if "!PRESET_CHOICE!"=="00" exit /b 0
+
+    call :PRINT_ERROR "Неверный выбор: !PRESET_CHOICE!"
+    pause
     goto PRESET_SELECTION
 
+    :APPLY_PRESET_SILENT
+    echo Применяю пресет !PRESET!...
+    net stop %SERVICE_NAME% >nul 2>&1
+    net stop %WINDIVERT_SERVICE% >nul 2>&1
+    timeout /t 1 >nul
+    
+    set "PRESET_FILE=%KEEN_BYPASS_DIR%\strategy!PRESET!.cmd"
+    if exist "!PRESET_FILE!" (
+        cd /d "%KEEN_BYPASS_DIR%"
+        
+        del /Q "%BACKUP_DIR%\*.cmd" 2>nul
+        copy "!PRESET_FILE!" "%BACKUP_DIR%\strategy!PRESET!.cmd" >nul 2>&1
+        
+        powershell -Command "Start-Process -Verb RunAs -FilePath '!PRESET_FILE!' -WindowStyle Hidden -Wait"
+        
+        set "CURRENT_PRESET=!PRESET!"
+    )
+    
+    goto PRESETS_MENU
+
 :DISABLE_AUTO_UPDATE
-    call :PRINT_HEADER
     call :PRINT_SECTION "Выключение автообновления"
     
     call :REMOVE_AUTOUPDATE_TASK
-    pause
+
     goto MENU_MAIN
 
 :ENABLE_AUTO_UPDATE
-    call :PRINT_HEADER
     call :PRINT_SECTION "Включение автообновления"
     
     call :SETUP_AUTO_UPDATE
@@ -369,11 +425,10 @@ exit /b 0
     ) else (
         call :PRINT_SUCCESS "Автообновление настроено (проверка каждые 10 минут)"
     )
-    pause
+
     goto MENU_MAIN
 
 :UNINSTALL_KEEN_BYPASS
-    call :PRINT_HEADER
     call :PRINT_SECTION "Деинсталляция Keen Bypass"
     
     echo Остановка служб...
@@ -547,59 +602,45 @@ exit /b 0
     )
     exit /b 0
 
-:PRESET_SELECTION
-    echo.
-    echo ====================================================================================================
-    echo  Выберите пресет
-    echo ====================================================================================================
-    echo.
-    echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
-    echo.
-    echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
-    echo 3. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
-    echo.
-    echo 4. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 5. Пресет 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo.
-    echo 0. Вернуться в главное меню.
-    echo 00. Выход.
-    echo.
-    set /p PRESET_CHOICE="Выберите пресет: "
-
-    if "%PRESET_CHOICE%"=="1" set "PRESET=1" & goto APPLY_PRESET
-    if "%PRESET_CHOICE%"=="2" set "PRESET=2" & goto APPLY_PRESET
-    if "%PRESET_CHOICE%"=="3" set "PRESET=3" & goto APPLY_PRESET
-    if "%PRESET_CHOICE%"=="4" set "PRESET=4" & goto APPLY_PRESET
-    if "%PRESET_CHOICE%"=="5" set "PRESET=5" & goto APPLY_PRESET
-    if "%PRESET_CHOICE%"=="0" goto MENU_MAIN
-    if "%PRESET_CHOICE%"=="00" exit /b 0
-
-    call :PRINT_ERROR "Неверный выбор: %PRESET_CHOICE%"
-    pause
-    goto PRESET_SELECTION
-
 :APPLY_PRESET
-    call :PRINT_HEADER
-    call :PRINT_SECTION "Применение пресета %PRESET%"
-    
-    echo Остановка служб...
-    
-    call :STOP_SERVICE %SERVICE_NAME%
-    call :STOP_SERVICE %WINDIVERT_SERVICE%
-    timeout /t 2 >nul
-    
-    echo Запуск пресета %PRESET%...
     set "PRESET_FILE=%KEEN_BYPASS_DIR%\strategy%PRESET%.cmd"
-    cd /d "%KEEN_BYPASS_DIR%"
-    
-    echo Очистка предыдущих резервных копий...
-    del /Q "%BACKUP_DIR%\*.cmd" 2>nul
-    
-    echo Создание резервной копии новой стратегии...
-    copy "%PRESET_FILE%" "%BACKUP_DIR%\strategy%PRESET%.cmd" >nul 2>&1
-    
-    powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -Wait"
+    if exist "%PRESET_FILE%" (
+        cd /d "%KEEN_BYPASS_DIR%"
+        
+        del /Q "%BACKUP_DIR%\*.cmd" 2>nul
+        copy "%PRESET_FILE%" "%BACKUP_DIR%\strategy%PRESET%.cmd" >nul 2>&1
+        
+        powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -WindowStyle Hidden -Wait"
+    )
     goto FINAL_SETUP
+
+:GET_CURRENT_STATUS
+    set "CURRENT_PRESET=N/A"
+    if exist "%BACKUP_DIR%" (
+        for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
+            set "FILENAME=%%~nf"
+            for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "CURRENT_PRESET=%%n"
+        )
+    )
+    
+    set "WINWS_STATUS=Не установлен"
+    sc query %SERVICE_NAME% >nul 2>&1
+    if !errorlevel! equ 0 (
+        net start | find /i "%SERVICE_NAME%" >nul 2>&1
+        if !errorlevel! equ 0 (
+            set "WINWS_STATUS=Запущен"
+        ) else (
+            set "WINWS_STATUS=Остановлен"
+        )
+    )
+    
+    set "WINDIVERT_STATUS=Не установлен"
+    sc query %WINDIVERT_SERVICE% >nul 2>&1
+    if !errorlevel! equ 0 (
+        set "WINDIVERT_STATUS=Установлен"
+    )
+    
+    exit /b 0
 
 :FINAL_SETUP
     echo.
