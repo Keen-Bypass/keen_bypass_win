@@ -59,3 +59,4 @@ exit /b %errorlevel%
     set /p REMOTE_VERSION= < "%REMOTE_VERSION_FILE%"
     del /q "%REMOTE_VERSION_FILE%" >nul 2>&1
     exit /b 0
+    

@@ -20,6 +20,4 @@ sc delete %1
 sc create %1 binPath= "\"C:\ProgramData\keen_bypass_win\zapret-win-bundle-master\zapret-winws\winws.exe\" %ARGS%" DisplayName= "zapret DPI bypass : %1" start= auto
 sc description %1 "zapret DPI bypass software"
 
-
 sc start %1
-

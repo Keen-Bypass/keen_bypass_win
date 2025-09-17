@@ -21,4 +21,3 @@ sc create %1 binPath= "\"C:\ProgramData\keen_bypass_win\zapret-win-bundle-master
 sc description %1 "zapret DPI bypass software"
 
 sc start %1
-

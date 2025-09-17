@@ -16,6 +16,7 @@ set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "BLOCKCHECK_PATH=%ZAPRET_DIR%\blockcheck\blockcheck.cmd"
 set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
+set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com rutracker.org i.instagram.com facebook.com discordapp.com google.ru"
 
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
@@ -48,6 +49,8 @@ echo.
 echo 7.  Выключить автообновление.
 echo 8.  Включить автообновление.
 echo.
+echo 9.  Быстрая проверка доменов.
+echo.
 echo 99. Деинсталлировать Keen Bypass.
 echo 00. Выход.
 echo.
@@ -61,6 +64,7 @@ if "%CHOICE%"=="5" goto STOP_ZAPRET
 if "%CHOICE%"=="6" goto START_ZAPRET
 if "%CHOICE%"=="7" goto DISABLE_AUTO_UPDATE
 if "%CHOICE%"=="8" goto ENABLE_AUTO_UPDATE
+if "%CHOICE%"=="9" goto FAST_DOMAIN_CHECK_MENU
 if "%CHOICE%"=="99" goto UNINSTALL_KEEN_BYPASS
 if "%CHOICE%"=="00" exit /b 0
 
@@ -120,7 +124,7 @@ exit /b 0
     del "%TEMP%\provider.txt" 2>nul
 
     echo Провайдер:            !PROVIDER_INFO!
-
+    
     call :PRINT_SECTION "Система"
     
     for /f "tokens=*" %%i in ('powershell -Command "Get-WmiObject -Class Win32_OperatingSystem | Select-Object -ExpandProperty Caption"') do set "OS_NAME=%%i"
@@ -182,6 +186,74 @@ exit /b 0
         )
     )
     echo Текущий пресет:       !CURRENT_PRESET!
+
+    call :PRINT_SECTION "Быстрый результат по ключевым доменам"
+
+    echo.
+    set "COUNT=0"
+    for %%D in (%DOMAIN_LIST%) do (
+        set /a COUNT+=1
+        if !COUNT! leq 2 (
+            call :CHECK_DOMAIN "%%D"
+        )
+    )
+    
+    endlocal
+    exit /b 0
+
+:FAST_DOMAIN_CHECK
+    setlocal enabledelayedexpansion
+    call :PRINT_SECTION "Быстрая проверка всех доменов"
+    
+    echo.
+    echo Проверяются домены: !DOMAIN_LIST!
+    echo.
+    
+    for %%D in (%DOMAIN_LIST%) do (
+        call :CHECK_DOMAIN "%%D"
+    )
+    
+    endlocal
+    exit /b 0
+
+:FAST_DOMAIN_CHECK_MENU
+    call :PRINT_HEADER
+    call :FAST_DOMAIN_CHECK
+    echo.
+    pause
+    goto MENU_MAIN
+
+:CHECK_DOMAIN
+    setlocal
+    set "DOMAIN=%~1"
+    set "PING_ICON=[FAIL]"
+    set "TLS_ICON=[FAIL]"
+    
+    rem Проверка PING
+    ping -n 1 -w 1000 "!DOMAIN!" >nul 2>&1
+    if !errorlevel! equ 0 set "PING_ICON=[OK]"
+    
+    rem Проверка TLS (используем curl если доступен)
+    where curl >nul 2>&1
+    if !errorlevel! equ 0 (
+        curl --tls-max 1.2 --connect-timeout 1 -sSL "https://!DOMAIN!" -o nul >nul 2>&1
+        if !errorlevel! equ 0 set "TLS_ICON=[OK]"
+    ) else (
+        rem Альтернативная проверка через powershell если curl нет
+        powershell -Command "$ProgressPreference='SilentlyContinue'; try {[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; $request = [System.Net.WebRequest]::Create('https://!DOMAIN!'); $request.Timeout = 1000; $response = $request.GetResponse(); $response.Close(); exit 0} catch {exit 1}" >nul 2>&1
+        if !errorlevel! equ 0 set "TLS_ICON=[OK]"
+    )
+    
+    rem Форматирование вывода
+    set "DOMAIN_DISPLAY=!DOMAIN!"
+    if "!DOMAIN_DISPLAY:~50!" neq "" set "DOMAIN_DISPLAY=!DOMAIN_DISPLAY:~0,47!..."
+    
+    set "SPACES="
+    for /l %%i in (1,1,55) do set "SPACES=!SPACES! "
+    set "DOMAIN_DISPLAY=!DOMAIN!!SPACES!"
+    set "DOMAIN_DISPLAY=!DOMAIN_DISPLAY:~0,55!"
+    
+    echo !DOMAIN_DISPLAY! : !PING_ICON! PING ^| !TLS_ICON! TLS 1.2
     
     endlocal
     exit /b 0
@@ -356,7 +428,16 @@ exit /b 0
     echo.
     echo Статус WINWS:         !WINWS_STATUS!
     echo Статус WINDIVERT:     !WINDIVERT_STATUS!
-    echo Текущий пресет:       !CURRENT_PRESET!
+    echo Текущий пресet:       !CURRENT_PRESET!
+    echo.
+
+    set "COUNT=0"
+    for %%D in (%DOMAIN_LIST%) do (
+        set /a COUNT+=1
+        if !COUNT! leq 2 (
+            call :CHECK_DOMAIN "%%D"
+        )
+    )
     echo.
     
     :PRESET_SELECTION
@@ -370,7 +451,7 @@ exit /b 0
     echo 3. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
     echo.
     echo 4. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 5. Пресет 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 5. Пресet 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
