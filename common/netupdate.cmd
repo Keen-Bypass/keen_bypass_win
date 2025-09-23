@@ -72,9 +72,6 @@ if errorlevel 1 (
 echo Настройка автообновления...
 call :SETUP_AUTO_UPDATE >nul 2>&1
 
-echo Очистка старых каталогов...
-call :CLEANUP_OLD >nul 2>&1
-
 call :SAVE_VERSION_INFO
 call :CLEANUP_TEMP_FILES
 
@@ -289,36 +286,4 @@ exit /b 0
     if exist "%ARCHIVE%" (
         del /q "%ARCHIVE%" >nul 2>&1
     )
-    exit /b 0
-
-:: ============ МИГРАЦИЯ СТАРЫХ КАТАЛОГОВ ============
-
-:CLEANUP_OLD
-    set "OLD_TARGET_DIR=C:\keen_bypass_win"
-    if exist "!OLD_TARGET_DIR!" (
-        powershell -Command "Get-Process | Where-Object { $_.Path -like '!OLD_TARGET_DIR!\*' } | Stop-Process -Force -ErrorAction SilentlyContinue" >nul 2>&1
-        timeout /t 2 >nul
-        rmdir /s /q "!OLD_TARGET_DIR!" 2>nul
-    )
-    
-    set "DOCUMENTS_PATH="
-    for /f "skip=2 tokens=2*" %%i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" /v "Personal" 2^>nul') do (
-        set "DOCUMENTS_PATH=%%j"
-    )
-    
-    if "!DOCUMENTS_PATH!"=="" (
-        for /f "tokens=2*" %%i in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" /v "Personal" 2^>nul') do (
-            set "DOCUMENTS_PATH=%%j"
-        )
-    )
-    
-    if "!DOCUMENTS_PATH!"=="" (
-        set "DOCUMENTS_PATH=%USERPROFILE%\Documents"
-    )
-    
-    set "OLD_DOCUMENTS_DIR=!DOCUMENTS_PATH!\keen_bypass_win"
-    if exist "!OLD_DOCUMENTS_DIR!" (
-        rmdir /s /q "!OLD_DOCUMENTS_DIR!" 2>nul
-    )
-    
     exit /b 0
