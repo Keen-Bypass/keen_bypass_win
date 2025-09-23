@@ -112,7 +112,7 @@ exit /b 0
 ::    if exist "%BACKUP_DIR%" (
 ::        for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
 ::            set "FILENAME=%%~nf"
-::            for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "PRESET=%%n"
+::            set "PRESET=!FILENAME:preset=!"
 ::        )
 ::    )
     exit /b 0

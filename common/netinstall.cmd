@@ -182,7 +182,7 @@ exit /b 0
     if exist "%BACKUP_DIR%" (
         for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
             set "FILENAME=%%~nf"
-            for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "CURRENT_PRESET=%%n"
+            set "CURRENT_PRESET=!FILENAME:preset=!"
         )
     )
     echo Текущий пресет:       !CURRENT_PRESET!
@@ -428,7 +428,7 @@ exit /b 0
     echo.
     echo Статус WINWS:         !WINWS_STATUS!
     echo Статус WINDIVERT:     !WINDIVERT_STATUS!
-    echo Текущий пресet:       !CURRENT_PRESET!
+    echo Текущий пресет:       !CURRENT_PRESET!
     echo.
 
     set "COUNT=0"
@@ -451,7 +451,7 @@ exit /b 0
     echo 3. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
     echo.
     echo 4. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 5. Пресet 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 5. Пресет 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
@@ -470,7 +470,7 @@ exit /b 0
     pause
     goto PRESET_SELECTION
 
-    :APPLY_PRESET_SILENT
+:APPLY_PRESET_SILENT
     echo Применяю пресет !PRESET!...
     net stop %SERVICE_NAME% >nul 2>&1
     net stop %WINDIVERT_SERVICE% >nul 2>&1
@@ -481,6 +481,7 @@ exit /b 0
         cd /d "%KEEN_BYPASS_DIR%"
         
         del /Q "%BACKUP_DIR%\*.cmd" 2>nul
+        call :CLEANUP_OLD_STRATEGY_FILES
         copy "!PRESET_FILE!" "%BACKUP_DIR%\preset!PRESET!.cmd" >nul 2>&1
         
         powershell -Command "Start-Process -Verb RunAs -FilePath '!PRESET_FILE!' -WindowStyle Hidden -Wait"
@@ -520,6 +521,7 @@ exit /b 0
     call :REMOVE_AUTOUPDATE_TASK
     echo Удаление файлов...
     powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
+    call :CLEANUP_OLD_STRATEGY_FILES
     timeout /t 2 >nul
     rmdir /s /q "%TARGET_DIR%" 2>nul
     
@@ -689,6 +691,7 @@ exit /b 0
         cd /d "%KEEN_BYPASS_DIR%"
         
         del /Q "%BACKUP_DIR%\*.cmd" 2>nul
+        call :CLEANUP_OLD_STRATEGY_FILES
         copy "%PRESET_FILE%" "%BACKUP_DIR%\preset%PRESET%.cmd" >nul 2>&1
         
         powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -WindowStyle Hidden -Wait"
@@ -700,7 +703,7 @@ exit /b 0
     if exist "%BACKUP_DIR%" (
         for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
             set "FILENAME=%%~nf"
-            for /f "tokens=2 delims=y" %%n in ("!FILENAME!") do set "CURRENT_PRESET=%%n"
+            set "CURRENT_PRESET=!FILENAME:preset=!"
         )
     )
     
@@ -742,6 +745,18 @@ exit /b 0
     echo Автоматический возврат в главное меню...
     timeout /t 2 >nul
     goto MENU_MAIN
+
+:CLEANUP_OLD_STRATEGY_FILES
+    if exist "%BACKUP_DIR%" (
+        del /Q "%BACKUP_DIR%\strategy*.cmd" 2>nul
+        if errorlevel 0 (
+            call :PRINT_INFO "Старые файлы strategy удалены из бэкапа"
+        )
+    )
+    if exist "%KEEN_BYPASS_DIR%" (
+        del /Q "%KEEN_BYPASS_DIR%\strategy*.cmd" 2>nul
+    )
+    exit /b 0
 
 if "%~1"=="" goto MENU_MAIN
 exit /b 0
