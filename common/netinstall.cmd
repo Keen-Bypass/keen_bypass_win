@@ -476,12 +476,12 @@ exit /b 0
     net stop %WINDIVERT_SERVICE% >nul 2>&1
     timeout /t 1 >nul
     
-    set "PRESET_FILE=%KEEN_BYPASS_DIR%\strategy!PRESET!.cmd"
+    set "PRESET_FILE=%KEEN_BYPASS_DIR%\preset!PRESET!.cmd"
     if exist "!PRESET_FILE!" (
         cd /d "%KEEN_BYPASS_DIR%"
         
         del /Q "%BACKUP_DIR%\*.cmd" 2>nul
-        copy "!PRESET_FILE!" "%BACKUP_DIR%\strategy!PRESET!.cmd" >nul 2>&1
+        copy "!PRESET_FILE!" "%BACKUP_DIR%\preset!PRESET!.cmd" >nul 2>&1
         
         powershell -Command "Start-Process -Verb RunAs -FilePath '!PRESET_FILE!' -WindowStyle Hidden -Wait"
         
@@ -655,11 +655,11 @@ exit /b 0
     mkdir "%KEEN_BYPASS_DIR%" >nul 2>&1
     mkdir "%KEEN_BYPASS_DIR%\files" >nul 2>&1
     
-    set "FILES[1]=strategy1.cmd"
-    set "FILES[2]=strategy2.cmd"
-    set "FILES[3]=strategy3.cmd"
-    set "FILES[4]=strategy4.cmd"
-    set "FILES[5]=strategy5.cmd"
+    set "FILES[1]=preset1.cmd"
+    set "FILES[2]=preset2.cmd"
+    set "FILES[3]=preset3.cmd"
+    set "FILES[4]=preset4.cmd"
+    set "FILES[5]=preset5.cmd"
     set "FILES[6]=hosts-antifilter.txt"
     set "FILES[7]=hosts-rkn.txt"
     set "FILES[8]=hosts-exclude.txt"
@@ -684,12 +684,12 @@ exit /b 0
     exit /b 0
 
 :APPLY_PRESET
-    set "PRESET_FILE=%KEEN_BYPASS_DIR%\strategy%PRESET%.cmd"
+    set "PRESET_FILE=%KEEN_BYPASS_DIR%\preset%PRESET%.cmd"
     if exist "%PRESET_FILE%" (
         cd /d "%KEEN_BYPASS_DIR%"
         
         del /Q "%BACKUP_DIR%\*.cmd" 2>nul
-        copy "%PRESET_FILE%" "%BACKUP_DIR%\strategy%PRESET%.cmd" >nul 2>&1
+        copy "%PRESET_FILE%" "%BACKUP_DIR%\preset%PRESET%.cmd" >nul 2>&1
         
         powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -WindowStyle Hidden -Wait"
     )

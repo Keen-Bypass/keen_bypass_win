@@ -10,7 +10,6 @@ set ARGS=^
 --filter-udp=1024-65535 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-repeats=6
 
 call :srvinst winws1
-set ARGS=--wf-l3=ipv4,ipv6 --wf-udp=443 --dpi-desync=fake 
 rem call :srvinst winws2
 goto :eof
 
@@ -19,5 +18,4 @@ net stop %1
 sc delete %1
 sc create %1 binPath= "\"C:\ProgramData\keen_bypass_win\zapret-win-bundle-master\zapret-winws\winws.exe\" %ARGS%" DisplayName= "zapret DPI bypass : %1" start= auto
 sc description %1 "zapret DPI bypass software"
-
 sc start %1
