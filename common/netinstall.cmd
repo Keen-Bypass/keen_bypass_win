@@ -106,34 +106,42 @@ exit /b 0
 echo [ПРЕДУПРЕЖДЕНИЕ] %~1
 exit /b 0
 
+:PRINT_PROGRESS
+echo [ПРОЦЕСС] %~1
+exit /b 0
+
+:PRINT_DOWNLOAD
+echo [ЗАГРУЗКА] %~1
+exit /b 0
+
 :GET_SYSTEM_INFO
-    setlocal
-    echo.
-    echo ====================================================================================================
-    echo                                 %PROJECT_NAME% v%PROJECT_VERSION%
-    echo ====================================================================================================
+    setlocal enabledelayedexpansion
     
-    call :PRINT_SECTION "Сеть"
-
-    set "IP_INFO_FILE=%TEMP%\ip_info.txt"
+    :: СБОР ИНФОРМАЦИИ О СИСТЕМЕ
+    
+    :: СЕТЕВАЯ ИНФОРМАЦИЯ
     set "PROVIDER_INFO=Не определено"
-
-    powershell -Command "$ProgressPreference='SilentlyContinue'; try {$response = Invoke-RestMethod -Uri 'https://ipinfo.io/json'; $response.org + ' | ' + $response.city} catch {'Не доступно'}" > "%TEMP%\provider.txt" 2>nul
-
-    set /p PROVIDER_INFO=<"%TEMP%\provider.txt" 2>nul
-    del "%TEMP%\provider.txt" 2>nul
-
-    echo Провайдер:            !PROVIDER_INFO!
+    set "CITY_INFO=Не определено"
     
-    call :PRINT_SECTION "Система"
+    :: Получение информации о провайдере и городе через ipinfo.io
+    powershell -Command "$ProgressPreference='SilentlyContinue'; try {$response = Invoke-RestMethod -Uri 'https://ipinfo.io/json'; $response.org + '|' + $response.city} catch {'Не доступно|Не доступно'}" > "%TEMP%\provider.txt" 2>nul
     
+    if exist "%TEMP%\provider.txt" (
+        for /f "tokens=1,2 delims=|" %%a in (%TEMP%\provider.txt) do (
+            set "PROVIDER_INFO=%%a"
+            set "CITY_INFO=%%b"
+        )
+        del "%TEMP%\provider.txt" 2>nul
+    )
+    
+    :: СИСТЕМНАЯ ИНФОРМАЦИЯ
+    :: Получение названия операционной системы
     for /f "tokens=*" %%i in ('powershell -Command "Get-WmiObject -Class Win32_OperatingSystem | Select-Object -ExpandProperty Caption"') do set "OS_NAME=%%i"
-    echo ОС:                   !OS_NAME!
     
-    call :PRINT_SECTION "DPI bypass multi platform"
-    
+    :: ИНФОРМАЦИЯ О KEEN BYPASS
     set "GITHUB_VERSION=!PROJECT_VERSION!"
     
+    :: Проверка установки Keen Bypass
     set "KB_STATUS=Не установлен"
     set "KB_VERSION=N/A"
     set "KB_DATE=N/A"
@@ -141,43 +149,32 @@ exit /b 0
     if exist "%VERSION_FILE%" (
         set "KB_STATUS=Установлен"
         for /f "delims=" %%i in ('type "%VERSION_FILE%" 2^>nul') do set "KB_VERSION=%%i"
-        
         for /f "tokens=1,2,3,4,5" %%a in ('dir "%VERSION_FILE%" /TC ^| find /i "version.txt"') do (
             if "%%c" neq "" set "KB_DATE=%%a"
         )
     )
     
-    echo Keen Bypass:          !KB_STATUS! ^| !KB_VERSION! ^| !KB_DATE!     /     Доступен на GitHub: !GITHUB_VERSION!
-    
+    :: СТАТУС АВТООБНОВЛЕНИЯ
     set "AUTOUPDATE_STATUS=Не установлен"
     if exist "%TARGET_DIR%" (
         set "AUTOUPDATE_STATUS=Не активно"
         schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
-        if !errorlevel! equ 0 (
-            set "AUTOUPDATE_STATUS=Активно"
-        )
+        if !errorlevel! equ 0 set "AUTOUPDATE_STATUS=Активно"
     )
-    echo Автообновление:       !AUTOUPDATE_STATUS!
     
+    :: СТАТУС СЛУЖБ
     set "WINWS_STATUS=Не установлен"
     sc query %SERVICE_NAME% >nul 2>&1
     if !errorlevel! equ 0 (
         net start | find /i "%SERVICE_NAME%" >nul 2>&1
-        if !errorlevel! equ 0 (
-            set "WINWS_STATUS=Запущен"
-        ) else (
-            set "WINWS_STATUS=Остановлен"
-        )
+        if !errorlevel! equ 0 (set "WINWS_STATUS=Запущен") else (set "WINWS_STATUS=Остановлен")
     )
-    echo Статус WINWS:         !WINWS_STATUS!
     
     set "WINDIVERT_STATUS=Не установлен"
     sc query %WINDIVERT_SERVICE% >nul 2>&1
-    if !errorlevel! equ 0 (
-        set "WINDIVERT_STATUS=Установлен"
-    )
-    echo Статус WINDIVERT:     !WINDIVERT_STATUS!
-
+    if !errorlevel! equ 0 set "WINDIVERT_STATUS=Установлен"
+    
+    :: ТЕКУЩИЙ ПРЕСЕТ
     set "CURRENT_PRESET=N/A"
     if exist "%BACKUP_DIR%" (
         for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
@@ -185,10 +182,32 @@ exit /b 0
             set "CURRENT_PRESET=!FILENAME:preset=!"
         )
     )
+    
+    :: ФОРМАТИРОВАННЫЙ ВЫВОД ИНФОРМАЦИИ
+    
+    echo.
+    echo ====================================================================================================
+    echo                                 %PROJECT_NAME% v%PROJECT_VERSION%
+    echo ====================================================================================================
+    
+    :: ВЫВОД СЕТЕВОЙ ИНФОРМАЦИИ
+    call :PRINT_SECTION "Сеть"
+    echo Провайдер:            !PROVIDER_INFO! ^| !CITY_INFO!
+    
+    :: ВЫВОД СИСТЕМНОЙ ИНФОРМАЦИИ  
+    call :PRINT_SECTION "Система"
+    echo ОС:                   !OS_NAME!
+    
+    :: ВЫВОД ИНФОРМАЦИИ О DPI BYPASS
+    call :PRINT_SECTION "DPI bypass multi platform"
+    echo Keen Bypass:          !KB_STATUS! ^| !KB_VERSION! ^| !KB_DATE!     /     Доступен на GitHub: !GITHUB_VERSION!
+    echo Автообновление:       !AUTOUPDATE_STATUS!
+    echo Статус WINWS:         !WINWS_STATUS!
+    echo Статус WINDIVERT:     !WINDIVERT_STATUS!
     echo Текущий пресет:       !CURRENT_PRESET!
-
+    
+    :: ВЫВОД ПРОВЕРКИ ДОМЕНОВ
     call :PRINT_SECTION "Быстрый результат по ключевым доменам"
-
     echo.
     set "COUNT=0"
     for %%D in (%DOMAIN_LIST%) do (
@@ -229,22 +248,18 @@ exit /b 0
     set "PING_ICON=[FAIL]"
     set "TLS_ICON=[FAIL]"
     
-    rem Проверка PING
     ping -n 1 -w 1000 "!DOMAIN!" >nul 2>&1
-    if !errorlevel! equ 0 set "PING_ICON=[OK]"
+    if !errorlevel! equ 0 set "PING_ICON=[ OK ]"
     
-    rem Проверка TLS (используем curl если доступен)
     where curl >nul 2>&1
     if !errorlevel! equ 0 (
         curl --tls-max 1.2 --connect-timeout 1 -sSL "https://!DOMAIN!" -o nul >nul 2>&1
-        if !errorlevel! equ 0 set "TLS_ICON=[OK]"
+        if !errorlevel! equ 0 set "TLS_ICON=[ OK ]"
     ) else (
-        rem Альтернативная проверка через powershell если curl нет
         powershell -Command "$ProgressPreference='SilentlyContinue'; try {[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; $request = [System.Net.WebRequest]::Create('https://!DOMAIN!'); $request.Timeout = 1000; $response = $request.GetResponse(); $response.Close(); exit 0} catch {exit 1}" >nul 2>&1
-        if !errorlevel! equ 0 set "TLS_ICON=[OK]"
+        if !errorlevel! equ 0 set "TLS_ICON=[ OK ]"
     )
     
-    rem Форматирование вывода
     set "DOMAIN_DISPLAY=!DOMAIN!"
     if "!DOMAIN_DISPLAY:~50!" neq "" set "DOMAIN_DISPLAY=!DOMAIN_DISPLAY:~0,47!..."
     
@@ -271,13 +286,14 @@ exit /b 0
 
 :GET_PROJECT_VERSION
     set "VERSION_FILE_TMP=%TEMP%\keen_version.txt"
-    echo Получение актуальной версии...
+    call :PRINT_PROGRESS "Получение актуальной версии..."
     
     powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE_TMP%')" >nul 2>&1
 
     if exist "%VERSION_FILE_TMP%" (
         for /f "delims=" %%i in ('type "%VERSION_FILE_TMP%" ^| powershell -Command "$input.Trim()"') do set "PROJECT_VERSION=%%i"
         del /q "%VERSION_FILE_TMP%" >nul 2>&1
+        call :PRINT_SUCCESS "Версия получена: %PROJECT_VERSION%"
         exit /b 0
     ) else (
         exit /b 1
@@ -303,22 +319,29 @@ exit /b 0
     exit /b 0
 
 :STOP_SERVICE
+    call :PRINT_PROGRESS "Остановка службы %1..."
     net stop %1 >nul 2>&1
     sc delete %1 >nul 2>&1
     reg delete "HKLM\SYSTEM\CurrentControlSet\Services\%1" /f >nul 2>&1
+    call :PRINT_SUCCESS "Служба %1 остановлена и удалена"
     exit /b 0
 
 :STOP_SERVICE_ONLY
+    call :PRINT_PROGRESS "Остановка службы %1..."
     net stop %1 >nul 2>&1
+    call :PRINT_SUCCESS "Служба %1 остановлена"
     exit /b 0
 
 :START_SERVICE
+    call :PRINT_PROGRESS "Запуск службы %1..."
     sc start %1 >nul 2>&1
+    call :PRINT_SUCCESS "Служба %1 запущена"
     exit /b 0
 
 :REMOVE_AUTOUPDATE_TASK
     schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
     if !errorlevel! equ 0 (
+        call :PRINT_PROGRESS "Удаление задачи автообновления..."
         schtasks /Delete /TN "%AUTOUPDATE_TASK%" /F >nul 2>&1
         call :PRINT_SUCCESS "Задача автообновления удалена"
     ) else (
@@ -330,20 +353,28 @@ exit /b 0
     set "INTERVAL=%~1"
     if "!INTERVAL!"=="" set "INTERVAL=5"
     
+    call :PRINT_PROGRESS "Создание задачи автообновления (интервал: !INTERVAL! минут)..."
     schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO !INTERVAL! ^
         /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_DIR%\autoupdate.cmd' -ArgumentList '-silent'\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
     
     if !errorlevel! neq 0 exit /b 1
+    call :PRINT_SUCCESS "Задача автообновления создана"
     exit /b 0
 
 :DOWNLOAD_FILE
     set "URL=%~1"
     set "DEST=%~2"
     
+    call :PRINT_DOWNLOAD "%~2"
     powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%URL%', '%DEST%')" >nul 2>&1
-    if exist "!DEST!" exit /b 0
-    exit /b 1
+    if exist "!DEST!" (
+        call :PRINT_SUCCESS "Файл загружен: %~2"
+        exit /b 0
+    ) else (
+        call :PRINT_ERROR "Ошибка загрузки: %~2"
+        exit /b 1
+    )
 
 :GET_DOCUMENTS_FOLDER
     for /f "usebackq" %%i in (`powershell -Command "[Environment]::GetFolderPath('MyDocuments')"`) do (
@@ -381,14 +412,14 @@ exit /b 0
         goto MENU_MAIN
     )
     
-    echo Останавливаю Zapret для проверки блокировок...
+    call :PRINT_PROGRESS "Останавливаю Zapret для проверки блокировок..."
     call :STOP_SERVICE_ONLY %SERVICE_NAME%
     call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
     timeout /t 2 >nul
     call :PRINT_SUCCESS "Zapret остановлен"
     
     echo.
-    echo Запуск blockcheck...
+    call :PRINT_PROGRESS "Запуск blockcheck..."
     cd /d "%ZAPRET_DIR%\blockcheck"
     call "%BLOCKCHECK_PATH%"
 
@@ -397,9 +428,7 @@ exit /b 0
 :STOP_ZAPRET
     call :PRINT_SECTION "Остановка Zapret"
     
-    echo Остановка службы %SERVICE_NAME%...
     call :STOP_SERVICE_ONLY %SERVICE_NAME%
-    echo Остановка службы %WINDIVERT_SERVICE%...
     call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
     call :PRINT_SUCCESS "Службы остановлены"
 
@@ -408,9 +437,7 @@ exit /b 0
 :START_ZAPRET
     call :PRINT_SECTION "Запуск Zapret"
     
-    echo Запуск службы %SERVICE_NAME%...
     call :START_SERVICE %SERVICE_NAME%
-    echo Запуск службы %WINDIVERT_SERVICE%...
     call :START_SERVICE %WINDIVERT_SERVICE%
     call :PRINT_SUCCESS "Службы запущены"
 
@@ -471,7 +498,7 @@ exit /b 0
     goto PRESET_SELECTION
 
 :APPLY_PRESET_SILENT
-    echo Применяю пресет !PRESET!...
+    call :PRINT_PROGRESS "Применяю пресет !PRESET!..."
     net stop %SERVICE_NAME% >nul 2>&1
     net stop %WINDIVERT_SERVICE% >nul 2>&1
     timeout /t 1 >nul
@@ -487,6 +514,9 @@ exit /b 0
         powershell -Command "Start-Process -Verb RunAs -FilePath '!PRESET_FILE!' -WindowStyle Hidden -Wait"
         
         set "CURRENT_PRESET=!PRESET!"
+        call :PRINT_SUCCESS "Пресет !PRESET! применен"
+    ) else (
+        call :PRINT_ERROR "Файл пресета не найден: !PRESET_FILE!"
     )
     
     goto PRESETS_MENU
@@ -513,13 +543,14 @@ exit /b 0
 :UNINSTALL_KEEN_BYPASS
     call :PRINT_SECTION "Деинсталляция Keen Bypass"
     
-    echo Остановка служб...
+    call :PRINT_PROGRESS "Остановка служб..."
     call :STOP_SERVICE %SERVICE_NAME%
     call :STOP_SERVICE %WINDIVERT_SERVICE%
     
-    echo Удаление автообновления...
+    call :PRINT_PROGRESS "Удаление автообновления..."
     call :REMOVE_AUTOUPDATE_TASK
-    echo Удаление файлов...
+    
+    call :PRINT_PROGRESS "Удаление файлов..."
     powershell -Command "Get-Process | Where-Object { $_.Path -like '%TARGET_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
     call :CLEANUP_OLD_STRATEGY_FILES
     timeout /t 2 >nul
@@ -556,14 +587,14 @@ exit /b 0
     if !SERVICE_EXISTS! equ 1 call :STOP_SERVICE %SERVICE_NAME%
     if !WINDIVERT_EXISTS! equ 1 call :STOP_SERVICE %WINDIVERT_SERVICE%
     
-    echo Остановка процессов и удаление папок keen_bypass и zapret...
+    call :PRINT_PROGRESS "Остановка процессов и удаление папок keen_bypass и zapret..."
     
     if exist "%KEEN_BYPASS_DIR%" (
         powershell -Command "Get-Process | Where-Object { $_.Path -like '%KEEN_BYPASS_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
         timeout /t 2 >nul
         rmdir /s /q "%KEEN_BYPASS_DIR%" 2>nul
         if not exist "%KEEN_BYPASS_DIR%" (
-            echo [УСПЕХ] Папка keen_bypass удалена
+            call :PRINT_SUCCESS "Папка keen_bypass удалена"
         )
     )
     
@@ -572,7 +603,7 @@ exit /b 0
         timeout /t 2 >nul
         rmdir /s /q "%ZAPRET_DIR%" 2>nul
         if not exist "%ZAPRET_DIR%" (
-            echo [УСПЕХ] Папка zapret-win-bundle-master удалена
+            call :PRINT_SUCCESS "Папка zapret-win-bundle-master удалена"
         )
     )
 
@@ -583,6 +614,7 @@ exit /b 0
     if not exist "%AUTOUPDATE_DIR%" mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
     if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%" >nul 2>&1
     if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%" >nul 2>&1
+    call :PRINT_SUCCESS "Структура папок создана"
 
     call :PRINT_SECTION "Настройка автообновления"
     call :SETUP_AUTO_UPDATE
@@ -611,28 +643,28 @@ exit /b 0
 :SETUP_AUTO_UPDATE
     set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
     
-    echo Проверка существующей задачи...
+    call :PRINT_PROGRESS "Проверка существующей задачи..."
     call :REMOVE_AUTOUPDATE_TASK >nul
     
-    echo Загрузка скрипта автообновления...
+    call :PRINT_PROGRESS "Загрузка скрипта автообновления..."
     call :DOWNLOAD_FILE "!GITHUB_URL!" "%AUTOUPDATE_DIR%\autoupdate.cmd"
     if errorlevel 1 exit /b 1
     
-    echo Создание задачи...
+    call :PRINT_PROGRESS "Создание задачи..."
     call :CREATE_AUTOUPDATE_TASK 10
     exit /b !errorlevel!
 
 :DOWNLOAD_AND_EXTRACT
     set "ARCHIVE=%TEMP%\master.zip"
     
-    echo Загрузка Zapret...
+    call :PRINT_PROGRESS "Загрузка Zapret..."
     call :DOWNLOAD_FILE "https://github.com/nikrays/zapret-win-bundle/archive/refs/heads/master.zip" "%ARCHIVE%"
     if errorlevel 1 (
-        call :PRINT_ERROR "Не удалось загрузить"
+        call :PRINT_ERROR "Не удалось загрузить Zapret"
         exit /b 1
     )
 
-    echo Распаковка...
+    call :PRINT_PROGRESS "Распаковка архива..."
     mkdir "%TARGET_DIR%" >nul 2>&1
     powershell -Command "Expand-Archive -Path '%ARCHIVE%' -DestinationPath '%TARGET_DIR%' -Force"
     
@@ -643,10 +675,10 @@ exit /b 0
     )
     
     if exist "%ZAPRET_DIR%" (
-        call :PRINT_SUCCESS "Установка завершена"
+        call :PRINT_SUCCESS "Установка Zapret завершена"
         exit /b 0
     ) else (
-        call :PRINT_ERROR "Не удалось распаковать"
+        call :PRINT_ERROR "Не удалось распаковать архив"
         exit /b 1
     )
 
@@ -695,6 +727,7 @@ exit /b 0
         copy "%PRESET_FILE%" "%BACKUP_DIR%\preset%PRESET%.cmd" >nul 2>&1
         
         powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -WindowStyle Hidden -Wait"
+        call :PRINT_SUCCESS "Пресет %PRESET% применен"
     )
     goto FINAL_SETUP
 
@@ -732,31 +765,26 @@ exit /b 0
     echo                                   УСТАНОВКА УСПЕШНО ЗАВЕРШЕНА!
     echo ====================================================================================================
     
-    echo Сохранение версии Keen Bypass...
+    call :PRINT_PROGRESS "Сохранение версии Keen Bypass..."
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
     
-    if exist "%VERSION_FILE%" (
-        call :PRINT_SUCCESS "Отпечаток версии сохранен: %PROJECT_VERSION%"
-    ) else (
-        call :PRINT_ERROR "Не удалось записать файл версии"
-    )
+    call :PRINT_PROGRESS "Запуск служб..."
+    call :START_SERVICE %SERVICE_NAME%
+    call :START_SERVICE %WINDIVERT_SERVICE%
     
     echo.
-    echo Автоматический возврат в главное меню...
-    timeout /t 2 >nul
-    goto MENU_MAIN
-
-:CLEANUP_OLD_STRATEGY_FILES
-    if exist "%BACKUP_DIR%" (
-        del /Q "%BACKUP_DIR%\strategy*.cmd" 2>nul
-        if errorlevel 0 (
-            call :PRINT_INFO "Старые файлы strategy удалены из бэкапа"
-        )
-    )
-    if exist "%KEEN_BYPASS_DIR%" (
-        del /Q "%KEEN_BYPASS_DIR%\strategy*.cmd" 2>nul
-    )
+    echo ====================================================================================================
+    echo                              Keen Bypass готов к работе!
+    echo ====================================================================================================
+    echo.
+    pause
     exit /b 0
 
-if "%~1"=="" goto MENU_MAIN
+:CLEANUP_OLD_STRATEGY_FILES
+    del /Q "%ZAPRET_DIR%\config\*.txt" 2>nul
+    del /Q "%ZAPRET_DIR%\config\*.ipset" 2>nul
+    del /Q "%ZAPRET_DIR%\config\*.exe" 2>nul
+    exit /b 0
+
+:END
 exit /b 0
