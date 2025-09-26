@@ -245,19 +245,19 @@ exit /b 0
 :CHECK_DOMAIN
     setlocal
     set "DOMAIN=%~1"
-    set "PING_ICON=[✖]"
-    set "TLS_ICON=[✖]"
+    set "PING_ICON=[X]"
+    set "TLS_ICON=[X]"
     
     ping -n 1 -w 1000 "!DOMAIN!" >nul 2>&1
-    if !errorlevel! equ 0 set "PING_ICON=[✔]"
+    if !errorlevel! equ 0 set "PING_ICON=[V]"
     
     where curl >nul 2>&1
     if !errorlevel! equ 0 (
         curl --tls-max 1.2 --connect-timeout 1 -sSL "https://!DOMAIN!" -o nul >nul 2>&1
-        if !errorlevel! equ 0 set "TLS_ICON=[✔]"
+        if !errorlevel! equ 0 set "TLS_ICON=[V]"
     ) else (
         powershell -Command "$ProgressPreference='SilentlyContinue'; try {[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; $request = [System.Net.WebRequest]::Create('https://!DOMAIN!'); $request.Timeout = 1000; $response = $request.GetResponse(); $response.Close(); exit 0} catch {exit 1}" >nul 2>&1
-        if !errorlevel! equ 0 set "TLS_ICON=[✔]"
+        if !errorlevel! equ 0 set "TLS_ICON=[V]"
     )
     
     set "DOMAIN_DISPLAY=!DOMAIN!"
@@ -788,4 +788,5 @@ exit /b 0
 
 :END
 exit /b 0
+
 
