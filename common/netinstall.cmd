@@ -16,7 +16,7 @@ set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "BLOCKCHECK_PATH=%ZAPRET_DIR%\blockcheck\blockcheck.cmd"
 set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
-set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com rutracker.org www.youtube.com yt3.ggpht.com i.instagram.com facebook.com discordapp.com google.com yandex.ru"
+set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com bbc.com rutracker.org www.youtube.com yt3.ggpht.com i.instagram.com facebook.com discordapp.com google.com yandex.ru"
 
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
