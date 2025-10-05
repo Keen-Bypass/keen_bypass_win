@@ -105,7 +105,7 @@ exit /b 0
     exit /b 1
 
 :GET_CURRENT_PRESET
-    set "PRESET=4"
+    set "PRESET=1"
 ::    if exist "%BACKUP_DIR%" (
 ::        for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
 ::            set "FILENAME=%%~nf"
