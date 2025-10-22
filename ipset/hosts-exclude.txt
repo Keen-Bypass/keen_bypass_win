@@ -13,7 +13,6 @@ dns.google
 elschool.ru
 entware.net
 github.com
-github.dev
 githubusercontent.com
 gosuslugi.ru
 gov.ru
@@ -57,7 +56,6 @@ sh365.org
 app-measurement.com
 www.google.com
 fonts.gstatic.com
-filmix.life
 filmixapp.cyou
 cdnsqu.com
 ru

@@ -16,7 +16,7 @@ set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
 set "VERSION_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/VERSION"
 set "BLOCKCHECK_PATH=%ZAPRET_DIR%\blockcheck\blockcheck.cmd"
 set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
-set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com bbc.com rutracker.org www.youtube.com yt3.ggpht.com i.instagram.com facebook.com discordapp.com google.com yandex.ru"
+set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com www.youtube.com yt3.ggpht.com rutracker.org i.instagram.com facebook.com discordapp.com google.com yandex.ru"
 
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
@@ -472,13 +472,17 @@ exit /b 0
     echo  Выберите пресет
     echo ====================================================================================================
     echo.
-    echo 1. Пресет 1 (Обычный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo 1. Пресет 1 (skip - googlevideo, fake - HOSTLISTS).
     echo.
-    echo 2. Пресет 2 (Альтернативный, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
-    echo 3. Пресет 3 (Альтернативный2, листы HOSTLIST+AUTOHOSTLIST+HOSTLIST-EXCLUDE).
+    echo 2. Пресет 2 (multidisorder - googlevideo, fake - HOSTLISTS).
+    echo 3. Пресет 3 (fake - googlevideo, fake,hostfakesplit - HOSTLISTS).
+    echo 4. Пресет 4 (hostfakesplit - googlevideo, fake,hostfakesplit - HOSTLISTS).
+    echo 5. Пресет 5 (fake,hostfakesplit - googlevideo, fake,fakedsplit - HOSTLISTS).
+    echo 6. Пресет 6 (multisplit - googlevideo, fake - HOSTLISTS).
+    echo 7. Пресет 7 (multisplit - googlevideo, multisplit - HOSTLISTS).
     echo.
-    echo 4. Пресет 4 (Сложный, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
-    echo 5. Пресет 5 (Сложный2, листы HOSTLIST+AUTOHOSTLIST+IPSET-EXCLUDE RU GEO).
+    echo 8. Пресет 8 (wssize 1:6 - googlevideo, wssize 1:6 - HOSTLISTS, IPSET-EXCLUDE RU).
+    echo 9. Пресет 9 (wssize 1:6 - googlevideo, wssize 1:6 - HOSTLISTS, IPSET-EXCLUDE RU).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
@@ -490,6 +494,10 @@ exit /b 0
     if "!PRESET_CHOICE!"=="3" set "PRESET=3" & goto APPLY_PRESET_SILENT
     if "!PRESET_CHOICE!"=="4" set "PRESET=4" & goto APPLY_PRESET_SILENT
     if "!PRESET_CHOICE!"=="5" set "PRESET=5" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="6" set "PRESET=6" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="7" set "PRESET=7" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="8" set "PRESET=8" & goto APPLY_PRESET_SILENT
+    if "!PRESET_CHOICE!"=="9" set "PRESET=9" & goto APPLY_PRESET_SILENT
     if "!PRESET_CHOICE!"=="0" goto MENU_MAIN
     if "!PRESET_CHOICE!"=="00" exit /b 0
 
@@ -694,11 +702,15 @@ exit /b 0
     set "FILES[3]=preset3.cmd"
     set "FILES[4]=preset4.cmd"
     set "FILES[5]=preset5.cmd"
-    set "FILES[6]=hosts-antifilter.txt"
-    set "FILES[7]=hosts-rkn.txt"
-    set "FILES[8]=hosts-exclude.txt"
+    set "FILES[6]=preset6.cmd"
+    set "FILES[7]=preset7.cmd"
+    set "FILES[8]=preset8.cmd"
+    set "FILES[9]=preset9.cmd"
+    set "FILES[10]=hosts-antifilter.txt"
+    set "FILES[11]=hosts-rkn.txt"
+    set "FILES[12]=hosts-exclude.txt"
     
-    for /L %%i in (1,1,8) do (
+    for /L %%i in (1,1,12) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 5 (
             set "SAVE_PATH=%KEEN_BYPASS_DIR%\!FILE!"

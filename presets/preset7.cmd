@@ -1,10 +1,10 @@
-@rem Пресет 4 (hostfakesplit - googlevideo, fake,hostfakesplit - HOSTLISTS).
+@rem Пресет 7 (multisplit - googlevideo, multisplit - HOSTLISTS).
 @rem ЕСЛИ НИЧЕГО НЕ ПОНИМАЕТЕ - НЕ ТРОГАЙТЕ ЭТОТ ФАЙЛ, ОТКАЖИТЕСЬ ОТ ИСПОЛЬЗОВАНИЯ СЛУЖБЫ. ИНАЧЕ БУДЕТЕ ПИСАТЬ ПОТОМ ВОПРОСЫ "У МЕНЯ ПРОПАЛ ИНТЕРНЕТ , КАК ВОССТАНОВИТЬ"
 
 set ARGS=^
 --wf-tcp=80,443 --wf-udp=443,1024-65535 ^
---filter-tcp=80,443 --dpi-desync=hostfakesplit --dpi-desync-fooling=badseq --dpi-desync-badseq-increment=10000 --dpi-desync-hostfakesplit-midhost=midsld --hostlist-domains=googlevideo.com --new ^
---filter-tcp=80,443 --dpi-desync=fake --dpi-desync-fooling=badseq --dpi-desync-badseq-increment=10000 --dpi-desync-fake-tls=0x4383a71211223344 --dpi-desync-fake-tls=! --dpi-desync-fake-tls-mod=rnd,rndsni,dupsid --hostlist=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-antifilter.txt\" --hostlist=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-rkn.txt\" --hostlist-auto=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-auto.txt\" --hostlist-exclude=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-exclude.txt\" --new ^
+--filter-tcp=80,443 --dpi-desync=multisplit --dpi-desync-split-pos=2 --dpi-desync-split-seqovl=336 --dpi-desync-split-seqovl-pattern=\"C:\ProgramData\keen_bypass_win/zapret-win-bundle-master/blockcheck/zapret/files/fake/tls_clienthello_iana_org.bin\" --new ^
+--filter-tcp=80,443 --dpi-desync=multisplit --dpi-desync-split-pos=2,sniext+1 --dpi-desync-split-seqovl=679 --dpi-desync-split-seqovl-pattern=\"C:\ProgramData\keen_bypass_win/zapret-win-bundle-master/blockcheck/zapret/files/fake/tls_clienthello_gosuslugi_ru.bin\" --hostlist=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-antifilter.txt\" --hostlist=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-rkn.txt\" --hostlist-auto=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-auto.txt\" --hostlist-exclude=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-exclude.txt\" --new ^
 --filter-udp=443 --dpi-desync=fake --dpi-desync-repeats=50 --dpi-desync-fake-quic=\"C:\ProgramData\keen_bypass_win\zapret-win-bundle-master\zapret-winws\files\quic_initial_www_google_com.bin\" --hostlist-domains=googlevideo.com --new ^
 --filter-udp=443,1024-65535 --filter-l7=quic,dht,discord,stun,unknown --dpi-desync=fake --dpi-desync-repeats=12 --dpi-desync-fake-quic=0x4383a71211223344 --hostlist=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-antifilter.txt\" --hostlist=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-rkn.txt\" --hostlist-auto=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-auto.txt\" --hostlist-exclude=\"C:\ProgramData\keen_bypass_win\keen_bypass\files\hosts-exclude.txt\" --new ^
 

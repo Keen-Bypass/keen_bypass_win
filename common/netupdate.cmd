@@ -105,7 +105,7 @@ exit /b 0
     exit /b 1
 
 :GET_CURRENT_PRESET
-    set "PRESET=1"
+    set "PRESET=6"
 ::    if exist "%BACKUP_DIR%" (
 ::        for /f "delims=" %%f in ('dir /b "%BACKUP_DIR%\*.cmd" 2^>nul') do (
 ::            set "FILENAME=%%~nf"
@@ -182,16 +182,20 @@ exit /b 0
     set "FILES[3]=preset3.cmd"
     set "FILES[4]=preset4.cmd"
     set "FILES[5]=preset5.cmd"
-    set "FILES[6]=hosts-antifilter.txt"
-    set "FILES[7]=hosts-rkn.txt"
-    set "FILES[8]=hosts-exclude.txt"
+    set "FILES[6]=preset6.cmd"
+    set "FILES[7]=preset7.cmd"
+    set "FILES[8]=preset8.cmd"
+    set "FILES[9]=preset9.cmd"
+    set "FILES[10]=hosts-antifilter.txt"
+    set "FILES[11]=hosts-rkn.txt"
+    set "FILES[12]=hosts-exclude.txt"
     
     mkdir "%KEEN_BYPASS_DIR%" >nul 2>&1
     mkdir "%KEEN_BYPASS_DIR%\files" >nul 2>&1
     
     set "ERROR_FLAG=0"
     
-    for /L %%i in (1,1,8) do (
+    for /L %%i in (1,1,12) do (
         set "FILE=!FILES[%%i]!"
         if %%i leq 5 (
             set "SAVE_PATH=%KEEN_BYPASS_DIR%\!FILE!"
