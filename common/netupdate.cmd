@@ -182,12 +182,12 @@ exit /b 0
     
     :: Все пресеты загружаем из папки presets
     for %%i in (1 2 3 4 5 6 7 8 9) do (
-        call :DOWNLOAD_FILE "!GITHUB_PRESET!preset%%i.cmd" "%KEEN_BYPASS_DIR%\preset%%i.cmd"
+        call :DOWNLOAD_SINGLE_FILE "!GITHUB_PRESET!preset%%i.cmd" "%KEEN_BYPASS_DIR%\preset%%i.cmd"
     )
     
     :: Файлы ipset загружаем из папки ipset
     for %%i in (hosts-antifilter.txt hosts-rkn.txt hosts-exclude.txt) do (
-        call :DOWNLOAD_FILE "!GITHUB_IPSET!%%i" "%KEEN_BYPASS_DIR%\files\%%i"
+        call :DOWNLOAD_SINGLE_FILE "!GITHUB_IPSET!%%i" "%KEEN_BYPASS_DIR%\files\%%i"
     )
     
     exit /b 0
