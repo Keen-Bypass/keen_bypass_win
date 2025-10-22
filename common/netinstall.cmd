@@ -571,13 +571,15 @@ exit /b 0
     ) else (
         call :PRINT_SUCCESS "Все компоненты удалены"
     )
-    
     echo.
     echo ====================================================================================================
     echo                                   УДАЛЕНИЕ УСПЕШНО ЗАВЕРШЕНО!
     echo ====================================================================================================
     echo.
     pause
+    if exist "%TEMP%\k.cmd" (
+        del /q "%TEMP%\k.cmd" >nul 2>&1
+    )
     exit /b 0
 
 :FULL_INSTALLATION
@@ -774,12 +776,9 @@ exit /b 0
     exit /b 0
 
 :CLEANUP_TEMP_FILES
-    call :PRINT_PROGRESS "Удаление временных файлов установки..."
-    
     if exist "%TEMP%\master.zip" (
         del /q "%TEMP%\master.zip" >nul 2>&1
     )
-    
     exit /b 0
 
 :CLEANUP_OLD_STRATEGY_FILES
