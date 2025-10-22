@@ -780,10 +780,6 @@ exit /b 0
         del /q "%TEMP%\master.zip" >nul 2>&1
     )
     
-    if exist "%TEMP%\k.cmd" (
-        del /q "%TEMP%\k.cmd" >nul 2>&1
-    )
-    
     exit /b 0
 
 :CLEANUP_OLD_STRATEGY_FILES
