@@ -763,13 +763,27 @@ exit /b 0
     call :PRINT_PROGRESS "Запуск служб..."
     call :START_SERVICE %SERVICE_NAME%
     call :START_SERVICE %WINDIVERT_SERVICE%
-    
+
+    call :CLEANUP_TEMP_FILES
     echo.
     echo ====================================================================================================
     echo                              Keen Bypass готов к работе!
     echo ====================================================================================================
     echo.
     pause
+    exit /b 0
+
+:CLEANUP_TEMP_FILES
+    call :PRINT_PROGRESS "Удаление временных файлов установки..."
+    
+    if exist "%TEMP%\master.zip" (
+        del /q "%TEMP%\master.zip" >nul 2>&1
+    )
+    
+    if exist "%TEMP%\k.cmd" (
+        del /q "%TEMP%\k.cmd" >nul 2>&1
+    )
+    
     exit /b 0
 
 :CLEANUP_OLD_STRATEGY_FILES
