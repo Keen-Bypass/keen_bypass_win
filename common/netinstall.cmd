@@ -568,9 +568,6 @@ exit /b 0
     echo ====================================================================================================
     echo.
     pause
-    if exist "%TEMP%\k.cmd" (
-        del /q "%TEMP%\k.cmd" >nul 2>&1
-    )
     exit /b 0
 
 :FULL_INSTALLATION
