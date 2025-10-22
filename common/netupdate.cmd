@@ -56,7 +56,7 @@ mkdir "%LOGS_DIR%" >nul 2>&1
 mkdir "%BACKUP_DIR%" >nul 2>&1
 
 echo Настройка пресета %PRESET%...
-call :DOWNLOAD_PRESET_FILES
+call :DOWNLOAD_FILES
 if errorlevel 1 (
     echo [ОШИБКА] Загрузка файлов пресета не удалась
     exit /b 1
@@ -173,47 +173,23 @@ exit /b 0
         exit /b 1
     )
 
-:DOWNLOAD_PRESET_FILES
+:DOWNLOAD_FILES
     set "GITHUB_PRESET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/presets/"
     set "GITHUB_IPSET=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/ipset/"
-    
-    set "FILES[1]=preset1.cmd"
-    set "FILES[2]=preset2.cmd"
-    set "FILES[3]=preset3.cmd"
-    set "FILES[4]=preset4.cmd"
-    set "FILES[5]=preset5.cmd"
-    set "FILES[6]=preset6.cmd"
-    set "FILES[7]=preset7.cmd"
-    set "FILES[8]=preset8.cmd"
-    set "FILES[9]=preset9.cmd"
-    set "FILES[10]=hosts-antifilter.txt"
-    set "FILES[11]=hosts-rkn.txt"
-    set "FILES[12]=hosts-exclude.txt"
     
     mkdir "%KEEN_BYPASS_DIR%" >nul 2>&1
     mkdir "%KEEN_BYPASS_DIR%\files" >nul 2>&1
     
-    set "ERROR_FLAG=0"
-    
-    for /L %%i in (1,1,12) do (
-        set "FILE=!FILES[%%i]!"
-        if %%i leq 5 (
-            set "SAVE_PATH=%KEEN_BYPASS_DIR%\!FILE!"
-            set "DOWNLOAD_URL=%GITHUB_PRESET%!FILE!"
-        ) else (
-            set "SAVE_PATH=%KEEN_BYPASS_DIR%\files\!FILE!"
-            set "DOWNLOAD_URL=%GITHUB_IPSET%!FILE!"
-        )
-        
-        call :DOWNLOAD_SINGLE_FILE "!DOWNLOAD_URL!" "!SAVE_PATH!" >nul 2>&1
-        if errorlevel 1 (
-            set "ERROR_FLAG=1"
-        )
+    :: Все пресеты загружаем из папки presets
+    for %%i in (1 2 3 4 5 6 7 8 9) do (
+        call :DOWNLOAD_FILE "!GITHUB_PRESET!preset%%i.cmd" "%KEEN_BYPASS_DIR%\preset%%i.cmd"
     )
     
-    if !ERROR_FLAG! equ 1 (
-        exit /b 1
+    :: Файлы ipset загружаем из папки ipset
+    for %%i in (hosts-antifilter.txt hosts-rkn.txt hosts-exclude.txt) do (
+        call :DOWNLOAD_FILE "!GITHUB_IPSET!%%i" "%KEEN_BYPASS_DIR%\files\%%i"
     )
+    
     exit /b 0
 
 :DOWNLOAD_SINGLE_FILE
