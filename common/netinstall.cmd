@@ -245,30 +245,21 @@ exit /b 0
 :CHECK_DOMAIN
     setlocal
     set "DOMAIN=%~1"
-    set "PING_ICON=[X]"
-    set "TLS_ICON=[X]"
+    set "PING_ICON=[X]" & set "TLS_ICON=[X]"
     
-    ping -n 1 -w 1000 "!DOMAIN!" >nul 2>&1
-    if !errorlevel! equ 0 set "PING_ICON=[V]"
+    ping -n 1 -w 1000 "!DOMAIN!" >nul 2>&1 && set "PING_ICON=[V]"
     
-    where curl >nul 2>&1
-    if !errorlevel! equ 0 (
-        curl --tls-max 1.2 --max-time 2 -sSL "https://!DOMAIN!" -o nul >nul 2>&1
-        if !errorlevel! equ 0 set "TLS_ICON=[V]"
-    ) else (
-        powershell -Command "$ProgressPreference='SilentlyContinue'; try {[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12; $request = [System.Net.WebRequest]::Create('https://!DOMAIN!'); $request.Timeout = 5000; $response = $request.GetResponse(); $response.Close(); exit 0} catch {exit 1}" >nul 2>&1
-        if !errorlevel! equ 0 set "TLS_ICON=[V]"
+    for /l %%i in (1,1,2) do (
+        if "!TLS_ICON!"=="[X]" (
+            curl --tls-max 1.2 --max-time 3 -sSL "https://!DOMAIN!" -o nul >nul 2>&1 && set "TLS_ICON=[V]" || (
+                powershell -Command "$ProgressPreference='SilentlyContinue'; try {[System.Net.ServicePointManager]::SecurityProtocol = 'Tls12'; $r=[System.Net.WebRequest]::Create('https://!DOMAIN!'); $r.Timeout=3000; $r.GetResponse().Close(); exit 0} catch {exit 1}" >nul 2>&1 && set "TLS_ICON=[V]"
+            )
+            if "!TLS_ICON!"=="[X]" && %%i equ 1 timeout /t 1 >nul
+        )
     )
     
-    set "DOMAIN_DISPLAY=!DOMAIN!"
-    if "!DOMAIN_DISPLAY:~50!" neq "" set "DOMAIN_DISPLAY=!DOMAIN_DISPLAY:~0,47!..."
-    
-    set "SPACES="
-    for /l %%i in (1,1,55) do set "SPACES=!SPACES! "
-    set "DOMAIN_DISPLAY=!DOMAIN!!SPACES!"
-    set "DOMAIN_DISPLAY=!DOMAIN_DISPLAY:~0,55!"
-    
-    echo !DOMAIN_DISPLAY! : PING !PING_ICON! ^| TLS 1.2 !TLS_ICON!
+    set "DOMAIN_DISPLAY=!DOMAIN!                                                  "
+    echo !DOMAIN_DISPLAY:~0,55! : PING !PING_ICON! ^| TLS 1.2 !TLS_ICON!
     
     endlocal
     exit /b 0
