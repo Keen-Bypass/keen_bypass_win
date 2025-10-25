@@ -49,6 +49,7 @@ protonvpn.com
 vpnly.com
 vpnlyru.com
 filmix.life
+imagetmdb.com
 api.frankfurter.dev
 bible-api.com
 cdn.cookielaw.org
