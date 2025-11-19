@@ -1,3 +1,6 @@
+# 🚀 KEEN BYPASS
+# 🔄 Обновлено: 19-11-2025
+
 vless://199a78a5-b4d4-4064-a0db-bb37c5839134@212.192.31.146:443?path=%2Fpanika&security=none&encryption=none&host=m.vk.com&type=ws#PORTAL+%F0%9F%8C%80+t.me%2FSTR_BYPASS+%D0%BE%D0%B1%D1%85%D0%BE%D0%B4+%D0%B1%D0%B5%D0%BB%D1%8B%D1%85+%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%BE%D0%B2+Germany%2C+Frankfurt+am+Main%2C+Cloud+Hosting+Solutions%2C+Limited.
 vless://2558c819-1363-4859-8fb9-f8cb104d49d2@176.223.66.8:39948?security=none&encryption=none&host=m.vk.com&headerType=http&type=tcp#PORTAL+%F0%9F%8C%80+t.me%2FSTR_BYPASS+%D0%BE%D0%B1%D1%85%D0%BE%D0%B4+%D0%B1%D0%B5%D0%BB%D1%8B%D1%85+%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%BE%D0%B2+United+Arab+Emirates%2C+Unknown%2C+Netvia+Bilisim+Yazilim+Dan.+Tic.+Ltd.+Sti.
 vless://russia@russia.whitenet.online:443?security=reality&encryption=none&pbk=xdNyDss0OLTu3z6kcdg8X2wfTOLtmDTobE2on3vKe34&headerType=none&fp=chrome&spx=%2F&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=vk.com&sid=ab1cd2#Whitenet+Russia
