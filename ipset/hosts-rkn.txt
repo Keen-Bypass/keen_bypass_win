@@ -114,3 +114,17 @@ trycloudflare.com
 videodelivery.net
 warp.plus
 workers.dev
+rblx.org
+rbx.com
+rbxcdn.com
+roblox-api.arkoselabs.com
+roblox.com
+robloxlabs.com
+rbxasset.com
+roblox.eu
+www.roblox.com
+api.roblox.com
+auth.roblox.com
+static.rbxcdn.com
+speedtest.net
+snapchat.com
