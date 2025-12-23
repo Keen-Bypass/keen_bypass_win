@@ -89,4 +89,5 @@ roblox.eu
 speedtest.net
 snapchat.com
 whatsapp.com
+whatsapp.net
 telegram.org
