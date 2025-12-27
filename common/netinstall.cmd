@@ -646,7 +646,7 @@ exit /b 0
         call :PRINT_WARNING "Не все файлы пресетов загружены"
     )
 
-    set "PRESET=3"
+    set "PRESET=2"
     call :APPLY_PRESET
     exit /b 0
 
