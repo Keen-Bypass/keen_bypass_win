@@ -472,17 +472,17 @@ exit /b 0
     echo  Выберите пресет
     echo ====================================================================================================
     echo.
-    echo 1. Пресет 1 (skip - googlevideo, fake - HOSTLISTS).
+    echo 1. Пресет 1 (skip googlevideo) (обновлено).
     echo.
-    echo 2. Пресет 2 (multidisorder - googlevideo, fake - HOSTLISTS).
-    echo 3. Пресет 3 (fake - googlevideo, fake,hostfakesplit - HOSTLISTS).
-    echo 4. Пресет 4 (hostfakesplit - googlevideo, fake,hostfakesplit - HOSTLISTS).
-    echo 5. Пресет 5 (fake,hostfakesplit - googlevideo, fake,fakedsplit - HOSTLISTS).
-    echo 6. Пресет 6 (multisplit - googlevideo, fake - HOSTLISTS).
-    echo 7. Пресет 7 (multisplit - googlevideo, multisplit - HOSTLISTS).
+    echo 2. Пресет 2 (обновлено).
+    echo 3. Пресет 3 (обновлено).
+    echo 4. Пресет 4 (обновлено).
+    echo 5. Пресет 5 (обновлено).
+    echo 6. Пресет 6 (обновлено).
+    echo 7. Пресет 7 (обновлено).
     echo.
-    echo 8. Пресет 8 (wssize 1:6 - googlevideo, wssize 1:6 - HOSTLISTS, IPSET-EXCLUDE RU).
-    echo 9. Пресет 9 (wssize 1:6 - googlevideo, wssize 1:6 - HOSTLISTS, IPSET-EXCLUDE RU).
+    echo 8. Пресет 8 (wssize 1:6) (обновлено).
+    echo 9. Пресет 9 (wssize 1:6) (обновлено).
     echo.
     echo 0. Вернуться в главное меню.
     echo 00. Выход.
