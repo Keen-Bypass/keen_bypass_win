@@ -761,7 +761,9 @@ exit /b 0
     
     call :PRINT_PROGRESS "Сохранение версии Keen Bypass..."
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
-    
+
+    netsh interface tcp set global timestamps=enabled
+
     call :PRINT_PROGRESS "Запуск служб..."
     call :START_SERVICE %SERVICE_NAME%
     call :START_SERVICE %WINDIVERT_SERVICE%

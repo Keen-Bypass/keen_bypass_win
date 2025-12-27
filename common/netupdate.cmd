@@ -250,7 +250,7 @@ exit /b 0
     schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO 10 ^
         /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_DIR%\autoupdate.cmd' -ArgumentList '-silent'\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
-    
+
     exit /b 0
 
 :SAVE_VERSION_INFO
@@ -259,7 +259,9 @@ exit /b 0
     mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
     
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
-    
+
+    netsh interface tcp set global timestamps=enabled
+
     exit /b 0
 
 :CLEANUP_TEMP_FILES
