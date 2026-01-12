@@ -91,3 +91,13 @@ snapchat.com
 whatsapp.com
 whatsapp.net
 telegram.org
+instantmessaging-pa.googleapis.com
+meetings.googleapis.com
+api.mixpanel.com
+repack.info
+adservice.google.com
+rockblack.pro
+doubleclick.net
+amazon-adsystem.com
+criteo.com
+id5-sync.com
