@@ -19,6 +19,7 @@ aftermarket.zf.com
 agents.media
 agentura.ru
 alberta.ca
+alphacoders.com
 amnezia.org
 anilibria.tv
 animestars.org
@@ -72,6 +73,7 @@ canva.com
 canva.com
 cdn.id.supercell.com
 cdn.oaistatic.com
+cdn2site.com
 cdninstagram.com
 certifytheweb.com
 chat.openai.com
@@ -95,6 +97,7 @@ czx.to
 d.docs.live.net
 data-cdn.mbamupdates.com
 database.clamav.net
+debian.map.fastlydns.net
 deepl.com
 deezer.com
 dell.com
@@ -140,6 +143,7 @@ fbsbx.com
 fex.net
 files.oaiusercontent.com
 firefly-ps.adobe.io
+fitgirl-repacks.site
 flashscore.com
 flibusta.is
 fluke.com
@@ -167,6 +171,7 @@ grazie.ai
 grok.com
 gulagu.net
 habr.com
+happycolorapp.com
 hd.zetfix.online
 hdkinoteatr.com
 hdrezka.fm
@@ -239,6 +244,7 @@ mouser.com
 mrakopedia.net
 my.atlassian.com
 myworld-portal.leica-geosystems.com
+naps2.com
 nasvsehtoshnit.ru
 navalny.com
 netapp.com
@@ -268,8 +274,10 @@ orbit-games.com
 os.mbed.com
 ovdinfo.org
 packages.gitlab.com
+pages.dev
 pandasecurity.com
 paperpaper.ru
+parallels.com
 path3.xtracloud.net
 patreon.com
 pay.buckaroo.nl
@@ -280,6 +288,7 @@ pcbway.com
 pcbway.ru
 pepperl-fuchs.com
 phoenixcontact.com
+photopea.com
 php.su
 piccy.info
 pixabay.com
@@ -288,6 +297,7 @@ plab.site
 platform.twitter.com
 plugins.jetbrains.com
 polit.ru
+pornhub.com
 pornolab.net
 portal.bgpmon.net
 proekt.media
@@ -399,10 +409,13 @@ vhd.zetflix.online
 viber.com
 video.twimg.com
 vipdrive.net
+vndb.org
 vot-tak.tv
 vrv.co
 vyos.io
 vyos.net
+wall.alphacoders.com
+wallpapercave.com
 watchguard.com
 weather.com
 weblance.com.ua
@@ -454,6 +467,8 @@ yeggi.com
 youtu.be
 yt3.googleusercontent.com
 zetflix.online
+zimbra.com
+zimbra.org
 znanija.com
 zohomail.com
 zona.media
