@@ -19,9 +19,8 @@ set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
 set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com www.youtube.com yt3.ggpht.com rutracker.org i.instagram.com facebook.com discordapp.com google.com yandex.ru"
 
 :: Clash Mi настройки
-set "CLASHMI_VERSION=v1.0.16.211"
-set "CLASHMI_FILE_NAME=clashmi_%CLASHMI_VERSION%_windows_x64.zip"
-set "CLASHMI_DOWNLOAD_URL=https://github.com/KaringX/clashmi/releases/download/%CLASHMI_VERSION%/%CLASHMI_FILE_NAME%"
+set "CLASHMI_VERSION=1.0.16.211"
+set "CLASHMI_DOWNLOAD_URL=https://github.com/KaringX/clashmi/releases/latest/download/clashmi_%CLASHMI_VERSION%_windows_x64.zip"
 set "CLASHMI_INSTALL_DIR=C:\Program Files\Clash Mi"
 set "CLASHMI_EXE_FILE=%CLASHMI_INSTALL_DIR%\clashmi.exe"
 set "CLASHMI_SERVICE_EXE=%CLASHMI_INSTALL_DIR%\clashmiService.exe"
@@ -870,7 +869,7 @@ exit /b 0
     call :PRINT_SECTION "Установка Clash Mi"
     
     echo Установка Clash MI...
-    echo Версия: %CLASHMI_VERSION%
+    echo Версия: v%CLASHMI_VERSION%
     echo.
     
     call :CLASHMI_STOP_PROCESSES
@@ -886,7 +885,7 @@ exit /b 0
     call :PRINT_SECTION "Установка завершена"
     echo Установка Clash MI завершена!
     echo.
-    echo Версия: %CLASHMI_VERSION%
+    echo Версия: v%CLASHMI_VERSION%
     echo Программа: %CLASHMI_INSTALL_DIR%
     echo Конфигурация: %CLASHMI_APPDATA_DIR%
     echo.
