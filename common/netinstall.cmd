@@ -18,6 +18,20 @@ set "BLOCKCHECK_PATH=%ZAPRET_DIR%\blockcheck\blockcheck.cmd"
 set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
 set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com www.youtube.com yt3.ggpht.com rutracker.org i.instagram.com facebook.com discordapp.com google.com yandex.ru"
 
+:: Clash Mi настройки
+set "CLASHMI_VERSION=v1.0.16.211"
+set "CLASHMI_FILE_NAME=clashmi_%CLASHMI_VERSION%_windows_x64.zip"
+set "CLASHMI_DOWNLOAD_URL=https://github.com/KaringX/clashmi/releases/download/%CLASHMI_VERSION%/%CLASHMI_FILE_NAME%"
+set "CLASHMI_INSTALL_DIR=C:\Program Files\Clash Mi"
+set "CLASHMI_EXE_FILE=%CLASHMI_INSTALL_DIR%\clashmi.exe"
+set "CLASHMI_SERVICE_EXE=%CLASHMI_INSTALL_DIR%\clashmiService.exe"
+set "CLASHMI_SHORTCUT_NAME=Clash Mi"
+set "CLASHMI_APPDATA_DIR=%APPDATA%\clashmi\clashmi"
+set "CLASHMI_PROFILES_DIR=%CLASHMI_APPDATA_DIR%\profiles"
+set "CLASHMI_CONFIG_URL1=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/setting.json"
+set "CLASHMI_CONFIG_URL2=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/service_core_setting.json"
+set "CLASHMI_CONFIG_URL3=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config_tun.yaml"
+
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
 powershell -command "&{$H=get-host;$W=$H.ui.rawui;$B=$W.buffersize;$B.width=120;$B.height=85;$W.buffersize=$B;$S=$W.windowsize;$S.width=120;$S.height=%LINES%;$W.windowsize=$S;}"
@@ -51,6 +65,8 @@ echo 8.  Включить автообновление.
 echo.
 echo 9.  Быстрая проверка доменов.
 echo.
+echo 10. Clash Mi (Mihomo).
+echo.
 echo 99. Деинсталлировать Keen Bypass.
 echo 00. Выход.
 echo.
@@ -65,6 +81,7 @@ if "%CHOICE%"=="6" goto START_ZAPRET
 if "%CHOICE%"=="7" goto DISABLE_AUTO_UPDATE
 if "%CHOICE%"=="8" goto ENABLE_AUTO_UPDATE
 if "%CHOICE%"=="9" goto FAST_DOMAIN_CHECK_MENU
+if "%CHOICE%"=="10" goto CLASHMI_MENU
 if "%CHOICE%"=="99" goto UNINSTALL_KEEN_BYPASS
 if "%CHOICE%"=="00" exit /b 0
 
@@ -107,11 +124,37 @@ echo [ПРЕДУПРЕЖДЕНИЕ] %~1
 exit /b 0
 
 :PRINT_PROGRESS
-echo [ПРОЦЕСС] %~1
+setlocal
+set "TEXT=%~1"
+set "PADDING="
+for /l %%i in (1,1,55) do set "PADDING=!PADDING! "
+set "TEXT=!TEXT!!PADDING!"
+set "TEXT=!TEXT:~0,55!"
+echo !TEXT!
+endlocal
+exit /b 0
+
+:PRINT_PROGRESS_WITH_STATUS
+setlocal
+set "TEXT=%~1"
+set "STATUS=%~2"
+set "PADDING="
+for /l %%i in (1,1,55) do set "PADDING=!PADDING! "
+set "TEXT=!TEXT!!PADDING!"
+set "TEXT=!TEXT:~0,55!"
+echo !TEXT! [!STATUS!]
+endlocal
 exit /b 0
 
 :PRINT_DOWNLOAD
-echo [ЗАГРУЗКА] %~1
+setlocal
+set "FILENAME=%~1"
+set "PADDING="
+for /l %%i in (1,1,45) do set "PADDING=!PADDING! "
+set "FILENAME=!FILENAME!!PADDING!"
+set "FILENAME=!FILENAME:~0,45!"
+echo !FILENAME! [OK]
+endlocal
 exit /b 0
 
 :GET_SYSTEM_INFO
@@ -174,6 +217,13 @@ exit /b 0
     sc query %WINDIVERT_SERVICE% >nul 2>&1
     if !errorlevel! equ 0 set "WINDIVERT_STATUS=Установлен"
     
+    :: СТАТУС CLASH MI
+    set "CLASHMI_STATUS=Не установлен"
+    if exist "%CLASHMI_INSTALL_DIR%" (
+        tasklist | find /i "clashmi.exe" >nul 2>&1
+        if !errorlevel! equ 0 (set "CLASHMI_STATUS=Запущен") else (set "CLASHMI_STATUS=Установлен")
+    )
+    
     :: ТЕКУЩИЙ ПРЕСЕТ
     set "CURRENT_PRESET=N/A"
     if exist "%BACKUP_DIR%" (
@@ -197,6 +247,7 @@ exit /b 0
     :: ВЫВОД СИСТЕМНОЙ ИНФОРМАЦИИ  
     call :PRINT_SECTION "Система"
     echo ОС:                   !OS_NAME!
+    echo Clash Mi:             !CLASHMI_STATUS!
     
     :: ВЫВОД ИНФОРМАЦИИ О DPI BYPASS
     call :PRINT_SECTION "DPI bypass multi platform"
@@ -281,19 +332,18 @@ exit /b 0
         powershell -Command "Start-Process -Verb RunAs -FilePath \"%~f0\"" 
         exit /b 1
     )
-    call :PRINT_SUCCESS "Привилегии администратора подтверждены"
+    call :PRINT_PROGRESS_WITH_STATUS "Привилегии администратора подтверждены" "OK"
     exit /b 0
 
 :GET_PROJECT_VERSION
     set "VERSION_FILE_TMP=%TEMP%\keen_version.txt"
-    call :PRINT_PROGRESS "Получение актуальной версии..."
     
     powershell -Command "$ProgressPreference='SilentlyContinue'; (Invoke-WebRequest -Uri '%VERSION_URL%' -OutFile '%VERSION_FILE_TMP%')" >nul 2>&1
 
     if exist "%VERSION_FILE_TMP%" (
         for /f "delims=" %%i in ('type "%VERSION_FILE_TMP%" ^| powershell -Command "$input.Trim()"') do set "PROJECT_VERSION=%%i"
         del /q "%VERSION_FILE_TMP%" >nul 2>&1
-        call :PRINT_SUCCESS "Версия получена: %PROJECT_VERSION%"
+        call :PRINT_PROGRESS_WITH_STATUS "Получение актуальной версии" "OK"
         exit /b 0
     ) else (
         exit /b 1
@@ -323,19 +373,19 @@ exit /b 0
     net stop %1 >nul 2>&1
     sc delete %1 >nul 2>&1
     reg delete "HKLM\SYSTEM\CurrentControlSet\Services\%1" /f >nul 2>&1
-    call :PRINT_SUCCESS "Служба %1 остановлена и удалена"
+    call :PRINT_PROGRESS_WITH_STATUS "Служба %1 остановлена и удалена" "OK"
     exit /b 0
 
 :STOP_SERVICE_ONLY
     call :PRINT_PROGRESS "Остановка службы %1..."
     net stop %1 >nul 2>&1
-    call :PRINT_SUCCESS "Служба %1 остановлена"
+    call :PRINT_PROGRESS_WITH_STATUS "Служба %1 остановлена" "OK"
     exit /b 0
 
 :START_SERVICE
     call :PRINT_PROGRESS "Запуск службы %1..."
     sc start %1 >nul 2>&1
-    call :PRINT_SUCCESS "Служба %1 запущена"
+    call :PRINT_PROGRESS_WITH_STATUS "Служба %1 запущена" "OK"
     exit /b 0
 
 :REMOVE_AUTOUPDATE_TASK
@@ -343,9 +393,9 @@ exit /b 0
     if !errorlevel! equ 0 (
         call :PRINT_PROGRESS "Удаление задачи автообновления..."
         schtasks /Delete /TN "%AUTOUPDATE_TASK%" /F >nul 2>&1
-        call :PRINT_SUCCESS "Задача автообновления удалена"
+        call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления удалена" "OK"
     ) else (
-        call :PRINT_INFO "Задача автообновления не найдена"
+        call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления не найдена" "SKIP"
     )
     exit /b 0
 
@@ -359,20 +409,20 @@ exit /b 0
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
     
     if !errorlevel! neq 0 exit /b 1
-    call :PRINT_SUCCESS "Задача автообновления создана"
+    call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления создана" "OK"
     exit /b 0
 
 :DOWNLOAD_FILE
     set "URL=%~1"
     set "DEST=%~2"
+    set "FILENAME=%~n2%~x2"
     
-    call :PRINT_DOWNLOAD "%~2"
     powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%URL%', '%DEST%')" >nul 2>&1
     if exist "!DEST!" (
-        call :PRINT_SUCCESS "Файл загружен: %~2"
+        call :PRINT_DOWNLOAD "!FILENAME!"
         exit /b 0
     ) else (
-        call :PRINT_ERROR "Ошибка загрузки: %~2"
+        echo !FILENAME! [ERROR]
         exit /b 1
     )
 
@@ -416,7 +466,7 @@ exit /b 0
     call :STOP_SERVICE_ONLY %SERVICE_NAME%
     call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
     timeout /t 2 >nul
-    call :PRINT_SUCCESS "Zapret остановлен"
+    call :PRINT_PROGRESS_WITH_STATUS "Zapret остановлен" "OK"
     
     echo.
     call :PRINT_PROGRESS "Запуск blockcheck..."
@@ -430,7 +480,7 @@ exit /b 0
     
     call :STOP_SERVICE_ONLY %SERVICE_NAME%
     call :STOP_SERVICE_ONLY %WINDIVERT_SERVICE%
-    call :PRINT_SUCCESS "Службы остановлены"
+    call :PRINT_PROGRESS_WITH_STATUS "Службы остановлены" "OK"
 
     goto MENU_MAIN
 
@@ -439,7 +489,7 @@ exit /b 0
     
     call :START_SERVICE %SERVICE_NAME%
     call :START_SERVICE %WINDIVERT_SERVICE%
-    call :PRINT_SUCCESS "Службы запущены"
+    call :PRINT_PROGRESS_WITH_STATUS "Службы запущены" "OK"
 
     goto MENU_MAIN
 
@@ -522,7 +572,7 @@ exit /b 0
         powershell -Command "Start-Process -Verb RunAs -FilePath '!PRESET_FILE!' -WindowStyle Hidden -Wait"
         
         set "CURRENT_PRESET=!PRESET!"
-        call :PRINT_SUCCESS "Пресет !PRESET! применен"
+        call :PRINT_PROGRESS_WITH_STATUS "Пресет !PRESET! применен" "OK"
     ) else (
         call :PRINT_ERROR "Файл пресета не найден: !PRESET_FILE!"
     )
@@ -569,7 +619,7 @@ exit /b 0
         pause
         goto MENU_MAIN
     ) else (
-        call :PRINT_SUCCESS "Все компоненты удалены"
+        call :PRINT_PROGRESS_WITH_STATUS "Все компоненты удалены" "OK"
     )
     echo.
     echo ====================================================================================================
@@ -597,14 +647,13 @@ exit /b 0
     if !SERVICE_EXISTS! equ 1 call :STOP_SERVICE %SERVICE_NAME%
     if !WINDIVERT_EXISTS! equ 1 call :STOP_SERVICE %WINDIVERT_SERVICE%
     
-    call :PRINT_PROGRESS "Остановка процессов и удаление папок keen_bypass и zapret..."
-    
+    call :PRINT_PROGRESS "Остановка процессов и удаление директории..."
     if exist "%KEEN_BYPASS_DIR%" (
         powershell -Command "Get-Process | Where-Object { $_.Path -like '%KEEN_BYPASS_DIR%\*' } | Stop-Process -Force -ErrorAction SilentlyContinue"
         timeout /t 2 >nul
         rmdir /s /q "%KEEN_BYPASS_DIR%" 2>nul
         if not exist "%KEEN_BYPASS_DIR%" (
-            call :PRINT_SUCCESS "Папка keen_bypass удалена"
+            call :PRINT_PROGRESS_WITH_STATUS "Папка keen_bypass удалена" "OK"
         )
     )
     
@@ -613,7 +662,7 @@ exit /b 0
         timeout /t 2 >nul
         rmdir /s /q "%ZAPRET_DIR%" 2>nul
         if not exist "%ZAPRET_DIR%" (
-            call :PRINT_SUCCESS "Папка zapret-win-bundle-master удалена"
+            call :PRINT_PROGRESS_WITH_STATUS "Папка zapret-win-bundle-master удалена" "OK"
         )
     )
 
@@ -624,7 +673,7 @@ exit /b 0
     if not exist "%AUTOUPDATE_DIR%" mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
     if not exist "%LOGS_DIR%" mkdir "%LOGS_DIR%" >nul 2>&1
     if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%" >nul 2>&1
-    call :PRINT_SUCCESS "Структура папок создана"
+    call :PRINT_PROGRESS_WITH_STATUS "Структура папок создана" "OK"
 
     call :PRINT_SECTION "Настройка автообновления"
     call :SETUP_AUTO_UPDATE
@@ -634,7 +683,7 @@ exit /b 0
         exit /b 1
     )
 
-    call :PRINT_SECTION "Загрузка и установка"
+    call :PRINT_SECTION "Загрузка и распаковка"
     call :DOWNLOAD_AND_EXTRACT
     if errorlevel 1 (
         pause
@@ -646,6 +695,7 @@ exit /b 0
         call :PRINT_WARNING "Не все файлы пресетов загружены"
     )
 
+    call :PRINT_SECTION "Установка"
     set "PRESET=2"
     call :APPLY_PRESET
     exit /b 0
@@ -685,7 +735,7 @@ exit /b 0
     )
     
     if exist "%ZAPRET_DIR%" (
-        call :PRINT_SUCCESS "Установка Zapret завершена"
+        call :PRINT_PROGRESS_WITH_STATUS "Установка Zapret завершена" "OK"
         exit /b 0
     ) else (
         call :PRINT_ERROR "Не удалось распаковать архив"
@@ -721,7 +771,7 @@ exit /b 0
         copy "%PRESET_FILE%" "%BACKUP_DIR%\preset%PRESET%.cmd" >nul 2>&1
         
         powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -WindowStyle Hidden -Wait"
-        call :PRINT_SUCCESS "Пресет %PRESET% применен"
+        call :PRINT_PROGRESS_WITH_STATUS "Применение пресета %PRESET%" "OK"
     )
     goto FINAL_SETUP
 
@@ -761,10 +811,12 @@ exit /b 0
     
     call :PRINT_PROGRESS "Сохранение версии Keen Bypass..."
     powershell -Command "[System.IO.File]::WriteAllText('%VERSION_FILE%', '%PROJECT_VERSION%'.Trim())" >nul 2>&1
+    call :PRINT_PROGRESS_WITH_STATUS "Сохранение версии Keen Bypass" "OK"
 
     netsh interface tcp set global timestamps=enabled
 
-    call :PRINT_PROGRESS "Запуск служб..."
+    echo.
+    call :PRINT_SECTION "Запуск служб"
     call :START_SERVICE %SERVICE_NAME%
     call :START_SERVICE %WINDIVERT_SERVICE%
 
@@ -787,6 +839,295 @@ exit /b 0
     del /Q "%ZAPRET_DIR%\config\*.txt" 2>nul
     del /Q "%ZAPRET_DIR%\config\*.ipset" 2>nul
     del /Q "%ZAPRET_DIR%\config\*.exe" 2>nul
+    exit /b 0
+
+:CLASHMI_MENU
+    cls
+    call :PRINT_SECTION "Clash Mi (Mihomo)"
+    
+    echo.
+    echo 1. Установить.
+    echo 2. Запустить.
+    echo.
+    echo 99. Удалить.
+    echo.
+    echo 0. Назад.
+    echo 00. Выход.
+    echo.
+    set /p CLASHMI_CHOICE="Выберите действие: "
+
+    if "!CLASHMI_CHOICE!"=="1" goto INSTALL_CLASHMI
+    if "!CLASHMI_CHOICE!"=="2" goto START_CLASHMI
+    if "!CLASHMI_CHOICE!"=="99" goto UNINSTALL_CLASHMI
+    if "!CLASHMI_CHOICE!"=="0" goto MENU_MAIN
+    if "!CLASHMI_CHOICE!"=="00" exit /b 0
+
+    call :PRINT_ERROR "Неверный выбор: !CLASHMI_CHOICE!"
+    pause
+    goto CLASHMI_MENU
+
+:INSTALL_CLASHMI
+    call :PRINT_SECTION "Установка Clash Mi"
+    
+    echo Установка Clash MI...
+    echo Версия: %CLASHMI_VERSION%
+    echo.
+    
+    call :CLASHMI_STOP_PROCESSES
+    call :CLASHMI_CLEANUP
+    call :CLASHMI_DOWNLOAD
+    call :CLASHMI_EXTRACT
+    call :CLASHMI_CREATE_SHORTCUTS
+    call :CLASHMI_SETUP_FIREWALL
+    call :CLASHMI_DOWNLOAD_CONFIGS
+    call :CLASHMI_CLEANUP_TEMP
+    
+    echo.
+    call :PRINT_SECTION "Установка завершена"
+    echo Установка Clash MI завершена!
+    echo.
+    echo Версия: %CLASHMI_VERSION%
+    echo Программа: %CLASHMI_INSTALL_DIR%
+    echo Конфигурация: %CLASHMI_APPDATA_DIR%
+    echo.
+    pause
+    goto CLASHMI_MENU
+
+:START_CLASHMI
+    call :PRINT_SECTION "Запуск Clash Mi"
+    
+    if not exist "%CLASHMI_EXE_FILE%" (
+        call :PRINT_ERROR "Clash Mi не установлен!"
+        call :PRINT_INFO "Установите его через пункт 1"
+        pause
+        goto CLASHMI_MENU
+    )
+    
+    call :PRINT_PROGRESS "Запуск Clash Mi..."
+    
+    :: Создаем временный VBS-скрипт для запуска без консоли
+    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\start_clashmi.vbs"
+    echo WshShell.Run """%CLASHMI_EXE_FILE%""", 0, False >> "%TEMP%\start_clashmi.vbs"
+    
+    :: Запускаем VBS-скрипт
+    cscript //nologo "%TEMP%\start_clashmi.vbs"
+    
+    :: Удаляем временный файл
+    del "%TEMP%\start_clashmi.vbs" 2>nul
+    
+    :: Даем время на запуск
+    timeout /t 3 /nobreak >nul
+    
+    :: Проверяем запуск
+    tasklist | find /i "clashmi.exe" >nul 2>&1
+    if !errorlevel! equ 0 (
+        call :PRINT_PROGRESS_WITH_STATUS "Clash Mi запущен" "OK"
+        call :PRINT_INFO "Программа работает в фоновом режиме"
+        call :PRINT_INFO "Закройте это окно - Clash Mi продолжит работу"
+    ) else (
+        call :PRINT_WARNING "Clash Mi может запускаться медленно"
+        call :PRINT_INFO "Проверьте иконку в системном трее"
+    )
+    
+    pause
+    goto CLASHMI_MENU
+
+:UNINSTALL_CLASHMI
+    call :PRINT_SECTION "Удаление Clash Mi"
+    
+    call :CLASHMI_STOP_PROCESSES
+    call :CLASHMI_CLEANUP
+    
+    call :PRINT_PROGRESS "Удаление правил брандмауэра..."
+    
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Удаление Clash Mi завершено" "OK"
+    
+    pause
+    goto CLASHMI_MENU
+
+:CLASHMI_STOP_PROCESSES
+    call :PRINT_PROGRESS "Остановка процессов Clash Mi..."
+    
+    tasklist | find /i "clashmi.exe" >nul && (
+        taskkill /F /IM "clashmi.exe" >nul 2>&1
+    )
+    
+    tasklist | find /i "clashmiService.exe" >nul && (
+        taskkill /F /IM "clashmiService.exe" >nul 2>&1
+    )
+    
+    timeout /t 2 /nobreak >nul
+    call :PRINT_PROGRESS_WITH_STATUS "Процессы остановлены" "OK"
+    exit /b 0
+
+:CLASHMI_CLEANUP
+    call :PRINT_PROGRESS "Очистка предыдущей версии..."
+    
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc\Parameters" /v ProxySettingsPerUser /t REG_DWORD /d 1 /f >nul 2>&1
+    netsh winhttp reset proxy >nul 2>&1
+    powershell -Command "[System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()" >nul 2>&1
+    
+    if exist "%CLASHMI_APPDATA_DIR%" (
+        rmdir /s /q "%CLASHMI_APPDATA_DIR%" 2>nul
+    )
+    mkdir "%CLASHMI_APPDATA_DIR%" 2>nul
+    mkdir "%CLASHMI_PROFILES_DIR%" 2>nul
+    
+    if exist "%CLASHMI_INSTALL_DIR%" (
+        rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
+        timeout /t 1 >nul
+        if exist "%CLASHMI_INSTALL_DIR%" (
+            powershell -Command "Remove-Item -Path '%CLASHMI_INSTALL_DIR%' -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+        )
+    )
+    
+    del "%USERPROFILE%\Desktop\%CLASHMI_SHORTCUT_NAME%.lnk" 2>nul
+    del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk" 2>nul
+    del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk" 2>nul
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Очистка завершена" "OK"
+    exit /b 0
+
+:CLASHMI_DOWNLOAD
+    call :PRINT_PROGRESS "Загрузка Clash Mi..."
+    
+    set "CLASHMI_ZIP_FILE=%TEMP%\clashmi_latest.zip"
+    
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_DOWNLOAD_URL%' -OutFile '%CLASHMI_ZIP_FILE%' -UseBasicParsing" >nul 2>&1
+    if !errorlevel! neq 0 (
+        call :PRINT_ERROR "Не удалось скачать программу"
+        exit /b 1
+    )
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Загрузка завершена" "OK"
+    exit /b 0
+
+:CLASHMI_EXTRACT
+    call :PRINT_PROGRESS "Распаковка архива..."
+    
+    mkdir "%CLASHMI_INSTALL_DIR%" 2>nul
+    powershell -Command "Expand-Archive -Path '%CLASHMI_ZIP_FILE%' -DestinationPath '%CLASHMI_INSTALL_DIR%' -Force" >nul 2>&1
+    
+    if not exist "%CLASHMI_EXE_FILE%" (
+        call :PRINT_ERROR "Основной файл не найден"
+        exit /b 1
+    )
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Распаковка завершена" "OK"
+    exit /b 0
+
+:CLASHMI_CREATE_SHORTCUTS
+    call :PRINT_PROGRESS "Создание ярлыков..."
+    
+    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\short1.vbs"
+    echo Set shortcut = WshShell.CreateShortcut("%USERPROFILE%\Desktop\%CLASHMI_SHORTCUT_NAME%.lnk") >> "%TEMP%\short1.vbs"
+    echo shortcut.TargetPath = "%CLASHMI_EXE_FILE%" >> "%TEMP%\short1.vbs"
+    echo shortcut.WorkingDirectory = "%CLASHMI_INSTALL_DIR%" >> "%TEMP%\short1.vbs"
+    echo shortcut.Save >> "%TEMP%\short1.vbs"
+    cscript //nologo "%TEMP%\short1.vbs" >nul
+    del "%TEMP%\short1.vbs" 2>nul
+    
+    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\short2.vbs"
+    echo Set shortcut = WshShell.CreateShortcut("%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk") >> "%TEMP%\short2.vbs"
+    echo shortcut.TargetPath = "%CLASHMI_EXE_FILE%" >> "%TEMP%\short2.vbs"
+    echo shortcut.WorkingDirectory = "%CLASHMI_INSTALL_DIR%" >> "%TEMP%\short2.vbs"
+    echo shortcut.Arguments = "--minimized" >> "%TEMP%\short2.vbs"
+    echo shortcut.Save >> "%TEMP%\short2.vbs"
+    cscript //nologo "%TEMP%\short2.vbs" >nul
+    del "%TEMP%\short2.vbs" 2>nul
+    
+    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\short3.vbs"
+    echo Set shortcut = WshShell.CreateShortcut("%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk") >> "%TEMP%\short3.vbs"
+    echo shortcut.TargetPath = "%CLASHMI_EXE_FILE%" >> "%TEMP%\short3.vbs"
+    echo shortcut.WorkingDirectory = "%CLASHMI_INSTALL_DIR%" >> "%TEMP%\short3.vbs"
+    echo shortcut.Save >> "%TEMP%\short3.vbs"
+    cscript //nologo "%TEMP%\short3.vbs" >nul
+    del "%TEMP%\short3.vbs" 2>nul
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Ярлыки созданы" "OK"
+    exit /b 0
+
+:CLASHMI_SETUP_FIREWALL
+    call :PRINT_PROGRESS "Настройка брандмауэра..."
+    
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
+    
+    timeout /t 1 /nobreak >nul
+    
+    netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmi.exe" dir=in action=allow program="%CLASHMI_EXE_FILE%" protocol=tcp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmi.exe" dir=in action=allow program="%CLASHMI_EXE_FILE%" protocol=udp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    
+    if exist "%CLASHMI_SERVICE_EXE%" (
+        netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmiService.exe" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" protocol=udp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+        netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmiService.exe" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" protocol=tcp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+        netsh advfirewall firewall add rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" protocol=tcp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    )
+    
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=tcp localport=9090 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=udp localport=9090 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=udp localport=7890 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=tcp localport=7890 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Брандмауэр настроен" "OK"
+    exit /b 0
+
+:CLASHMI_DOWNLOAD_CONFIGS
+    call :PRINT_PROGRESS "Загрузка конфигурации..."
+    
+    set "CLASHMI_TEMP_CONF1=%TEMP%\setting.json"
+    set "CLASHMI_TEMP_CONF2=%TEMP%\service_core_setting.json"
+    set "CLASHMI_TEMP_CONF3=%TEMP%\config_tun.yaml"
+    
+    call :PRINT_PROGRESS "Загрузка setting.json..."
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL1%' -OutFile '%CLASHMI_TEMP_CONF1%' -UseBasicParsing" >nul 2>&1
+    if exist "%CLASHMI_TEMP_CONF1%" (
+        copy "%CLASHMI_TEMP_CONF1%" "%CLASHMI_APPDATA_DIR%\" >nul 2>&1
+        call :PRINT_PROGRESS_WITH_STATUS "setting.json загружен" "OK"
+    ) else (
+        call :PRINT_WARNING "Не удалось загрузить setting.json"
+    )
+    
+    call :PRINT_PROGRESS "Загрузка service_core_setting.json..."
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL2%' -OutFile '%CLASHMI_TEMP_CONF2%' -UseBasicParsing" >nul 2>&1
+    if exist "%CLASHMI_TEMP_CONF2%" (
+        copy "%CLASHMI_TEMP_CONF2%" "%CLASHMI_APPDATA_DIR%\" >nul 2>&1
+        call :PRINT_PROGRESS_WITH_STATUS "service_core_setting.json загружен" "OK"
+    ) else (
+        call :PRINT_WARNING "Не удалось загрузить service_core_setting.json"
+    )
+    
+    call :PRINT_PROGRESS "Загрузка config_tun.yaml..."
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL3%' -OutFile '%CLASHMI_TEMP_CONF3%' -UseBasicParsing" >nul 2>&1
+    if exist "%CLASHMI_TEMP_CONF3%" (
+        copy "%CLASHMI_TEMP_CONF3%" "%CLASHMI_PROFILES_DIR%\" >nul 2>&1
+        call :PRINT_PROGRESS_WITH_STATUS "config_tun.yaml загружен" "OK"
+    ) else (
+        call :PRINT_WARNING "Не удалось загрузить config_tun.yaml"
+    )
+    
+    exit /b 0
+
+:CLASHMI_CLEANUP_TEMP
+    call :PRINT_PROGRESS "Очистка временных файлов..."
+    
+    del "%CLASHMI_ZIP_FILE%" 2>nul
+    del "%TEMP%\setting.json" 2>nul
+    del "%TEMP%\service_core_setting.json" 2>nul
+    del "%TEMP%\config_tun.yaml" 2>nul
+    
+    call :PRINT_PROGRESS_WITH_STATUS "Очистка завершена" "OK"
     exit /b 0
 
 :END
