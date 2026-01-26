@@ -1025,34 +1025,17 @@ exit /b 0
     exit /b 0
 
 :CLASHMI_CREATE_SHORTCUTS
-    call :PRINT_PROGRESS "Создание ярлыков..."
+    call :PRINT_PROGRESS "Создание ярлыков (с правами администратора)..."
     
-    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\short1.vbs"
-    echo Set shortcut = WshShell.CreateShortcut("%USERPROFILE%\Desktop\%CLASHMI_SHORTCUT_NAME%.lnk") >> "%TEMP%\short1.vbs"
-    echo shortcut.TargetPath = "%CLASHMI_EXE_FILE%" >> "%TEMP%\short1.vbs"
-    echo shortcut.WorkingDirectory = "%CLASHMI_INSTALL_DIR%" >> "%TEMP%\short1.vbs"
-    echo shortcut.Save >> "%TEMP%\short1.vbs"
-    cscript //nologo "%TEMP%\short1.vbs" >nul
-    del "%TEMP%\short1.vbs" 2>nul
+    :: Используем PowerShell для создания ярлыков с флагом администратора
     
-    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\short2.vbs"
-    echo Set shortcut = WshShell.CreateShortcut("%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk") >> "%TEMP%\short2.vbs"
-    echo shortcut.TargetPath = "%CLASHMI_EXE_FILE%" >> "%TEMP%\short2.vbs"
-    echo shortcut.WorkingDirectory = "%CLASHMI_INSTALL_DIR%" >> "%TEMP%\short2.vbs"
-    echo shortcut.Arguments = "--minimized" >> "%TEMP%\short2.vbs"
-    echo shortcut.Save >> "%TEMP%\short2.vbs"
-    cscript //nologo "%TEMP%\short2.vbs" >nul
-    del "%TEMP%\short2.vbs" 2>nul
+    :: Ярлык в меню Пуск
+    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk'); $sc.TargetPath = '%CLASHMI_EXE_FILE%'; $sc.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $sc.Save(); $bytes = [System.IO.File]::ReadAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk'); $bytes[0x15] = $bytes[0x15] -bor 0x20; [System.IO.File]::WriteAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk', $bytes)"
     
-    echo Set WshShell = CreateObject("WScript.Shell") > "%TEMP%\short3.vbs"
-    echo Set shortcut = WshShell.CreateShortcut("%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk") >> "%TEMP%\short3.vbs"
-    echo shortcut.TargetPath = "%CLASHMI_EXE_FILE%" >> "%TEMP%\short3.vbs"
-    echo shortcut.WorkingDirectory = "%CLASHMI_INSTALL_DIR%" >> "%TEMP%\short3.vbs"
-    echo shortcut.Save >> "%TEMP%\short3.vbs"
-    cscript //nologo "%TEMP%\short3.vbs" >nul
-    del "%TEMP%\short3.vbs" 2>nul
+    :: Ярлык в автозагрузке (с параметром --minimized)
+    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk'); $sc.TargetPath = '%CLASHMI_EXE_FILE%'; $sc.Arguments = '--minimized'; $sc.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $sc.Save(); $bytes = [System.IO.File]::ReadAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk'); $bytes[0x15] = $bytes[0x15] -bor 0x20; [System.IO.File]::WriteAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk', $bytes)"
     
-    call :PRINT_PROGRESS_WITH_STATUS "Ярлыки созданы" "OK"
+    call :PRINT_PROGRESS_WITH_STATUS "Ярлыки созданы (с правами администратора)" "OK"
     exit /b 0
 
 :CLASHMI_SETUP_FIREWALL
