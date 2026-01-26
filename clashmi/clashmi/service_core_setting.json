@@ -111,7 +111,7 @@
     "enable": false
   },
   "tun": {
-    "overwrite": true,
+    "overwrite": false,
     "enable": true,
     "device": "Clash Mi",
     "stack": "system",
