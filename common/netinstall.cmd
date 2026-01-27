@@ -30,6 +30,7 @@ set "CLASHMI_PROFILES_DIR=%CLASHMI_APPDATA_DIR%\profiles"
 set "CLASHMI_CONFIG_URL1=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/setting.json"
 set "CLASHMI_CONFIG_URL2=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/service_core_setting.json"
 set "CLASHMI_CONFIG_URL3=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config_tun.yaml"
+set "CLASHMI_CONFIG_URL4=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config.yaml"
 
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
@@ -870,15 +871,19 @@ exit /b 0
     
     echo Установка Clash MI...
     echo Версия: v%CLASHMI_VERSION%
+    
+    :: Определяем и выводим информацию о пользователе
+    call :GET_USER_INFO
+    
     echo.
     
     call :CLASHMI_STOP_PROCESSES
     call :CLASHMI_CLEANUP
     call :CLASHMI_DOWNLOAD
     call :CLASHMI_EXTRACT
-    call :CLASHMI_CREATE_SHORTCUTS
     call :CLASHMI_SETUP_FIREWALL
     call :CLASHMI_DOWNLOAD_CONFIGS
+    call :CLASHMI_CREATE_SHORTCUTS
     call :CLASHMI_CLEANUP_TEMP
     
     echo.
@@ -891,6 +896,34 @@ exit /b 0
     echo.
     pause
     goto CLASHMI_MENU
+
+:GET_USER_INFO
+    :: Функция определения информации о пользователе
+    setlocal enabledelayedexpansion
+    
+    for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+        for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+    )
+    
+    if not "!DETECTED_USER!"=="" (
+        set "CHECK_USER=!DETECTED_USER!"
+    ) else (
+        set "CHECK_USER=%USERNAME%"
+    )
+    
+    echo Учетная запись: !CHECK_USER!
+    
+    :: Проверяем членство в группе Администраторов
+    set "USER_TYPE=Стандартная"
+    net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
+    
+    echo Тип учетной записи: !USER_TYPE!
+    
+    endlocal & (
+        set "DETECTED_USER=%DETECTED_USER%"
+        set "USER_TYPE=%USER_TYPE%"
+    )
+    exit /b 0
 
 :START_CLASHMI
     call :PRINT_SECTION "Запуск Clash Mi"
@@ -975,12 +1008,27 @@ exit /b 0
     netsh winhttp reset proxy >nul 2>&1
     powershell -Command "[System.Net.WebRequest]::DefaultWebProxy = [System.Net.WebRequest]::GetSystemWebProxy()" >nul 2>&1
     
+    :: 1. Полная очистка ВСЕХ папок clashmi у ВСЕХ пользователей через PowerShell
+    call :PRINT_PROGRESS "Очистка онфигурации у всех пользователей..."
+    powershell -Command "Get-ChildItem -Path 'C:\Users\*\AppData\Roaming\clashmi' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
+    
+    :: 2. Также чистим по конкретному пути для определенного пользователя
+    if defined DETECTED_USER (
+        set "USER_APPDATA=C:\Users\%DETECTED_USER%\AppData\Roaming"
+        set "USER_CLASHMI_DIR=%USER_APPDATA%\clashmi\clashmi"
+        
+        if exist "!USER_CLASHMI_DIR!" (
+            rmdir /s /q "!USER_CLASHMI_DIR!" 2>nul
+        )
+    )
+    
+    :: 3. Очищаем папку администратора
     if exist "%CLASHMI_APPDATA_DIR%" (
         rmdir /s /q "%CLASHMI_APPDATA_DIR%" 2>nul
     )
-    mkdir "%CLASHMI_APPDATA_DIR%" 2>nul
-    mkdir "%CLASHMI_PROFILES_DIR%" 2>nul
     
+    :: 4. Очищаем папку установки
+    call :PRINT_PROGRESS "Очистка основной директории..."
     if exist "%CLASHMI_INSTALL_DIR%" (
         rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
         timeout /t 1 >nul
@@ -989,9 +1037,13 @@ exit /b 0
         )
     )
     
-    del "%USERPROFILE%\Desktop\%CLASHMI_SHORTCUT_NAME%.lnk" 2>nul
-    del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk" 2>nul
-    del "%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk" 2>nul
+    :: 5. Очистка ярлыков пользователя
+    call :PRINT_PROGRESS "Очистка ярлыков..."
+    if defined DETECTED_USER (
+        del "C:\Users\%DETECTED_USER%\Desktop\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Clash Mi.lnk" 2>nul
+    )
     
     call :PRINT_PROGRESS_WITH_STATUS "Очистка завершена" "OK"
     exit /b 0
@@ -1024,20 +1076,6 @@ exit /b 0
     call :PRINT_PROGRESS_WITH_STATUS "Распаковка завершена" "OK"
     exit /b 0
 
-:CLASHMI_CREATE_SHORTCUTS
-    call :PRINT_PROGRESS "Создание ярлыков (с правами администратора)..."
-    
-    :: Используем PowerShell для создания ярлыков с флагом администратора
-    
-    :: Ярлык в меню Пуск
-    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk'); $sc.TargetPath = '%CLASHMI_EXE_FILE%'; $sc.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $sc.Save(); $bytes = [System.IO.File]::ReadAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk'); $bytes[0x15] = $bytes[0x15] -bor 0x20; [System.IO.File]::WriteAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\%CLASHMI_SHORTCUT_NAME%.lnk', $bytes)"
-    
-    :: Ярлык в автозагрузке (с параметром --minimized)
-    powershell -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk'); $sc.TargetPath = '%CLASHMI_EXE_FILE%'; $sc.Arguments = '--minimized'; $sc.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $sc.Save(); $bytes = [System.IO.File]::ReadAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk'); $bytes[0x15] = $bytes[0x15] -bor 0x20; [System.IO.File]::WriteAllBytes('%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\%CLASHMI_SHORTCUT_NAME%.lnk', $bytes)"
-    
-    call :PRINT_PROGRESS_WITH_STATUS "Ярлыки созданы (с правами администратора)" "OK"
-    exit /b 0
-
 :CLASHMI_SETUP_FIREWALL
     call :PRINT_PROGRESS "Настройка брандмауэра..."
     
@@ -1068,14 +1106,30 @@ exit /b 0
 :CLASHMI_DOWNLOAD_CONFIGS
     call :PRINT_PROGRESS "Загрузка конфигурации..."
     
+    :: Определяем путь к AppData пользователя
+    if defined DETECTED_USER (
+        set "USER_APPDATA=C:\Users\%DETECTED_USER%\AppData\Roaming"
+    ) else (
+        set "USER_APPDATA=%APPDATA%"
+    )
+    
+    set "USER_CLASHMI_DIR=%USER_APPDATA%\clashmi\clashmi"
+    set "USER_PROFILES_DIR=%USER_CLASHMI_DIR%\profiles"
+    
     set "CLASHMI_TEMP_CONF1=%TEMP%\setting.json"
     set "CLASHMI_TEMP_CONF2=%TEMP%\service_core_setting.json"
     set "CLASHMI_TEMP_CONF3=%TEMP%\config_tun.yaml"
+    set "CLASHMI_TEMP_CONF4=%TEMP%\config.yaml"
     
+    :: Создаем папки если не существуют
+    if not exist "%USER_CLASHMI_DIR%" mkdir "%USER_CLASHMI_DIR%" 2>nul
+    if not exist "%USER_PROFILES_DIR%" mkdir "%USER_PROFILES_DIR%" 2>nul
+    
+    :: Общие конфиги для всех
     call :PRINT_PROGRESS "Загрузка setting.json..."
     powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL1%' -OutFile '%CLASHMI_TEMP_CONF1%' -UseBasicParsing" >nul 2>&1
     if exist "%CLASHMI_TEMP_CONF1%" (
-        copy "%CLASHMI_TEMP_CONF1%" "%CLASHMI_APPDATA_DIR%\" >nul 2>&1
+        copy "%CLASHMI_TEMP_CONF1%" "%USER_CLASHMI_DIR%\" >nul 2>&1
         call :PRINT_PROGRESS_WITH_STATUS "setting.json загружен" "OK"
     ) else (
         call :PRINT_WARNING "Не удалось загрузить setting.json"
@@ -1084,21 +1138,138 @@ exit /b 0
     call :PRINT_PROGRESS "Загрузка service_core_setting.json..."
     powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL2%' -OutFile '%CLASHMI_TEMP_CONF2%' -UseBasicParsing" >nul 2>&1
     if exist "%CLASHMI_TEMP_CONF2%" (
-        copy "%CLASHMI_TEMP_CONF2%" "%CLASHMI_APPDATA_DIR%\" >nul 2>&1
+        copy "%CLASHMI_TEMP_CONF2%" "%USER_CLASHMI_DIR%\" >nul 2>&1
         call :PRINT_PROGRESS_WITH_STATUS "service_core_setting.json загружен" "OK"
     ) else (
         call :PRINT_WARNING "Не удалось загрузить service_core_setting.json"
     )
     
-    call :PRINT_PROGRESS "Загрузка config_tun.yaml..."
-    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL3%' -OutFile '%CLASHMI_TEMP_CONF3%' -UseBasicParsing" >nul 2>&1
-    if exist "%CLASHMI_TEMP_CONF3%" (
-        copy "%CLASHMI_TEMP_CONF3%" "%CLASHMI_PROFILES_DIR%\" >nul 2>&1
-        call :PRINT_PROGRESS_WITH_STATUS "config_tun.yaml загружен" "OK"
-    ) else (
-        call :PRINT_WARNING "Не удалось загрузить config_tun.yaml"
+    :: Разные конфиги для разных типов учеток
+    if defined USER_TYPE (
+        if /i "%USER_TYPE%"=="Стандартная" (
+            :: Для стандартных - config.yaml
+            call :PRINT_PROGRESS "Загрузка config.yaml..."
+            powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%CLASHMI_TEMP_CONF4%' -UseBasicParsing" >nul 2>&1
+            if exist "%CLASHMI_TEMP_CONF4%" (
+                copy "%CLASHMI_TEMP_CONF4%" "%USER_PROFILES_DIR%\" >nul 2>&1
+                call :PRINT_PROGRESS_WITH_STATUS "config.yaml загружен" "OK"
+            ) else (
+                call :PRINT_WARNING "Не удалось загрузить config.yaml"
+            )
+        ) else (
+            :: Для администраторов - config_tun.yaml
+            call :PRINT_PROGRESS "Загрузка config_tun.yaml..."
+            powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL3%' -OutFile '%CLASHMI_TEMP_CONF3%' -UseBasicParsing" >nul 2>&1
+            if exist "%CLASHMI_TEMP_CONF3%" (
+                copy "%CLASHMI_TEMP_CONF3%" "%USER_PROFILES_DIR%\" >nul 2>&1
+                call :PRINT_PROGRESS_WITH_STATUS "config_tun.yaml загружен" "OK"
+            ) else (
+                call :PRINT_WARNING "Не удалось загрузить config_tun.yaml"
+            )
+        )
     )
     
+    :: Проверяем что файлы созданы
+    echo.
+    echo Проверка созданных файлов:
+    if exist "%USER_CLASHMI_DIR%\setting.json" (
+        echo [OK] setting.json: %USER_CLASHMI_DIR%\setting.json
+    ) else (
+        echo [ERROR] setting.json: не найден
+    )
+    
+    if exist "%USER_CLASHMI_DIR%\service_core_setting.json" (
+        echo [OK] service_core_setting.json: %USER_CLASHMI_DIR%\service_core_setting.json
+    ) else (
+        echo [ERROR] service_core_setting.json: не найден
+    )
+    
+    if defined USER_TYPE (
+        if /i "%USER_TYPE%"=="Стандартная" (
+            if exist "%USER_PROFILES_DIR%\config.yaml" (
+                echo [OK] config.yaml: %USER_PROFILES_DIR%\config.yaml
+            ) else (
+                echo [ERROR] config.yaml: не найден
+            )
+        ) else (
+            if exist "%USER_PROFILES_DIR%\config_tun.yaml" (
+                echo [OK] config_tun.yaml: %USER_PROFILES_DIR%\config_tun.yaml
+            ) else (
+                echo [ERROR] config_tun.yaml: не найден
+            )
+        )
+    )
+    
+    exit /b 0
+
+:CLASHMI_CREATE_SHORTCUTS
+    call :PRINT_PROGRESS "Создание ярлыков..."
+    
+    :: Используем определенного ранее пользователя
+    if not defined DETECTED_USER (
+        call :PRINT_WARNING "Пользователь не определен"
+        goto :END_SHORTCUTS
+    )
+    
+    echo Пользователь: !DETECTED_USER!
+    echo Тип учетки: !USER_TYPE!
+    
+    :: Для всех пользователей создаем личные ярлыки
+    set "START_MENU_DIR=C:\Users\!DETECTED_USER!\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Clash Mi"
+    set "STARTUP_DIR=C:\Users\!DETECTED_USER!\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+    
+    :: Создаем папки если не существуют
+    if not exist "!START_MENU_DIR!" (
+        mkdir "!START_MENU_DIR!" 2>nul
+        if errorlevel 1 (
+            call :PRINT_WARNING "Не удалось создать папку в меню Пуск"
+            goto :CHECK_SHORTCUTS
+        )
+    )
+    
+    :: 1. Создаем ярлык в меню "Пуск" (для всех пользователей)
+    echo Creating Start Menu shortcut...
+    powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('!START_MENU_DIR!\Clash Mi.lnk'); $Shortcut.TargetPath = '%CLASHMI_EXE_FILE%'; $Shortcut.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $Shortcut.Description = 'Clash Mi VPN Client'; $Shortcut.Save()" 2>nul
+    
+    :: 2. Создаем ярлык в автозапуске (для всех пользователей)
+    echo Creating Startup shortcut...
+    powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('!STARTUP_DIR!\Clash Mi.lnk'); $Shortcut.TargetPath = '%CLASHMI_EXE_FILE%'; $Shortcut.Arguments = '--minimized'; $Shortcut.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $Shortcut.Description = 'Clash Mi VPN Client (Автозапуск)'; $Shortcut.Save()" 2>nul
+    
+    :: 3. Для администраторов создаем дополнительный ярлык
+    if /i "!USER_TYPE!"=="Администратор" (
+        echo Creating Admin shortcut...
+        
+        :: Создаем ярлык для администраторов (обычный, без запроса UAC)
+        powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('!START_MENU_DIR!\Clash Mi (Admin).lnk'); $Shortcut.TargetPath = '%CLASHMI_EXE_FILE%'; $Shortcut.WorkingDirectory = '%CLASHMI_INSTALL_DIR%'; $Shortcut.Description = 'Clash Mi VPN Client для администратора'; $Shortcut.Save()" 2>nul
+        
+        call :PRINT_PROGRESS_WITH_STATUS "Доп. ярлык для администратора создан" "OK"
+    )
+    
+    :CHECK_SHORTCUTS
+    :: Проверяем создание
+    set "CREATED_COUNT=0"
+    
+    if exist "!START_MENU_DIR!\Clash Mi.lnk" (
+        call :PRINT_PROGRESS_WITH_STATUS "Ярлык в меню Пуск создан" "OK"
+        set /a CREATED_COUNT+=1
+    ) else (
+        call :PRINT_WARNING "Не удалось создать ярлык в меню Пуск"
+    )
+    
+    if exist "!STARTUP_DIR!\Clash Mi.lnk" (
+        call :PRINT_PROGRESS_WITH_STATUS "Ярлык в автозапуске создан" "OK"
+        set /a CREATED_COUNT+=1
+    ) else (
+        call :PRINT_WARNING "Не удалось создать ярлык в автозапуске"
+    )
+    
+    if !CREATED_COUNT! equ 2 (
+        call :PRINT_PROGRESS_WITH_STATUS "Все ярлыки успешно созданы" "OK"
+    ) else (
+        call :PRINT_WARNING "Создано !CREATED_COUNT! из 2 ярлыков"
+    )
+    
+    :END_SHORTCUTS
     exit /b 0
 
 :CLASHMI_CLEANUP_TEMP
@@ -1108,6 +1279,7 @@ exit /b 0
     del "%TEMP%\setting.json" 2>nul
     del "%TEMP%\service_core_setting.json" 2>nul
     del "%TEMP%\config_tun.yaml" 2>nul
+    del "%TEMP%\config.yaml" 2>nul
     
     call :PRINT_PROGRESS_WITH_STATUS "Очистка завершена" "OK"
     exit /b 0
