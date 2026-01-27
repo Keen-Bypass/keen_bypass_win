@@ -20,7 +20,7 @@ set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com www.youtube.com yt3.ggpht.com
 
 :: Clash Mi настройки
 set "CLASHMI_VERSION=1.0.17.300"
-set "CLASHMI_DOWNLOAD_URL=https://github.com/KaringX/clashmi/releases/latest/download/clashmi_%CLASHMI_VERSION%_windows_x64.zip"
+set "CLASHMI_DOWNLOAD_URL=https://github.com/KaringX/clashmi/releases/download/v%CLASHMI_VERSION%/clashmi_%CLASHMI_VERSION%_windows_x64.zip"
 set "CLASHMI_INSTALL_DIR=C:\Program Files\Clash Mi"
 set "CLASHMI_EXE_FILE=%CLASHMI_INSTALL_DIR%\clashmi.exe"
 set "CLASHMI_SERVICE_EXE=%CLASHMI_INSTALL_DIR%\clashmiService.exe"
