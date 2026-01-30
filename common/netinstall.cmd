@@ -991,14 +991,8 @@ rem:============================================================================
     netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
     netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
     echo   [OK] Очистка брандмауэра
-    
-    :: 4. Удаление запланированных задач автозапуска
-    echo   [ИНФО] Удаление задач планировщика...
-    schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
-    schtasks /Delete /TN "ClashMi_OneTime_*" /F >nul 2>&1
-    echo   [OK] Удаление задач
-    
-    :: 5. Удаление установочных файлов программы
+
+    :: 6. Удаление установочных файлов программы
     echo   [ИНФО] Удаление файлов программы...
     if exist "%CLASHMI_INSTALL_DIR%" (
         :: Первая попытка - стандартная
@@ -1025,7 +1019,7 @@ rem:============================================================================
         echo   [OK] Удаление файлов программы
     )
     
-    :: 6. Удаление пользовательских данных и конфигураций
+    :: 7. Удаление пользовательских данных и конфигураций
     echo   [ИНФО] Удаление пользовательских данных...
     
     :: Получаем информацию о пользователе если не определена
@@ -1073,7 +1067,7 @@ rem:============================================================================
     
     echo   [OK] Удаление пользовательских данных
     
-    :: 7. Заключительная проверка и сообщение
+    :: 8. Заключительная проверка и сообщение
     echo   [ИНФО] Проверка результатов очистки...
     
     set "CLEANUP_SUCCESS=1"
@@ -1620,7 +1614,167 @@ rem:============================================================================
     goto CLASHMI_MENU
 
 :CLASHMI_UNINSTALL
-    call :CLASHMI_CLEANUP
+    echo   [ИНФО] Выполнение полной очистки системы...
+    
+    :: 1. Остановка всех процессов Clash Mi
+    echo   [ИНФО] Остановка процессов Clash Mi...
+    tasklist | find /i "clashmi.exe" >nul && taskkill /F /IM "clashmi.exe" >nul 2>&1
+    tasklist | find /i "clashmiService.exe" >nul && taskkill /F /IM "clashmiService.exe" >nul 2>&1
+    timeout /t 2 /nobreak >nul
+    echo   [OK] Остановка процессов
+    
+    :: 2. Полная очистка прокси-настроек Windows
+    echo   [ИНФО] Сброс системных прокси-настроек...
+    
+    :: Сначала определяем вошедшего пользователя, если еще не определили
+    if not defined DETECTED_USER (
+        for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+            for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+        )
+        if not defined DETECTED_USER set "DETECTED_USER=%USERNAME%"
+    )
+    
+    :: Получаем SID вошедшего пользователя
+    set "USER_SID="
+    for /f "tokens=2 delims==" %%s in ('wmic useraccount where name^="%DETECTED_USER%" get sid /value 2^>nul ^| find "SID="') do (
+        set "USER_SID=%%s"
+    )
+    
+    :: 1. Очищаем прокси для ВОШЕДШЕГО пользователя через HKU
+    if defined USER_SID (
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
+        echo   [OK] Для вошедшего пользователя %DETECTED_USER%
+    )
+    
+    :: 2. Очищаем прокси для ТЕКУЩЕГО пользователя (админа через UAC)
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
+    echo   [OK] Для текущего пользователя
+    
+    :: 3. Очищаем системные настройки (только с правами админа)
+    net session >nul 2>&1
+    if !errorlevel! equ 0 (
+        reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\Internet Settings" /f >nul 2>&1
+        reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc\Parameters" /v ProxySettingsPerUser /t REG_DWORD /d 1 /f >nul 2>&1
+        netsh winhttp reset proxy >nul 2>&1
+        echo   [OK] Системные настройки
+    )
+    
+    :: 3. Удаление всех правил брандмауэра, связанных с Clash Mi
+    echo   [ИНФО] Очистка правил брандмауэра...
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
+    echo   [OK] Очистка брандмауэра
+    
+    :: 4. Удаление запланированных задач автозапуска
+    echo   [ИНФО] Удаление задач планировщика...
+    schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
+    schtasks /Delete /TN "ClashMi_OneTime_*" /F >nul 2>&1
+    echo   [OK] Удаление задач
+    
+    :: 5. Удаление установочных файлов программы
+    echo   [ИНФО] Удаление файлов программы...
+    if exist "%CLASHMI_INSTALL_DIR%" (
+        :: Первая попытка - стандартная
+        rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
+        timeout /t 1 >nul
+        
+        :: Вторая попытка - через PowerShell если не удалось
+        if exist "%CLASHMI_INSTALL_DIR%" (
+            powershell -Command "Remove-Item -Path '%CLASHMI_INSTALL_DIR%' -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+            timeout /t 1 >nul
+        )
+        
+        :: Третья попытка - через takeown и icacls если файлы заблокированы
+        if exist "%CLASHMI_INSTALL_DIR%" (
+            takeown /f "%CLASHMI_INSTALL_DIR%" /r /d y >nul 2>&1
+            icacls "%CLASHMI_INSTALL_DIR%" /grant Everyone:F /t /c /q >nul 2>&1
+            rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
+        )
+    )
+    
+    if exist "%CLASHMI_INSTALL_DIR%" (
+        echo   [FAIL] Удаление файлов программы
+    ) else (
+        echo   [OK] Удаление файлов программы
+    )
+    
+    :: 6. Удаление пользовательских данных и конфигураций
+    echo   [ИНФО] Удаление пользовательских данных...
+    
+    :: Получаем информацию о пользователе если не определена
+    if not defined DETECTED_USER (
+        setlocal enabledelayedexpansion
+        for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+            for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+        )
+        if not "!DETECTED_USER!"=="" (
+            set "CHECK_USER=!DETECTED_USER!"
+        ) else (
+            set "CHECK_USER=%USERNAME%"
+        )
+        endlocal & set "DETECTED_USER=%DETECTED_USER%"
+    )
+    
+    :: Удаляем данные текущего пользователя
+    if defined DETECTED_USER (
+        set "USER_APPDATA=C:\Users\%DETECTED_USER%\AppData\Roaming"
+        
+        :: Удаляем основную папку конфигурации
+        set "USER_CLASHMI_DIR=%USER_APPDATA%\clashmi\clashmi"
+        if exist "!USER_CLASHMI_DIR!" (
+            rmdir /s /q "!USER_CLASHMI_DIR!" 2>nul
+            timeout /t 1 >nul
+        )
+        
+        :: Удаляем все возможные папки clashmi в AppData пользователя
+        powershell -Command "Get-ChildItem -Path 'C:\Users\%DETECTED_USER%\AppData\Roaming' -Filter '*clashmi*' -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+        
+        :: Удаляем ярлыки пользователя
+        del "C:\Users\%DETECTED_USER%\Desktop\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\Desktop\Clash Mi.url" 2>nul
+    )
+    
+    :: Удаляем данные из общей папки AppData
+    if exist "%CLASHMI_APPDATA_DIR%" (
+        rmdir /s /q "%CLASHMI_APPDATA_DIR%" 2>nul
+    )
+    
+    :: Удаляем данные для всех пользователей (глобальная очистка)
+    powershell -Command "Get-ChildItem -Path 'C:\Users\*\AppData\Roaming\clashmi' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+    
+    echo   [OK] Удаление пользовательских данных
+    
+    :: 7. Заключительная проверка и сообщение
+    echo   [ИНФО] Проверка результатов очистки...
+    
+    set "CLEANUP_SUCCESS=1"
+    
+    :: Проверяем, остались ли процессы
+    tasklist | find /i "clashmi.exe" >nul && set "CLEANUP_SUCCESS=0"
+    tasklist | find /i "clashmiService.exe" >nul && set "CLEANUP_SUCCESS=0"
+    
+    :: Проверяем, осталась ли папка программы
+    if exist "%CLASHMI_INSTALL_DIR%" set "CLEANUP_SUCCESS=0"
+    
+    if "!CLEANUP_SUCCESS!"=="1" (
+        echo   [OK] Проверка результатов
+        echo [УСПЕХ] Полная деинсталяция Clash Mi прошла успешно
+    ) else (
+        echo   [WARN] Проверка результатов
+        echo [ВНИМАНИЕ] Некоторые элементы могут быть не удалены. Перезагрузите компьютер и повторите.
+    )
+    
+    exit /b 0
     pause
     goto CLASHMI_MENU
 
