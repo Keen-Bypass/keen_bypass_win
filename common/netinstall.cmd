@@ -1226,9 +1226,9 @@ rem:============================================================================
 
     rem Закомментировано создание ярлыка в автозагрузку - временно отключено
     rem if /i "%USER_TYPE%"=="Администратор" (
-    rem     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_STARTUP%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.Arguments='--minimized';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save();$b=[IO.File]::ReadAllBytes('%SHORTCUT_STARTUP%');$b[0x15]=$b[0x15]-bor 0x20;[IO.File]::WriteAllBytes('%SHORTCUT_STARTUP%',$b)" >nul 2>&1
+    rem     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_STARTUP%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.Arguments='--launch_startup';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save();$b=[IO.File]::ReadAllBytes('%SHORTCUT_STARTUP%');$b[0x15]=$b[0x15]-bor 0x20;[IO.File]::WriteAllBytes('%SHORTCUT_STARTUP%',$b)" >nul 2>&1
     rem ) else (
-    rem     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_STARTUP%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.Arguments='--minimized';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save()" >nul 2>&1
+    rem     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_STARTUP%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.Arguments='--launch_startup';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save()" >nul 2>&1
     rem )
 
     if exist "%SHORTCUT_MAIN%" (
@@ -1459,7 +1459,7 @@ rem:============================================================================
             echo   ^<Actions Context="Principal1"^>
             echo     ^<Exec^>
             echo       ^<Command^>%CLASHMI_EXE_FILE%^</Command^>
-            echo       ^<Arguments^>--minimized^</Arguments^>
+            echo       ^<Arguments^>--launch_startup^</Arguments^>
             echo     ^</Exec^>
             echo   ^</Actions^>
             echo ^</Task^>
@@ -1487,7 +1487,7 @@ rem:============================================================================
         )
     ) else (
         :: ДЛЯ АДМИНИСТРАТОРА - ЗАПУСКАЕМ НАПРЯМУЮ
-        powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--minimized' -WorkingDirectory '%CLASHMI_INSTALL_DIR%' -WindowStyle Hidden" >nul 2>&1
+        powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--launch_startup' -WorkingDirectory '%CLASHMI_INSTALL_DIR%' -WindowStyle Hidden" >nul 2>&1
     )
     
     :: Ждем запуска процесса
@@ -1592,3 +1592,4 @@ rem:============================================================================
 
 :END
 exit /b 0
+
