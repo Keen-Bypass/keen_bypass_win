@@ -404,8 +404,10 @@ exit /b 0
     if "!INTERVAL!"=="" set "INTERVAL=5"
     
     call :PRINT_PROGRESS "Создание задачи автообновления (интервал: !INTERVAL! минут)..."
+    
+    :: Используем cmd.exe напрямую без PowerShell
     schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO !INTERVAL! ^
-        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_DIR%\autoupdate.cmd' -ArgumentList '-silent'\"" ^
+        /TR "cmd.exe /c \"call \"%AUTOUPDATE_DIR%\autoupdate.cmd\" -silent\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
     
     if !errorlevel! neq 0 exit /b 1
