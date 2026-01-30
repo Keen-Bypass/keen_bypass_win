@@ -871,7 +871,7 @@ rem:============================================================================
     if "!CLASHMI_CHOICE!"=="0" goto MENU_MAIN
     if "!CLASHMI_CHOICE!"=="00" exit /b 0
 
-    call :PRINT_ERROR "Неверный выбор: !CLASHMI_CHOICE!"
+    echo [ОШИБКА] Неверный выбор: !CLASHMI_CHOICE!
     pause
     goto CLASHMI_MENU
 
@@ -903,7 +903,8 @@ rem:============================================================================
     exit /b 0
 
 :INSTALL_CLASHMI
-    call :PRINT_SECTION "Установка Clash Mi"
+    echo ======= Установка Clash Mi =======
+    echo.
     
     echo Установка Clash MI...
     echo Версия: v%CLASHMI_VERSION%
@@ -922,7 +923,7 @@ rem:============================================================================
     call :CLASHMI_CLEANUP_TEMP
     
     echo.
-    call :PRINT_SECTION "Установка завершена"
+    echo ======= Установка завершена =======
     echo.
     echo Версия: v%CLASHMI_VERSION%
     echo Программа: %CLASHMI_INSTALL_DIR%
@@ -932,41 +933,73 @@ rem:============================================================================
     goto CLASHMI_MENU
 
 :CLASHMI_CLEANUP
-    call :PRINT_PROGRESS "Выполнение полной очистки системы..."
+    echo   [ИНФО] Выполнение полной очистки системы...
     
     :: 1. Остановка всех процессов Clash Mi
-    call :PRINT_PROGRESS "Остановка процессов Clash Mi..."
+    echo   [ИНФО] Остановка процессов Clash Mi...
     tasklist | find /i "clashmi.exe" >nul && taskkill /F /IM "clashmi.exe" >nul 2>&1
     tasklist | find /i "clashmiService.exe" >nul && taskkill /F /IM "clashmiService.exe" >nul 2>&1
     timeout /t 2 /nobreak >nul
-    call :PRINT_PROGRESS_WITH_STATUS "Остановка процессов" "OK"
+    echo   [OK] Остановка процессов
     
-    :: 2. Сброс всех прокси-настроек Windows
-    call :PRINT_PROGRESS "Сброс системных прокси-настроек..."
+    :: 2. Полная очистка прокси-настроек Windows
+    echo   [ИНФО] Сброс системных прокси-настроек...
+    
+    :: Сначала определяем вошедшего пользователя, если еще не определили
+    if not defined DETECTED_USER (
+        for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+            for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+        )
+        if not defined DETECTED_USER set "DETECTED_USER=%USERNAME%"
+    )
+    
+    :: Получаем SID вошедшего пользователя
+    set "USER_SID="
+    for /f "tokens=2 delims==" %%s in ('wmic useraccount where name^="%DETECTED_USER%" get sid /value 2^>nul ^| find "SID="') do (
+        set "USER_SID=%%s"
+    )
+    
+    :: 1. Очищаем прокси для ВОШЕДШЕГО пользователя через HKU
+    if defined USER_SID (
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
+        echo   [OK] Для вошедшего пользователя %DETECTED_USER%
+    )
+    
+    :: 2. Очищаем прокси для ТЕКУЩЕГО пользователя (админа через UAC)
     reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
     reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
     reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
     reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
-    reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc\Parameters" /v ProxySettingsPerUser /t REG_DWORD /d 1 /f >nul 2>&1
-    netsh winhttp reset proxy >nul 2>&1
-    call :PRINT_PROGRESS_WITH_STATUS "Сброс прокси-настроек" "OK"
+    echo   [OK] Для текущего пользователя
+    
+    :: 3. Очищаем системные настройки (только с правами админа)
+    net session >nul 2>&1
+    if !errorlevel! equ 0 (
+        reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\Internet Settings" /f >nul 2>&1
+        reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc\Parameters" /v ProxySettingsPerUser /t REG_DWORD /d 1 /f >nul 2>&1
+        netsh winhttp reset proxy >nul 2>&1
+        echo   [OK] Системные настройки
+    )
     
     :: 3. Удаление всех правил брандмауэра, связанных с Clash Mi
-    call :PRINT_PROGRESS "Очистка правил брандмауэра..."
+    echo   [ИНФО] Очистка правил брандмауэра...
     netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
     netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
     netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
     netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
-    call :PRINT_PROGRESS_WITH_STATUS "Очистка брандмауэра" "OK"
+    echo   [OK] Очистка брандмауэра
     
     :: 4. Удаление запланированных задач автозапуска
-    call :PRINT_PROGRESS "Удаление задач планировщика..."
+    echo   [ИНФО] Удаление задач планировщика...
     schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
     schtasks /Delete /TN "ClashMi_OneTime_*" /F >nul 2>&1
-    call :PRINT_PROGRESS_WITH_STATUS "Удаление задач" "OK"
+    echo   [OK] Удаление задач
     
     :: 5. Удаление установочных файлов программы
-    call :PRINT_PROGRESS "Удаление файлов программы..."
+    echo   [ИНФО] Удаление файлов программы...
     if exist "%CLASHMI_INSTALL_DIR%" (
         :: Первая попытка - стандартная
         rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
@@ -987,13 +1020,13 @@ rem:============================================================================
     )
     
     if exist "%CLASHMI_INSTALL_DIR%" (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление файлов программы" "FAIL"
+        echo   [FAIL] Удаление файлов программы
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление файлов программы" "OK"
+        echo   [OK] Удаление файлов программы
     )
     
     :: 6. Удаление пользовательских данных и конфигураций
-    call :PRINT_PROGRESS "Удаление пользовательских данных..."
+    echo   [ИНФО] Удаление пользовательских данных...
     
     :: Получаем информацию о пользователе если не определена
     if not defined DETECTED_USER (
@@ -1038,10 +1071,10 @@ rem:============================================================================
     :: Удаляем данные для всех пользователей (глобальная очистка)
     powershell -Command "Get-ChildItem -Path 'C:\Users\*\AppData\Roaming\clashmi' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
     
-    call :PRINT_PROGRESS_WITH_STATUS "Удаление пользовательских данных" "OK"
+    echo   [OK] Удаление пользовательских данных
     
     :: 7. Заключительная проверка и сообщение
-    call :PRINT_PROGRESS "Проверка результатов очистки..."
+    echo   [ИНФО] Проверка результатов очистки...
     
     set "CLEANUP_SUCCESS=1"
     
@@ -1053,47 +1086,47 @@ rem:============================================================================
     if exist "%CLASHMI_INSTALL_DIR%" set "CLEANUP_SUCCESS=0"
     
     if "!CLEANUP_SUCCESS!"=="1" (
-        call :PRINT_PROGRESS_WITH_STATUS "Проверка результатов" "OK"
-        call :PRINT_SUCCESS "Полная деинсталяция Clash Mi прошла успешно"
+        echo   [OK] Проверка результатов
+        echo [УСПЕХ] Полная деинсталяция Clash Mi прошла успешно
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Проверка результатов" "WARN"
-        call :PRINT_WARNING "Некоторые элементы могут быть не удалены. Перезагрузите компьютер и повторите."
+        echo   [WARN] Проверка результатов
+        echo [ВНИМАНИЕ] Некоторые элементы могут быть не удалены. Перезагрузите компьютер и повторите.
     )
     
     exit /b 0
 
 :CLASHMI_DOWNLOAD
-    call :PRINT_PROGRESS "Загрузка..."
+    echo   [ИНФО] Загрузка...
     
     set "CLASHMI_ZIP_FILE=%TEMP%\clashmi_latest.zip"
     powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_DOWNLOAD_URL%' -OutFile '%CLASHMI_ZIP_FILE%' -UseBasicParsing" >nul 2>&1
     
     if !errorlevel! equ 0 (
         if exist "!CLASHMI_ZIP_FILE!" (
-            call :PRINT_PROGRESS_WITH_STATUS "Загрузка Clash Mi" "OK"
+            echo   [OK] Загрузка Clash Mi
             exit /b 0
         )
     )
     
-    call :PRINT_PROGRESS_WITH_STATUS "Загрузка Clash Mi" "FAIL"
+    echo   [FAIL] Загрузка Clash Mi
     exit /b 1
 
 :CLASHMI_EXTRACT
-    call :PRINT_PROGRESS "Распаковка архива..."
+    echo   [ИНФО] Распаковка архива...
     
     mkdir "%CLASHMI_INSTALL_DIR%" 2>nul
     powershell -Command "Expand-Archive -Path '%CLASHMI_ZIP_FILE%' -DestinationPath '%CLASHMI_INSTALL_DIR%' -Force" >nul 2>&1
     
     if not exist "%CLASHMI_EXE_FILE%" (
-        call :PRINT_PROGRESS_WITH_STATUS "Распаковка архива" "FAIL"
+        echo   [FAIL] Распаковка архива
         exit /b 1
     )
     
-    call :PRINT_PROGRESS_WITH_STATUS "Распаковка архива" "OK"
+    echo   [OK] Распаковка архива
     exit /b 0
 
 :CLASHMI_SETUP_FIREWALL
-    call :PRINT_PROGRESS "Настройка брандмауэра..."
+    echo   [ИНФО] Настройка брандмауэра...
     
     netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
     netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
@@ -1118,15 +1151,15 @@ rem:============================================================================
     netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=udp localport=7890 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
     netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=tcp localport=7890 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
     
-    call :PRINT_PROGRESS_WITH_STATUS "Настройка брандмауэра" "OK"
+    echo   [OK] Настройка брандмауэра
     exit /b 0
     
 :FIREWALL_FAIL
-    call :PRINT_PROGRESS_WITH_STATUS "Настройка брандмауэра" "FAIL"
+    echo   [FAIL] Настройка брандмауэра
     exit /b 1
 
 :CLASHMI_DOWNLOAD_CONFIGS
-    call :PRINT_PROGRESS "Загрузка конфигурации..."
+    echo   [ИНФО] Загрузка конфигурации...
     
     if defined DETECTED_USER (
         set "USER_APPDATA=C:\Users\%DETECTED_USER%\AppData\Roaming"
@@ -1141,49 +1174,49 @@ rem:============================================================================
     if not exist "%USER_PROFILES_DIR%" mkdir "%USER_PROFILES_DIR%" 2>nul
     
     :: Загружаем setting.json
-    call :PRINT_PROGRESS "Загрузка setting.json..."
+    echo   [ИНФО] Загрузка setting.json...
     powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL1%' -OutFile '%TEMP%\setting.json' -UseBasicParsing" >nul 2>&1
     if exist "%TEMP%\setting.json" (
         copy "%TEMP%\setting.json" "%USER_CLASHMI_DIR%\" >nul 2>&1
-        call :PRINT_PROGRESS_WITH_STATUS "Загрузка setting.json" "OK"
+        echo   [OK] Загрузка setting.json
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Загрузка setting.json" "FAIL"
+        echo   [FAIL] Загрузка setting.json
     )
     
     :: Загружаем service_core_setting.json
-    call :PRINT_PROGRESS "Загрузка service_core_setting.json..."
+    echo   [ИНФО] Загрузка service_core_setting.json...
     powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL2%' -OutFile '%TEMP%\service_core_setting.json' -UseBasicParsing" >nul 2>&1
     if exist "%TEMP%\service_core_setting.json" (
         copy "%TEMP%\service_core_setting.json" "%USER_CLASHMI_DIR%\" >nul 2>&1
-        call :PRINT_PROGRESS_WITH_STATUS "Загрузка service_core_setting.json" "OK"
+        echo   [OK] Загрузка service_core_setting.json
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Загрузка service_core_setting.json" "FAIL"
+        echo   [FAIL] Загрузка service_core_setting.json
     )
     
     :: Загружаем конфиг в зависимости от типа учетной записи
     if defined USER_TYPE (
         if /i "%USER_TYPE%"=="Стандартная" (
-            call :PRINT_PROGRESS "Загрузка config.yaml..."
+            echo   [ИНФО] Загрузка config.yaml...
             powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%TEMP%\config.yaml' -UseBasicParsing" >nul 2>&1
             if exist "%TEMP%\config.yaml" (
                 copy "%TEMP%\config.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
-                call :PRINT_PROGRESS_WITH_STATUS "Загрузка config.yaml" "OK"
+                echo   [OK] Загрузка config.yaml
             ) else (
-                call :PRINT_PROGRESS_WITH_STATUS "Загрузка config.yaml" "FAIL"
+                echo   [FAIL] Загрузка config.yaml
             )
         ) else (
-            call :PRINT_PROGRESS "Загрузка config_tun.yaml..."
+            echo   [ИНФО] Загрузка config_tun.yaml...
             powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL3%' -OutFile '%TEMP%\config_tun.yaml' -UseBasicParsing" >nul 2>&1
             if exist "%TEMP%\config_tun.yaml" (
                 copy "%TEMP%\config_tun.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
-                call :PRINT_PROGRESS_WITH_STATUS "Загрузка config_tun.yaml" "OK"
+                echo   [OK] Загрузка config_tun.yaml
             ) else (
-                call :PRINT_PROGRESS_WITH_STATUS "Загрузка config_tun.yaml" "FAIL"
+                echo   [FAIL] Загрузка config_tun.yaml
             )
         )
     )
     
-    call :PRINT_PROGRESS "Проверка созданных файлов..."
+    echo   [ИНФО] Проверка созданных файлов...
     set "CHECK_OK=1"
     if not exist "%USER_CLASHMI_DIR%\setting.json" set "CHECK_OK=0"
     if not exist "%USER_CLASHMI_DIR%\service_core_setting.json" set "CHECK_OK=0"
@@ -1196,18 +1229,18 @@ rem:============================================================================
     )
     
     if "!CHECK_OK!"=="1" (
-        call :PRINT_PROGRESS_WITH_STATUS "Проверка созданных файлов" "OK"
+        echo   [OK] Проверка созданных файлов
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Проверка созданных файлов" "FAIL"
+        echo   [FAIL] Проверка созданных файлов
     )
     
     exit /b 0
 
 :CLASHMI_CREATE_SHORTCUTS
-    call :PRINT_PROGRESS "Создание ярлыков..."
+    echo   [ИНФО] Создание ярлыков...
     
     if not defined DETECTED_USER (
-        call :PRINT_PROGRESS_WITH_STATUS "Создание ярлыков" "FAIL"
+        echo   [FAIL] Создание ярлыков
         exit /b 1
     )
 
@@ -1234,23 +1267,23 @@ rem:============================================================================
     if exist "%SHORTCUT_MAIN%" (
         rem Закомментирована проверка ярлыка в автозагрузке
         rem if exist "%SHORTCUT_STARTUP%" (
-        rem     call :PRINT_PROGRESS_WITH_STATUS "Создание ярлыков" "OK"
+        rem     echo   [OK] Создание ярлыков
         rem ) else (
-        rem     call :PRINT_PROGRESS_WITH_STATUS "Создание ярлыков" "PARTIAL"
+        rem     echo   [PARTIAL] Создание ярлыков
         rem )
-        call :PRINT_PROGRESS_WITH_STATUS "Создание ярлыков" "OK"
+        echo   [OK] Создание ярлыков
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Создание ярлыков" "FAIL"
+        echo   [FAIL] Создание ярлыков
     )
 
     exit /b 0
 
 :CLASHMI_AUTORUN
-    call :PRINT_PROGRESS "Настройка автозапуска"
+    echo   [ИНФО] Настройка автозапуска
     
     :: Проверяем, установлен ли Clash Mi
     if not exist "%CLASHMI_EXE_FILE%" (
-        call :PRINT_ERROR "Clash Mi не установлен!"
+        echo [ОШИБКА] Clash Mi не установлен!
         pause
         goto CLASHMI_MENU
     )
@@ -1285,7 +1318,7 @@ rem:============================================================================
     )
     
     if "!USER_SID!"=="" (
-        call :PRINT_ERROR "Не удалось получить SID пользователя!"
+        echo [ОШИБКА] Не удалось получить SID пользователя!
         endlocal
         pause
         goto CLASHMI_MENU
@@ -1352,9 +1385,9 @@ rem:============================================================================
     if !errorlevel! equ 0 (
         :: Удаляем временный XML файл
         if exist "!TASK_XML!" del "!TASK_XML!" >nul 2>&1
-        call :PRINT_PROGRESS_WITH_STATUS "Настройка автозапуска" "OK"
+        echo   [OK] Настройка автозапуска
     ) else (
-        call :PRINT_ERROR "Ошибка при создании задачи!"
+        echo [ОШИБКА] Ошибка при создании задачи!
         if exist "!TASK_XML!" del "!TASK_XML!" >nul 2>&1
     )
     
@@ -1362,10 +1395,10 @@ rem:============================================================================
     exit /b 0
 
 :CLASHMI_START_AUTO
-    call :PRINT_PROGRESS "Запуск"
+    echo   [ИНФО] Запуск
     
     if not exist "%CLASHMI_EXE_FILE%" (
-        call :PRINT_ERROR "Clash Mi не найден"
+        echo [ОШИБКА] Clash Mi не найден
         exit /b 0
     )
     
@@ -1496,24 +1529,24 @@ rem:============================================================================
     :: Проверяем, запустился ли процесс
     tasklist | find /i "clashmi.exe" >nul 2>&1
     if !errorlevel! equ 0 (
-        call :PRINT_PROGRESS_WITH_STATUS "Запуск" "OK"
+        echo   [OK] Запуск
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Запуск" "FAIL"
+        echo   [FAIL] Запуск
     )
     
     endlocal
     exit /b 0
 
 :CLASHMI_CLEANUP_TEMP
-    call :PRINT_PROGRESS "Очистка временных файлов установки..."
+    echo   [ИНФО] Очистка временных файлов установки...
     
     :: Удаляем скачанный архив
     if exist "%TEMP%\clashmi_latest.zip" (
         del /q "%TEMP%\clashmi_latest.zip" >nul 2>&1
         if exist "%TEMP%\clashmi_latest.zip" (
-            call :PRINT_PROGRESS_WITH_STATUS "Удаление архива" "FAIL"
+            echo   [FAIL] Удаление архива
         ) else (
-            call :PRINT_PROGRESS_WITH_STATUS "Удаление архива" "OK"
+            echo   [OK] Удаление архива
         )
     )
     
@@ -1543,13 +1576,13 @@ rem:============================================================================
     
     :: Проверяем результаты
     if "!TEMP_FILES_TOTAL!"=="0" (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление временных файлов" "SKIP"
+        echo   [SKIP] Удаление временных файлов
         echo   [ИНФО] Временные файлы не найдены
     ) else if "!TEMP_FILES_DELETED!"=="!TEMP_FILES_TOTAL!" (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление временных файлов" "OK"
+        echo   [OK] Удаление временных файлов
         echo   [УСПЕХ] Удалено файлов: !TEMP_FILES_DELETED! из !TEMP_FILES_TOTAL!
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление временных файлов" "PARTIAL"
+        echo   [PARTIAL] Удаление временных файлов
         echo   [ВНИМАНИЕ] Удалено файлов: !TEMP_FILES_DELETED! из !TEMP_FILES_TOTAL!
     )
     
@@ -1562,17 +1595,18 @@ rem:============================================================================
 
 
 :CLASHMI_AUTORUN_DISABLE
-    call :PRINT_SECTION "Удаление автозапуска Clash Mi"
+    echo ======= Удаление автозапуска Clash Mi =======
+    echo.
     
-    call :PRINT_PROGRESS "Удаление задачи..."
+    echo   [ИНФО] Удаление задачи...
     schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
     
     if !errorlevel! equ 0 (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление задачи" "OK"
+        echo   [OK] Удаление задачи
         echo.
         echo [УСПЕХ] Автозапуск отключен!
     ) else (
-        call :PRINT_PROGRESS_WITH_STATUS "Удаление задачи" "SKIP"
+        echo   [SKIP] Удаление задачи
         echo.
         echo [ИНФО] Задача автозапуска не найдена.
     )
