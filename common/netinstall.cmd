@@ -1296,9 +1296,6 @@ rem:============================================================================
     set "USER_TYPE=Стандартная"
     net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
     
-    :: Удаляем старую задачу
-    schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
-    
     :: Получаем SID пользователя
     set "USER_SID="
     for /f "tokens=2 delims= " %%s in (
@@ -1780,4 +1777,5 @@ rem:============================================================================
 
 :END
 exit /b 0
+
 
