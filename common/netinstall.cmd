@@ -1386,143 +1386,35 @@ rem:============================================================================
     exit /b 0
 
 :CLASHMI_START_AUTO
-    echo   [ИНФО] Запуск
-    
-    if not exist "%CLASHMI_EXE_FILE%" (
-        echo [ОШИБКА] Clash Mi не найден
-        exit /b 0
-    )
-    
     setlocal enabledelayedexpansion
     
-    :: Получаем информацию о текущем пользователе
-    set "DETECTED_USER="
+    :: Получаем информацию о пользователе
     for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
         for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
     )
-    if not "!DETECTED_USER!"=="" (
-        set "CHECK_USER=!DETECTED_USER!"
-    ) else (
-        set "CHECK_USER=%USERNAME%"
-    )
-    set "USER_TYPE=Стандартная"
-    net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
     
-    :: Останавливаем все предыдущие процессы Clash Mi
-    taskkill /F /IM "clashmi.exe" >nul 2>&1
-    taskkill /F /IM "clashmiService.exe" >nul 2>&1
-    timeout /t 2 /nobreak >nul
+    if not defined DETECTED_USER set "DETECTED_USER=%USERNAME%"
     
-    if /i "!USER_TYPE!"=="Стандартная" (
-        :: ДЛЯ СТАНДАРТНОГО ПОЛЬЗОВАТЕЛЯ - СОЗДАЕМ ВРЕМЕННУЮ ЗАДАЧУ
-        set "TASK_NAME=ClashMi_OneTime_%RANDOM%"
-        
-        :: Получаем SID пользователя
-        set "USER_SID="
-        for /f "tokens=2 delims= " %%s in (
-            'powershell -NoProfile -ExecutionPolicy Bypass -Command "([System.Security.Principal.NTAccount]'%USERDOMAIN%\!DETECTED_USER!').Translate([System.Security.Principal.SecurityIdentifier]).Value" 2^>nul'
-        ) do set "USER_SID=%%s"
-        
-        if "!USER_SID!"=="" (
-            set "USER_ID=%USERDOMAIN%\!DETECTED_USER!"
-            set "USE_SID=false"
-        ) else (
-            set "USER_ID=!USER_SID!"
-            set "USE_SID=true"
-        )
-        
-        :: Создаем XML файл задачи
-        set "TASK_XML=%TEMP%\!TASK_NAME!.xml"
-        
-        (
-            echo ^<?xml version="1.0" encoding="UTF-16"?^>
-            echo ^<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"^>
-            echo   ^<RegistrationInfo^>
-            echo     ^<Author^>%USERDOMAIN%\!DETECTED_USER!^</Author^>
-            echo     ^<URI^>\Clash Mi Temporary Task^</URI^>
-            echo   ^</RegistrationInfo^>
-            echo   ^<Triggers^>
-            echo     ^<LogonTrigger id="Trigger1"^>
-            echo       ^<Enabled^>true^</Enabled^>
-            echo       ^<UserId^>%USERDOMAIN%\!DETECTED_USER!^</UserId^>
-            echo       ^<Delay^>PT1S^</Delay^>
-            echo     ^</LogonTrigger^>
-            echo   ^</Triggers^>
-            echo   ^<Principals^>
-            echo     ^<Principal id="Principal1"^>
-            if "!USE_SID!"=="true" (
-                echo       ^<UserId^>!USER_SID!^</UserId^>
-            ) else (
-                echo       ^<UserId^>%USERDOMAIN%\!DETECTED_USER!^</UserId^>
-            )
-            echo       ^<LogonType^>InteractiveToken^</LogonType^>
-            echo       ^<RunLevel^>HighestAvailable^</RunLevel^>
-            echo     ^</Principal^>
-            echo   ^</Principals^>
-            echo   ^<Settings^>
-            echo     ^<MultipleInstancesPolicy^>IgnoreNew^</MultipleInstancesPolicy^>
-            echo     ^<DisallowStartIfOnBatteries^>false^</DisallowStartIfOnBatteries^>
-            echo     ^<StopIfGoingOnBatteries^>false^</StopIfGoingOnBatteries^>
-            echo     ^<AllowHardTerminate^>true^</AllowHardTerminate^>
-            echo     ^<StartWhenAvailable^>false^</StartWhenAvailable^>
-            echo     ^<RunOnlyIfNetworkAvailable^>false^</RunOnlyIfNetworkAvailable^>
-            echo     ^<IdleSettings^>
-            echo       ^<Duration^>PT10M^</Duration^>
-            echo       ^<WaitTimeout^>PT1H^</WaitTimeout^>
-            echo       ^<StopOnIdleEnd^>true^</StopOnIdleEnd^>
-            echo       ^<RestartOnIdle^>false^</RestartOnIdle^>
-            echo     ^</IdleSettings^>
-            echo     ^<AllowStartOnDemand^>true^</AllowStartOnDemand^>
-            echo     ^<Enabled^>true^</Enabled^>
-            echo     ^<Hidden^>false^</Hidden^>
-            echo     ^<RunOnlyIfIdle^>false^</RunOnlyIfIdle^>
-            echo     ^<WakeToRun^>false^</WakeToRun^>
-            echo     ^<ExecutionTimeLimit^>PT0S^</ExecutionTimeLimit^>
-            echo     ^<Priority^>4^</Priority^>
-            echo   ^</Settings^>
-            echo   ^<Actions Context="Principal1"^>
-            echo     ^<Exec^>
-            echo       ^<Command^>%CLASHMI_EXE_FILE%^</Command^>
-            echo       ^<Arguments^>--launch_startup^</Arguments^>
-            echo     ^</Exec^>
-            echo   ^</Actions^>
-            echo ^</Task^>
-        ) > "!TASK_XML!"
-        
-        :: Импортируем задачу
-        schtasks /Create /TN "!TASK_NAME!" /XML "!TASK_XML!" /F >nul 2>&1
-        
-        if !errorlevel! equ 0 (
-            :: Запускаем задачу немедленно
-            schtasks /Run /TN "!TASK_NAME!" >nul 2>&1
-            
-            if !errorlevel! equ 0 (
-                :: Ждем немного и удаляем задачу
-                timeout /t 5 /nobreak >nul
-                schtasks /Delete /TN "!TASK_NAME!" /F >nul 2>&1
-                del "!TASK_XML!" 2>nul
-            ) else (
-                :: Удаляем задачу при ошибке
-                schtasks /Delete /TN "!TASK_NAME!" /F >nul 2>&1
-                del "!TASK_XML!" 2>nul
-            )
-        ) else (
-            if exist "!TASK_XML!" del "!TASK_XML!" 2>nul
-        )
-    ) else (
-        :: ДЛЯ АДМИНИСТРАТОРА - ЗАПУСКАЕМ НАПРЯМУЮ
-        powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--launch_startup' -WorkingDirectory '%CLASHMI_INSTALL_DIR%' -WindowStyle Hidden" >nul 2>&1
-    )
+    :: Создаем простую задачу с немедленным запуском
+    set "TASK_NAME=ClashMi_Immediate_%RANDOM%"
     
-    :: Ждем запуска процесса
-    timeout /t 5 /nobreak >nul
+    echo   [ИНФО] Создание немедленной задачи запуска...
     
-    :: Проверяем, запустился ли процесс
-    tasklist | find /i "clashmi.exe" >nul 2>&1
+    :: Создаем задачу
+    schtasks /Create /TN "!TASK_NAME!" /SC ONCE /ST 00:00 /RU "!DETECTED_USER!" /RL HIGHEST ^
+        /TR "\"!CLASHMI_EXE_FILE!\" --launch_startup" /F >nul 2>&1
+    
     if !errorlevel! equ 0 (
-        echo   [OK] Запуск
+        :: Немедленно запускаем задачу
+        schtasks /Run /TN "!TASK_NAME!" >nul 2>&1
+        
+        :: Ждем немного и удаляем задачу
+        timeout /t 3 >nul
+        schtasks /Delete /TN "!TASK_NAME!" /F >nul 2>&1
+        
+        echo   [OK] Программа запущена от имени !DETECTED_USER!
     ) else (
-        echo   [FAIL] Запуск
+        echo   [FAIL] Не удалось создать задачу
     )
     
     endlocal
