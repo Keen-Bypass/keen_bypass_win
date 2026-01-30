@@ -564,7 +564,7 @@ exit /b 0
         echo   ^<Actions Context="Author"^>
         echo     ^<Exec^>
         echo       ^<Command^>%CLASHMI_EXE_FILE%^</Command^>
-        echo       ^<Arguments^>--minimized^</Arguments^>
+        echo       ^<Arguments^>--launch_startup^</Arguments^>
         echo     ^</Exec^>
         echo   ^</Actions^>
         echo ^</Task^>
@@ -587,7 +587,7 @@ exit /b 0
     )
     
     :: Запуск приложения
-    powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--minimized' -WindowStyle Hidden" >nul 2>&1
+    powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--launch_startup' -WindowStyle Hidden" >nul 2>&1
     
     :: Ждем запуска
     timeout /t 5 >nul
