@@ -258,23 +258,19 @@ exit /b 0
     powershell -Command "Start-Process -Verb RunAs -FilePath '%PRESET_FILE%' -Wait" >nul 2>&1
     exit /b 0
 
-:SETUP_AUTO_UPDATE
-    set "AUTOUPDATE_TASK=keen_bypass_win_autoupdate"
-    set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
+:CREATE_AUTOUPDATE_TASK
+    set "INTERVAL=%~1"
+    if "!INTERVAL!"=="" set "INTERVAL=5"
     
-    schtasks /Query /TN "%AUTOUPDATE_TASK%" >nul 2>&1
-    if %errorlevel% equ 0 (
-        schtasks /Delete /TN "%AUTOUPDATE_TASK%" /F >nul 2>&1
-    )
+    call :PRINT_PROGRESS "Создание задачи автообновления (интервал: !INTERVAL! минут)..."
     
-    mkdir "%AUTOUPDATE_DIR%" >nul 2>&1
-    
-    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('!GITHUB_URL!', '%AUTOUPDATE_DIR%\autoupdate.cmd')" >nul 2>&1
-    
-    schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO 10 ^
-        /TR "powershell -WindowStyle Hidden -Command \"Start-Process -Verb RunAs -FilePath '%AUTOUPDATE_DIR%\autoupdate.cmd' -ArgumentList '-silent'\"" ^
+    :: Используем cmd.exe напрямую без PowerShell
+    schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO !INTERVAL! ^
+        /TR "cmd.exe /c \"call \"%AUTOUPDATE_DIR%\autoupdate.cmd\" -silent\"" ^
         /RU SYSTEM /RL HIGHEST /F >nul 2>&1
-
+    
+    if !errorlevel! neq 0 exit /b 1
+    call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления создана" "OK"
     exit /b 0
 
 :SAVE_VERSION_INFO
