@@ -351,25 +351,21 @@ exit /b 0
 :GET_USER_INFO
     setlocal enabledelayedexpansion
     
-    :: Определяем текущего пользователя
     for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
         for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
     )
     
-    if "!DETECTED_USER!"=="" (
-        set "DETECTED_USER=%USERNAME%"
+    if not "!DETECTED_USER!"=="" (
+        set "CHECK_USER=!DETECTED_USER!"
+    ) else (
+        set "CHECK_USER=%USERNAME%"
     )
     
-    if "!DETECTED_USER!"=="" (
-        endlocal
-        exit /b 1
-    )
+    echo Учетная запись: !CHECK_USER!
     
-    :: Определяем тип учетной записи
     set "USER_TYPE=Стандартная"
-    net user "!DETECTED_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
+    net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
     
-    echo Учетная запись: !DETECTED_USER!
     echo Тип учетной записи: !USER_TYPE!
     
     endlocal & (
@@ -379,76 +375,233 @@ exit /b 0
     exit /b 0
 
 :CLASHMI_CLEANUP
-    echo Очистка предыдущей установки...
+    echo   [ИНФО] Выполнение полной очистки системы...
     
-    :: Остановка процессов
-    taskkill /F /IM "clashmi.exe" >nul 2>&1
-    taskkill /F /IM "clashmiService.exe" >nul 2>&1
-    timeout /t 2 >nul
+    :: 1. Остановка всех процессов Clash Mi
+    echo   [ИНФО] Остановка процессов Clash Mi...
+    tasklist | find /i "clashmi.exe" >nul && taskkill /F /IM "clashmi.exe" >nul 2>&1
+    tasklist | find /i "clashmiService.exe" >nul && taskkill /F /IM "clashmiService.exe" >nul 2>&1
+    timeout /t 2 /nobreak >nul
+    echo   [OK] Остановка процессов
     
-    :: Сброс прокси настроек
-    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+    :: 2. Полная очистка прокси-настроек Windows
+    echo   [ИНФО] Сброс системных прокси-настроек...
     
-    :: Удаление правил брандмауэра
-    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
-    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
-    
-    :: Удаление файлов
-    if exist "%CLASHMI_INSTALL_DIR%" (
-        rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
+    :: Сначала определяем вошедшего пользователя, если еще не определили
+    if not defined DETECTED_USER (
+        for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+            for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+        )
+        if not defined DETECTED_USER set "DETECTED_USER=%USERNAME%"
     )
     
-    echo Очистка завершена.
+    :: Получаем SID вошедшего пользователя
+    set "USER_SID="
+    for /f "tokens=2 delims==" %%s in ('wmic useraccount where name^="%DETECTED_USER%" get sid /value 2^>nul ^| find "SID="') do (
+        set "USER_SID=%%s"
+    )
+    
+    :: 1. Очищаем прокси для ВОШЕДШЕГО пользователя через HKU
+    if defined USER_SID (
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
+        reg add "HKU\%USER_SID%\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
+        echo   [OK] Для вошедшего пользователя %DETECTED_USER%
+    )
+    
+    :: 2. Очищаем прокси для ТЕКУЩЕГО пользователя (админа через UAC)
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer /t REG_SZ /d "" /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyOverride /t REG_SZ /d "<local>" /f >nul 2>&1
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v AutoConfigURL /t REG_SZ /d "" /f >nul 2>&1
+    echo   [OK] Для текущего пользователя
+    
+    :: 3. Очищаем системные настройки (только с правами админа)
+    net session >nul 2>&1
+    if !errorlevel! equ 0 (
+        reg delete "HKLM\SOFTWARE\Policies\Microsoft\Windows\CurrentVersion\Internet Settings" /f >nul 2>&1
+        reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinHttpAutoProxySvc\Parameters" /v ProxySettingsPerUser /t REG_DWORD /d 1 /f >nul 2>&1
+        netsh winhttp reset proxy >nul 2>&1
+        echo   [OK] Системные настройки
+    )
+    
+    :: 3. Удаление всех правил брандмауэра, связанных с Clash Mi
+    echo   [ИНФО] Очистка правил брандмауэра...
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
+    echo   [OK] Очистка брандмауэра
+    
+    :: 4. Удаление запланированных задач автозапуска
+    echo   [ИНФО] Удаление задач планировщика...
+    schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
+    schtasks /Delete /TN "ClashMi_OneTime_*" /F >nul 2>&1
+    echo   [OK] Удаление задач
+    
+    :: 5. Удаление установочных файлов программы
+    echo   [ИНФО] Удаление файлов программы...
+    if exist "%CLASHMI_INSTALL_DIR%" (
+        :: Первая попытка - стандартная
+        rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
+        timeout /t 1 >nul
+        
+        :: Вторая попытка - через PowerShell если не удалось
+        if exist "%CLASHMI_INSTALL_DIR%" (
+            powershell -Command "Remove-Item -Path '%CLASHMI_INSTALL_DIR%' -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+            timeout /t 1 >nul
+        )
+        
+        :: Третья попытка - через takeown и icacls если файлы заблокированы
+        if exist "%CLASHMI_INSTALL_DIR%" (
+            takeown /f "%CLASHMI_INSTALL_DIR%" /r /d y >nul 2>&1
+            icacls "%CLASHMI_INSTALL_DIR%" /grant Everyone:F /t /c /q >nul 2>&1
+            rmdir /s /q "%CLASHMI_INSTALL_DIR%" 2>nul
+        )
+    )
+    
+    if exist "%CLASHMI_INSTALL_DIR%" (
+        echo   [FAIL] Удаление файлов программы
+    ) else (
+        echo   [OK] Удаление файлов программы
+    )
+    
+    :: 6. Удаление пользовательских данных и конфигураций
+    echo   [ИНФО] Удаление пользовательских данных...
+    
+    :: Получаем информацию о пользователе если не определена
+    if not defined DETECTED_USER (
+        setlocal enabledelayedexpansion
+        for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+            for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+        )
+        if not "!DETECTED_USER!"=="" (
+            set "CHECK_USER=!DETECTED_USER!"
+        ) else (
+            set "CHECK_USER=%USERNAME%"
+        )
+        endlocal & set "DETECTED_USER=%DETECTED_USER%"
+    )
+    
+    :: Удаляем данные текущего пользователя
+    if defined DETECTED_USER (
+        set "USER_APPDATA=C:\Users\%DETECTED_USER%\AppData\Roaming"
+        
+        :: Удаляем основную папку конфигурации
+        set "USER_CLASHMI_DIR=%USER_APPDATA%\clashmi\clashmi"
+        if exist "!USER_CLASHMI_DIR!" (
+            rmdir /s /q "!USER_CLASHMI_DIR!" 2>nul
+            timeout /t 1 >nul
+        )
+        
+        :: Удаляем все возможные папки clashmi в AppData пользователя
+        powershell -Command "Get-ChildItem -Path 'C:\Users\%DETECTED_USER%\AppData\Roaming' -Filter '*clashmi*' -Directory -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+        
+        :: Удаляем ярлыки пользователя
+        del "C:\Users\%DETECTED_USER%\Desktop\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Clash Mi.lnk" 2>nul
+        del "C:\Users\%DETECTED_USER%\Desktop\Clash Mi.url" 2>nul
+    )
+    
+    :: Удаляем данные из общей папки AppData
+    if exist "%CLASHMI_APPDATA_DIR%" (
+        rmdir /s /q "%CLASHMI_APPDATA_DIR%" 2>nul
+    )
+    
+    :: Удаляем данные для всех пользователей (глобальная очистка)
+    powershell -Command "Get-ChildItem -Path 'C:\Users\*\AppData\Roaming\clashmi' -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue" >nul 2>&1
+    
+    echo   [OK] Удаление пользовательских данных
+    
+    :: 7. Заключительная проверка и сообщение
+    echo   [ИНФО] Проверка результатов очистки...
+    
+    set "CLEANUP_SUCCESS=1"
+    
+    :: Проверяем, остались ли процессы
+    tasklist | find /i "clashmi.exe" >nul && set "CLEANUP_SUCCESS=0"
+    tasklist | find /i "clashmiService.exe" >nul && set "CLEANUP_SUCCESS=0"
+    
+    :: Проверяем, осталась ли папка программы
+    if exist "%CLASHMI_INSTALL_DIR%" set "CLEANUP_SUCCESS=0"
+    
+    if "!CLEANUP_SUCCESS!"=="1" (
+        echo   [OK] Проверка результатов
+        echo [УСПЕХ] Полная деинсталяция Clash Mi прошла успешно
+    ) else (
+        echo   [WARN] Проверка результатов
+        echo [ВНИМАНИЕ] Некоторые элементы могут быть не удалены. Перезагрузите компьютер и повторите.
+    )
+    
     exit /b 0
 
 :CLASHMI_DOWNLOAD
-    echo Загрузка Clash Mi...
+    echo   [ИНФО] Загрузка...
     
     set "CLASHMI_ZIP_FILE=%TEMP%\clashmi_latest.zip"
-    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%CLASHMI_DOWNLOAD_URL%', '%CLASHMI_ZIP_FILE%')" >nul 2>&1
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_DOWNLOAD_URL%' -OutFile '%CLASHMI_ZIP_FILE%' -UseBasicParsing" >nul 2>&1
     
-    if exist "!CLASHMI_ZIP_FILE!" (
-        echo Загрузка завершена.
-        exit /b 0
-    ) else (
-        echo [ОШИБКА] Загрузка не удалась
-        exit /b 1
+    if !errorlevel! equ 0 (
+        if exist "!CLASHMI_ZIP_FILE!" (
+            echo   [OK] Загрузка Clash Mi
+            exit /b 0
+        )
     )
+    
+    echo   [FAIL] Загрузка Clash Mi
+    exit /b 1
 
 :CLASHMI_EXTRACT
-    echo Распаковка архива...
+    echo   [ИНФО] Распаковка архива...
     
     mkdir "%CLASHMI_INSTALL_DIR%" 2>nul
     powershell -Command "Expand-Archive -Path '%CLASHMI_ZIP_FILE%' -DestinationPath '%CLASHMI_INSTALL_DIR%' -Force" >nul 2>&1
     
     if not exist "%CLASHMI_EXE_FILE%" (
-        echo [ОШИБКА] Распаковка не удалась
+        echo   [FAIL] Распаковка архива
         exit /b 1
     )
     
-    echo Распаковка завершена.
+    echo   [OK] Распаковка архива
     exit /b 0
 
 :CLASHMI_SETUP_FIREWALL
-    echo Настройка брандмауэра...
+    echo   [ИНФО] Настройка брандмауэра...
     
-    :: Удаляем старые правила
     netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmi.exe" >nul 2>&1
     netsh advfirewall firewall delete rule name="C:\Program Files\Clash Mi\clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="clashmiService.exe" >nul 2>&1
+    netsh advfirewall firewall delete rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" >nul 2>&1
+    timeout /t 1 /nobreak >nul
     
-    :: Создаем новые правила
-    netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmi.exe" dir=in action=allow program="%CLASHMI_EXE_FILE%" enable=yes >nul 2>&1
-    netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmiService.exe" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" enable=yes >nul 2>&1
+    :: Создаем правила для clashmi.exe
+    netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmi.exe" dir=in action=allow program="%CLASHMI_EXE_FILE%" protocol=tcp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+    netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmi.exe" dir=in action=allow program="%CLASHMI_EXE_FILE%" protocol=udp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
     
-    echo Настройка брандмауэра завершена.
+    :: Создаем правила для clashmiService.exe если существует
+    if exist "%CLASHMI_SERVICE_EXE%" (
+        netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmiService.exe" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" protocol=udp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+        netsh advfirewall firewall add rule name="C:\Program Files\Clash Mi\clashmiService.exe" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" protocol=tcp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+        netsh advfirewall firewall add rule name="sing-tun (C:\Program Files\Clash Mi\clashmiService.exe)" dir=in action=allow program="%CLASHMI_SERVICE_EXE%" protocol=tcp localport=any remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+    )
+    
+    :: Создаем правила для портов
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=tcp localport=9090 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=udp localport=9090 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=udp localport=7890 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+    netsh advfirewall firewall add rule name="clashmiService.exe" dir=in action=allow protocol=tcp localport=7890 remoteport=any localip=any remoteip=any profile=any enable=yes >nul 2>&1 || goto FIREWALL_FAIL
+    
+    echo   [OK] Настройка брандмауэра
     exit /b 0
+    
+:FIREWALL_FAIL
+    echo   [FAIL] Настройка брандмауэра
+    exit /b 1
 
 :CLASHMI_DOWNLOAD_CONFIGS
-    echo Загрузка конфигурации...
-    
-    if not defined DETECTED_USER (
-        call :GET_USER_INFO
-    )
+    echo   [ИНФО] Загрузка конфигурации...
     
     if defined DETECTED_USER (
         set "USER_APPDATA=C:\Users\%DETECTED_USER%\AppData\Roaming"
@@ -459,85 +612,181 @@ exit /b 0
     set "USER_CLASHMI_DIR=%USER_APPDATA%\clashmi\clashmi"
     set "USER_PROFILES_DIR=%USER_CLASHMI_DIR%\profiles"
     
-    mkdir "%USER_CLASHMI_DIR%" 2>nul
-    mkdir "%USER_PROFILES_DIR%" 2>nul
+    if not exist "%USER_CLASHMI_DIR%" mkdir "%USER_CLASHMI_DIR%" 2>nul
+    if not exist "%USER_PROFILES_DIR%" mkdir "%USER_PROFILES_DIR%" 2>nul
     
-    :: Загрузка конфигурационных файлов
-    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%CLASHMI_CONFIG_URL1%', '%USER_CLASHMI_DIR%\setting.json')" >nul 2>&1
-    powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%CLASHMI_CONFIG_URL2%', '%USER_CLASHMI_DIR%\service_core_setting.json')" >nul 2>&1
+    :: Загружаем setting.json
+    echo   [ИНФО] Загрузка setting.json...
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL1%' -OutFile '%TEMP%\setting.json' -UseBasicParsing" >nul 2>&1
+    if exist "%TEMP%\setting.json" (
+        copy "%TEMP%\setting.json" "%USER_CLASHMI_DIR%\" >nul 2>&1
+        echo   [OK] Загрузка setting.json
+    ) else (
+        echo   [FAIL] Загрузка setting.json
+    )
     
+    :: Загружаем service_core_setting.json
+    echo   [ИНФО] Загрузка service_core_setting.json...
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL2%' -OutFile '%TEMP%\service_core_setting.json' -UseBasicParsing" >nul 2>&1
+    if exist "%TEMP%\service_core_setting.json" (
+        copy "%TEMP%\service_core_setting.json" "%USER_CLASHMI_DIR%\" >nul 2>&1
+        echo   [OK] Загрузка service_core_setting.json
+    ) else (
+        echo   [FAIL] Загрузка service_core_setting.json
+    )
+    
+    :: Загружаем конфиг в зависимости от типа учетной записи
     if defined USER_TYPE (
         if /i "%USER_TYPE%"=="Стандартная" (
-            powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%CLASHMI_CONFIG_URL4%', '%USER_PROFILES_DIR%\config.yaml')" >nul 2>&1
+            echo   [ИНФО] Загрузка config.yaml...
+            powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%TEMP%\config.yaml' -UseBasicParsing" >nul 2>&1
+            if exist "%TEMP%\config.yaml" (
+                copy "%TEMP%\config.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
+                echo   [OK] Загрузка config.yaml
+            ) else (
+                echo   [FAIL] Загрузка config.yaml
+            )
         ) else (
-            powershell -Command "$ProgressPreference='SilentlyContinue'; (New-Object System.Net.WebClient).DownloadFile('%CLASHMI_CONFIG_URL3%', '%USER_PROFILES_DIR%\config_tun.yaml')" >nul 2>&1
+            echo   [ИНФО] Загрузка config_tun.yaml...
+            powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL3%' -OutFile '%TEMP%\config_tun.yaml' -UseBasicParsing" >nul 2>&1
+            if exist "%TEMP%\config_tun.yaml" (
+                copy "%TEMP%\config_tun.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
+                echo   [OK] Загрузка config_tun.yaml
+            ) else (
+                echo   [FAIL] Загрузка config_tun.yaml
+            )
         )
     )
     
-    echo Загрузка конфигурации завершена.
+    echo   [ИНФО] Проверка созданных файлов...
+    set "CHECK_OK=1"
+    if not exist "%USER_CLASHMI_DIR%\setting.json" set "CHECK_OK=0"
+    if not exist "%USER_CLASHMI_DIR%\service_core_setting.json" set "CHECK_OK=0"
+    if defined USER_TYPE (
+        if /i "%USER_TYPE%"=="Стандартная" (
+            if not exist "%USER_PROFILES_DIR%\config.yaml" set "CHECK_OK=0"
+        ) else (
+            if not exist "%USER_PROFILES_DIR%\config_tun.yaml" set "CHECK_OK=0"
+        )
+    )
+    
+    if "!CHECK_OK!"=="1" (
+        echo   [OK] Проверка созданных файлов
+    ) else (
+        echo   [FAIL] Проверка созданных файлов
+    )
+    
     exit /b 0
 
 :CLASHMI_CREATE_SHORTCUTS
-    echo Создание ярлыков...
+    echo   [ИНФО] Создание ярлыков...
     
     if not defined DETECTED_USER (
-        call :GET_USER_INFO
-    )
-    
-    if not defined DETECTED_USER (
-        echo [ПРЕДУПРЕЖДЕНИЕ] Не удалось создать ярлыки - пользователь не определен
-        exit /b 1
-    )
-    
-    set "USER_HOME=C:\Users\%DETECTED_USER%"
-    set "START_MENU=%USER_HOME%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs"
-    
-    mkdir "!START_MENU!" 2>nul
-    
-    :: Создание ярлыка в меню Пуск
-    powershell -Command "$ws=New-Object -ComObject WScript.Shell; $sc=$ws.CreateShortcut('!START_MENU!\%CLASHMI_SHORTCUT_NAME%.lnk'); $sc.TargetPath='%CLASHMI_EXE_FILE%'; $sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%'; $sc.Save()" >nul 2>&1
-    
-    if exist "!START_MENU!\%CLASHMI_SHORTCUT_NAME%.lnk" (
-        echo Ярлыки созданы.
-        exit /b 0
-    ) else (
-        echo [ПРЕДУПРЕЖДЕНИЕ] Не удалось создать ярлыки
+        echo   [FAIL] Создание ярлыков
         exit /b 1
     )
 
+    set "USER_HOME=C:\Users\%DETECTED_USER%"
+    set "APPDATA_USER=%USER_HOME%\AppData\Roaming"
+    set "START_MENU=%APPDATA_USER%\Microsoft\Windows\Start Menu\Programs"
+    set "STARTUP=%APPDATA_USER%\Microsoft\Windows\Start Menu\Programs\Startup"
+    set "SHORTCUT_MAIN=%START_MENU%\%CLASHMI_SHORTCUT_NAME%.lnk"
+    set "SHORTCUT_STARTUP=%STARTUP%\%CLASHMI_SHORTCUT_NAME%.lnk"
+
+    if /i "%USER_TYPE%"=="Администратор" (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_MAIN%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save();$b=[IO.File]::ReadAllBytes('%SHORTCUT_MAIN%');$b[0x15]=$b[0x15]-bor 0x20;[IO.File]::WriteAllBytes('%SHORTCUT_MAIN%',$b)" >nul 2>&1
+    ) else (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_MAIN%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save()" >nul 2>&1
+    )
+
+    rem Закомментировано создание ярлыка в автозагрузку - временно отключено
+    rem if /i "%USER_TYPE%"=="Администратор" (
+    rem     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_STARTUP%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.Arguments='--launch_startup';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save();$b=[IO.File]::ReadAllBytes('%SHORTCUT_STARTUP%');$b[0x15]=$b[0x15]-bor 0x20;[IO.File]::WriteAllBytes('%SHORTCUT_STARTUP%',$b)" >nul 2>&1
+    rem ) else (
+    rem     powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell;$sc=$ws.CreateShortcut('%SHORTCUT_STARTUP%');$sc.TargetPath='%CLASHMI_EXE_FILE%';$sc.Arguments='--launch_startup';$sc.WorkingDirectory='%CLASHMI_INSTALL_DIR%';$sc.IconLocation='%CLASHMI_EXE_FILE%';$sc.Save()" >nul 2>&1
+    rem )
+
+    if exist "%SHORTCUT_MAIN%" (
+        rem Закомментирована проверка ярлыка в автозагрузке
+        rem if exist "%SHORTCUT_STARTUP%" (
+        rem     echo   [OK] Создание ярлыков
+        rem ) else (
+        rem     echo   [PARTIAL] Создание ярлыков
+        rem )
+        echo   [OK] Создание ярлыков
+    ) else (
+        echo   [FAIL] Создание ярлыков
+    )
+
+    exit /b 0
+
 :CLASHMI_AUTORUN
-    echo Настройка автозапуска...
+    echo   [ИНФО] Настройка автозапуска
     
-    if not defined DETECTED_USER (
-        call :GET_USER_INFO
+    :: Проверяем, установлен ли Clash Mi
+    if not exist "%CLASHMI_EXE_FILE%" (
+        echo [ОШИБКА] Clash Mi не установлен!
+        pause
+        goto CLASHMI_MENU
     )
     
-    if not defined DETECTED_USER (
-        echo [ПРЕДУПРЕЖДЕНИЕ] Не удалось настроить автозапуск - пользователь не определен
-        exit /b 1
+    :: Получаем информацию о текущем пользователе
+    setlocal enabledelayedexpansion
+    set "DETECTED_USER="
+    for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+        for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
     )
+    if not "!DETECTED_USER!"=="" (
+        set "CHECK_USER=!DETECTED_USER!"
+    ) else (
+        set "CHECK_USER=%USERNAME%"
+    )
+    set "USER_TYPE=Стандартная"
+    net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
     
     :: Удаляем старую задачу
     schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
     
-    :: Создаем XML для задачи
+    :: Получаем SID пользователя
+    set "USER_SID="
+    for /f "tokens=2 delims= " %%s in (
+        'powershell -NoProfile -ExecutionPolicy Bypass -Command "([System.Security.Principal.NTAccount]'%USERDOMAIN%\%DETECTED_USER%').Translate([System.Security.Principal.SecurityIdentifier]).Value" 2^>nul'
+    ) do set "USER_SID=%%s"
+    
+    if "!USER_SID!"=="" (
+        for /f "tokens=2 delims==" %%s in (
+            'wmic useraccount where name^="%DETECTED_USER%" get sid /value 2^>nul ^| find "SID="'
+        ) do set "USER_SID=%%s"
+    )
+    
+    if "!USER_SID!"=="" (
+        echo [ОШИБКА] Не удалось получить SID пользователя!
+        endlocal
+        pause
+        goto CLASHMI_MENU
+    )
+    
+    :: Создаем XML файл задачи
+    set "TASK_NAME=Clash Mi Autorun"
     set "TASK_XML=%TEMP%\clashmi_autorun.xml"
     
     (
         echo ^<?xml version="1.0" encoding="UTF-16"?^>
         echo ^<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"^>
         echo   ^<RegistrationInfo^>
-        echo     ^<Author^>System^</Author^>
+        echo     ^<Author^>%USERDOMAIN%\%DETECTED_USER%^</Author^>
+        echo     ^<URI^>\Clash Mi Autorun^</URI^>
         echo   ^</RegistrationInfo^>
         echo   ^<Triggers^>
-        echo     ^<LogonTrigger^>
+        echo     ^<LogonTrigger id="Trigger1"^>
         echo       ^<Enabled^>true^</Enabled^>
-        echo       ^<Delay^>PT30S^</Delay^>
+        echo       ^<UserId^>%USERDOMAIN%\%DETECTED_USER%^</UserId^>
+        echo       ^<Delay^>PT3S^</Delay^>
         echo     ^</LogonTrigger^>
         echo   ^</Triggers^>
         echo   ^<Principals^>
-        echo     ^<Principal id="Author"^>
-        echo       ^<UserId^>%USERDOMAIN%\%DETECTED_USER%^</UserId^>
+        echo     ^<Principal id="Principal1"^>
+        echo       ^<UserId^>%USER_SID%^</UserId^>
         echo       ^<LogonType^>InteractiveToken^</LogonType^>
         echo       ^<RunLevel^>HighestAvailable^</RunLevel^>
         echo     ^</Principal^>
@@ -550,6 +799,8 @@ exit /b 0
         echo     ^<StartWhenAvailable^>false^</StartWhenAvailable^>
         echo     ^<RunOnlyIfNetworkAvailable^>false^</RunOnlyIfNetworkAvailable^>
         echo     ^<IdleSettings^>
+        echo       ^<Duration^>PT10M^</Duration^>
+        echo       ^<WaitTimeout^>PT1H^</WaitTimeout^>
         echo       ^<StopOnIdleEnd^>true^</StopOnIdleEnd^>
         echo       ^<RestartOnIdle^>false^</RestartOnIdle^>
         echo     ^</IdleSettings^>
@@ -559,9 +810,9 @@ exit /b 0
         echo     ^<RunOnlyIfIdle^>false^</RunOnlyIfIdle^>
         echo     ^<WakeToRun^>false^</WakeToRun^>
         echo     ^<ExecutionTimeLimit^>PT0S^</ExecutionTimeLimit^>
-        echo     ^<Priority^>7^</Priority^>
+        echo     ^<Priority^>4^</Priority^>
         echo   ^</Settings^>
-        echo   ^<Actions Context="Author"^>
+        echo   ^<Actions Context="Principal1"^>
         echo     ^<Exec^>
         echo       ^<Command^>%CLASHMI_EXE_FILE%^</Command^>
         echo       ^<Arguments^>--launch_startup^</Arguments^>
@@ -570,44 +821,211 @@ exit /b 0
         echo ^</Task^>
     ) > "!TASK_XML!"
     
-    :: Импортируем задачу
-    schtasks /Create /TN "Clash Mi Autorun" /XML "!TASK_XML!" /F >nul 2>&1
+    :: Импортируем задачу в планировщик
+    schtasks /Create /TN "!TASK_NAME!" /XML "!TASK_XML!" /F >nul 2>&1
     
-    del "!TASK_XML!" 2>nul
+    if !errorlevel! equ 0 (
+        :: Удаляем временный XML файл
+        if exist "!TASK_XML!" del "!TASK_XML!" >nul 2>&1
+        echo   [OK] Настройка автозапуска
+    ) else (
+        echo [ОШИБКА] Ошибка при создании задачи!
+        if exist "!TASK_XML!" del "!TASK_XML!" >nul 2>&1
+    )
     
-    echo Настройка автозапуска завершена.
+    endlocal
     exit /b 0
 
 :CLASHMI_START_AUTO
-    echo Запуск Clash Mi...
+    echo   [ИНФО] Запуск
     
     if not exist "%CLASHMI_EXE_FILE%" (
         echo [ОШИБКА] Clash Mi не найден
-        exit /b 1
-    )
-    
-    :: Запуск приложения
-    powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--launch_startup' -WindowStyle Hidden" >nul 2>&1
-    
-    :: Ждем запуска
-    timeout /t 5 >nul
-    
-    :: Проверяем запуск
-    tasklist | find /i "clashmi.exe" >nul 2>&1
-    if errorlevel 0 (
-        echo Clash Mi запущен.
         exit /b 0
-    ) else (
-        echo [ПРЕДУПРЕЖДЕНИЕ] Clash Mi не запустился автоматически
-        exit /b 1
     )
+    
+    setlocal enabledelayedexpansion
+    
+    :: Получаем информацию о текущем пользователе
+    set "DETECTED_USER="
+    for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+        for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+    )
+    if not "!DETECTED_USER!"=="" (
+        set "CHECK_USER=!DETECTED_USER!"
+    ) else (
+        set "CHECK_USER=%USERNAME%"
+    )
+    set "USER_TYPE=Стандартная"
+    net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
+    
+    :: Останавливаем все предыдущие процессы Clash Mi
+    taskkill /F /IM "clashmi.exe" >nul 2>&1
+    taskkill /F /IM "clashmiService.exe" >nul 2>&1
+    timeout /t 2 /nobreak >nul
+    
+    if /i "!USER_TYPE!"=="Стандартная" (
+        :: ДЛЯ СТАНДАРТНОГО ПОЛЬЗОВАТЕЛЯ - СОЗДАЕМ ВРЕМЕННУЮ ЗАДАЧУ
+        set "TASK_NAME=ClashMi_OneTime_%RANDOM%"
+        
+        :: Получаем SID пользователя
+        set "USER_SID="
+        for /f "tokens=2 delims= " %%s in (
+            'powershell -NoProfile -ExecutionPolicy Bypass -Command "([System.Security.Principal.NTAccount]'%USERDOMAIN%\!DETECTED_USER!').Translate([System.Security.Principal.SecurityIdentifier]).Value" 2^>nul'
+        ) do set "USER_SID=%%s"
+        
+        if "!USER_SID!"=="" (
+            set "USER_ID=%USERDOMAIN%\!DETECTED_USER!"
+            set "USE_SID=false"
+        ) else (
+            set "USER_ID=!USER_SID!"
+            set "USE_SID=true"
+        )
+        
+        :: Создаем XML файл задачи
+        set "TASK_XML=%TEMP%\!TASK_NAME!.xml"
+        
+        (
+            echo ^<?xml version="1.0" encoding="UTF-16"?^>
+            echo ^<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"^>
+            echo   ^<RegistrationInfo^>
+            echo     ^<Author^>%USERDOMAIN%\!DETECTED_USER!^</Author^>
+            echo     ^<URI^>\Clash Mi Temporary Task^</URI^>
+            echo   ^</RegistrationInfo^>
+            echo   ^<Triggers^>
+            echo     ^<LogonTrigger id="Trigger1"^>
+            echo       ^<Enabled^>true^</Enabled^>
+            echo       ^<UserId^>%USERDOMAIN%\!DETECTED_USER!^</UserId^>
+            echo       ^<Delay^>PT1S^</Delay^>
+            echo     ^</LogonTrigger^>
+            echo   ^</Triggers^>
+            echo   ^<Principals^>
+            echo     ^<Principal id="Principal1"^>
+            if "!USE_SID!"=="true" (
+                echo       ^<UserId^>!USER_SID!^</UserId^>
+            ) else (
+                echo       ^<UserId^>%USERDOMAIN%\!DETECTED_USER!^</UserId^>
+            )
+            echo       ^<LogonType^>InteractiveToken^</LogonType^>
+            echo       ^<RunLevel^>HighestAvailable^</RunLevel^>
+            echo     ^</Principal^>
+            echo   ^</Principals^>
+            echo   ^<Settings^>
+            echo     ^<MultipleInstancesPolicy^>IgnoreNew^</MultipleInstancesPolicy^>
+            echo     ^<DisallowStartIfOnBatteries^>false^</DisallowStartIfOnBatteries^>
+            echo     ^<StopIfGoingOnBatteries^>false^</StopIfGoingOnBatteries^>
+            echo     ^<AllowHardTerminate^>true^</AllowHardTerminate^>
+            echo     ^<StartWhenAvailable^>false^</StartWhenAvailable^>
+            echo     ^<RunOnlyIfNetworkAvailable^>false^</RunOnlyIfNetworkAvailable^>
+            echo     ^<IdleSettings^>
+            echo       ^<Duration^>PT10M^</Duration^>
+            echo       ^<WaitTimeout^>PT1H^</WaitTimeout^>
+            echo       ^<StopOnIdleEnd^>true^</StopOnIdleEnd^>
+            echo       ^<RestartOnIdle^>false^</RestartOnIdle^>
+            echo     ^</IdleSettings^>
+            echo     ^<AllowStartOnDemand^>true^</AllowStartOnDemand^>
+            echo     ^<Enabled^>true^</Enabled^>
+            echo     ^<Hidden^>false^</Hidden^>
+            echo     ^<RunOnlyIfIdle^>false^</RunOnlyIfIdle^>
+            echo     ^<WakeToRun^>false^</WakeToRun^>
+            echo     ^<ExecutionTimeLimit^>PT0S^</ExecutionTimeLimit^>
+            echo     ^<Priority^>4^</Priority^>
+            echo   ^</Settings^>
+            echo   ^<Actions Context="Principal1"^>
+            echo     ^<Exec^>
+            echo       ^<Command^>%CLASHMI_EXE_FILE%^</Command^>
+            echo       ^<Arguments^>--launch_startup^</Arguments^>
+            echo     ^</Exec^>
+            echo   ^</Actions^>
+            echo ^</Task^>
+        ) > "!TASK_XML!"
+        
+        :: Импортируем задачу
+        schtasks /Create /TN "!TASK_NAME!" /XML "!TASK_XML!" /F >nul 2>&1
+        
+        if !errorlevel! equ 0 (
+            :: Запускаем задачу немедленно
+            schtasks /Run /TN "!TASK_NAME!" >nul 2>&1
+            
+            if !errorlevel! equ 0 (
+                :: Ждем немного и удаляем задачу
+                timeout /t 5 /nobreak >nul
+                schtasks /Delete /TN "!TASK_NAME!" /F >nul 2>&1
+                del "!TASK_XML!" 2>nul
+            ) else (
+                :: Удаляем задачу при ошибке
+                schtasks /Delete /TN "!TASK_NAME!" /F >nul 2>&1
+                del "!TASK_XML!" 2>nul
+            )
+        ) else (
+            if exist "!TASK_XML!" del "!TASK_XML!" 2>nul
+        )
+    ) else (
+        :: ДЛЯ АДМИНИСТРАТОРА - ЗАПУСКАЕМ НАПРЯМУЮ
+        powershell -Command "Start-Process -FilePath '%CLASHMI_EXE_FILE%' -ArgumentList '--launch_startup' -WorkingDirectory '%CLASHMI_INSTALL_DIR%' -WindowStyle Hidden" >nul 2>&1
+    )
+    
+    :: Ждем запуска процесса
+    timeout /t 5 /nobreak >nul
+    
+    :: Проверяем, запустился ли процесс
+    tasklist | find /i "clashmi.exe" >nul 2>&1
+    if !errorlevel! equ 0 (
+        echo   [OK] Запуск
+    ) else (
+        echo   [FAIL] Запуск
+    )
+    
+    endlocal
+    exit /b 0
 
 :CLASHMI_CLEANUP_TEMP
-    echo Очистка временных файлов...
+    echo   [ИНФО] Очистка временных файлов установки...
     
+    :: Удаляем скачанный архив
     if exist "%TEMP%\clashmi_latest.zip" (
         del /q "%TEMP%\clashmi_latest.zip" >nul 2>&1
+        if exist "%TEMP%\clashmi_latest.zip" (
+            echo   [FAIL] Удаление архива
+        ) else (
+            echo   [OK] Удаление архива
+        )
     )
     
-    echo Очистка завершена.
+    :: Удаляем временные конфигурационные файлы
+    set "TEMP_FILES_DELETED=0"
+    set "TEMP_FILES_TOTAL=0"
+    
+    for %%f in (
+        "%TEMP%\setting.json"
+        "%TEMP%\service_core_setting.json"
+        "%TEMP%\config_tun.yaml"
+        "%TEMP%\config.yaml"
+        "%TEMP%\clashmi_autorun.xml"
+        "%TEMP%\ClashMi_OneTime_*.xml"
+        "%TEMP%\clashmi_*.xml"
+    ) do (
+        if exist "%%f" (
+            set /a "TEMP_FILES_TOTAL+=1"
+            del /q "%%f" >nul 2>&1
+            if not exist "%%f" set /a "TEMP_FILES_DELETED+=1"
+        )
+    )
+    
+    :: Удаляем другие временные файлы, связанные с Clash Mi
+    powershell -Command "Get-ChildItem -Path '%TEMP%' -Filter '*clashmi*' -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue" >nul 2>&1
+    powershell -Command "Get-ChildItem -Path '%TEMP%' -Filter '*clash*' -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue" >nul 2>&1
+    
+    :: Проверяем результаты
+    if "!TEMP_FILES_TOTAL!"=="0" (
+        echo   [SKIP] Удаление временных файлов
+        echo   [ИНФО] Временные файлы не найдены
+    ) else if "!TEMP_FILES_DELETED!"=="!TEMP_FILES_TOTAL!" (
+        echo   [OK] Удаление временных файлов
+        echo   [УСПЕХ] Удалено файлов: !TEMP_FILES_DELETED! из !TEMP_FILES_TOTAL!
+    ) else (
+        echo   [PARTIAL] Удаление временных файлов
+        echo   [ВНИМАНИЕ] Удалено файлов: !TEMP_FILES_DELETED! из !TEMP_FILES_TOTAL!
+    )
+    
     exit /b 0
