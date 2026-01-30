@@ -766,11 +766,11 @@ proxy-groups:
     - icon: https://www.svgrepo.com/show/349563/whatsapp.svg
       name: Whatsapp
       proxies:
-        - DIRECT
         - Wireguard WARP
         - Черные списки GEO
         - Черные списки
         - Белые списки
+        - DIRECT
       type: select
     - icon: https://www.svgrepo.com/show/354443/telegram.svg
       name: Telegram
