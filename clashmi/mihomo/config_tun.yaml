@@ -18,7 +18,7 @@ bind-address: '*'
 mode: rule
 unified-delay: true
 log-level: error
-ipv6: false
+ipv6: true
 external-controller: 127.0.0.1:9090
 external-controller-pipe: ""
 external-controller-unix: ""
@@ -1018,7 +1018,7 @@ hosts: {}
 dns:
     enable: true
     prefer-h3: true
-    ipv6: false
+    ipv6: true
     ipv6-timeout: 300
     use-hosts: true
     use-system-hosts: true
