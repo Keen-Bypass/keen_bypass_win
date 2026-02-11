@@ -19,7 +19,7 @@ set "VERSION_FILE=%AUTOUPDATE_DIR%\version.txt"
 set "DOMAIN_LIST=rr3---sn-n8v7kn7k.googlevideo.com www.youtube.com yt3.ggpht.com rutracker.org i.instagram.com facebook.com discordapp.com google.com yandex.ru"
 
 :: Clash Mi настройки
-set "CLASHMI_VERSION=1.0.17.300"
+set "CLASHMI_VERSION=1.0.18.403"
 set "CLASHMI_DOWNLOAD_URL=https://github.com/KaringX/clashmi/releases/download/v%CLASHMI_VERSION%/clashmi_%CLASHMI_VERSION%_windows_x64.zip"
 set "CLASHMI_INSTALL_DIR=C:\Program Files\Clash Mi"
 set "CLASHMI_EXE_FILE=%CLASHMI_INSTALL_DIR%\clashmi.exe"
@@ -1670,4 +1670,5 @@ rem:============================================================================
 
 :END
 exit /b 0
+
 
