@@ -1,1238 +1,1046 @@
-port: 7890
-socks-port: 7891
-redir-port: 1182
-tproxy-port: 1181
-mixed-port: 7890
-ss-config: ""
-vmess-config: ""
-inbound-tfo: false
-inbound-mptcp: false
-authentication: []
-skip-auth-prefixes: []
-lan-allowed-ips:
-    - 0.0.0.0/0
-    - ::/0
-lan-disallowed-ips: []
+# --- ОСНОВНЫЕ ПОРТЫ ---
+port: 7890             # HTTP/HTTPS порт для ПК/клиентов
+socks-port: 7891       # SOCKS5 порт
+mixed-port: 1080       # Объединённый порт для редиректов
+redir-port: 1182       # TProxy для LAN устройств
+tproxy-port: 1181      # TProxy
 allow-lan: true
-bind-address: '*'
 mode: rule
+log-level: silent
+ipv6: false            # Можно включить true если сеть поддерживает
+tcp-concurrent: true
 unified-delay: true
-log-level: error
-ipv6: true
-external-controller: 127.0.0.1:9090
-external-controller-pipe: ""
-external-controller-unix: ""
-external-controller-tls: ""
-external-controller-cors:
-    allow-origins:
-        - '*'
-    allow-private-network: true
-external-ui: ""
-external-ui-url: ""
-external-ui-name: ""
-external-doh-server: ""
-secret: 30a772738a1f7097
-interface-name: ""
-routing-mark: 0
-tunnels: []
 geo-auto-update: true
 geo-update-interval: 168
+external-controller: 0.0.0.0:9090
+external-ui: ./zash
+external-ui-url: "https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip"
 geodata-mode: true
-geodata-loader: memconservative
-geosite-matcher: ""
-tcp-concurrent: true
-find-process-mode: always
-global-client-fingerprint: chrome
-global-ua: clash.meta/1.19.18
-etag-support: true
-keep-alive-idle: 30
-keep-alive-interval: 30
-disable-keep-alive: false
-proxy-providers:
-    BLACK_VLESS_RUS:
-        interval: 3600
-        path: ./proxy-providers/BLACK_VLESS_RUS.yaml
-        type: http
-        url: https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt
-    WHITE-CIDR-RU:
-        interval: 3600
-        path: ./proxy-providers/WHITE-CIDR-RU.yaml
-        type: http
-        url: https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt
-rule-providers:
-    discord:
-        behavior: classical
-        format: text
-        payload:
-            - AND,((DOMAIN-KEYWORD,discord),(NOT,((DOMAIN-SUFFIX,ru))))
-            - AND,((IP-CIDR,34.0.192.0/18,no-resolve),(NETWORK,UDP),(DST-PORT,50000-50100))
-            - AND,((IP-CIDR,35.192.0.0/11,no-resolve),(NETWORK,UDP),(DST-PORT,50000-50100))
-            - AND,((IP-CIDR,66.22.192.0/18,no-resolve),(NETWORK,UDP),(DST-PORT,50000-50100))
-        type: inline
-    geoip-ruleset-fastly:
-        behavior: ipcidr
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geoip/fastly.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/fastly.mrs
-    geoip-ruleset-netflix:
-        behavior: ipcidr
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geoip/netflix.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/netflix.mrs
-    geoip-ruleset-private:
-        behavior: ipcidr
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geoip/private.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/private.mrs
-    geoip-ruleset-ru:
-        behavior: ipcidr
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geoip/ru.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/ru.mrs
-    geoip-ruleset-telegram:
-        behavior: ipcidr
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geoip/telegram.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geoip/telegram.mrs
-    geosite-ruleset-apple:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/apple.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/apple.mrs
-    geosite-ruleset-category-ads-all:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/category-ads-all.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-ads-all.mrs
-    geosite-ruleset-category-gov-ru:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/category-gov-ru.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-gov-ru.mrs
-    geosite-ruleset-category-porn:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/category-porn.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-porn.mrs
-    geosite-ruleset-category-ru:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/category-ru.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-ru.mrs
-    geosite-ruleset-category-speedtest:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/category-speedtest.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/category-speedtest.mrs
-    geosite-ruleset-facebook:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/facebook.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/facebook.mrs
-    geosite-ruleset-github:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/github.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/github.mrs
-    geosite-ruleset-google:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/google.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/google.mrs
-    geosite-ruleset-google-gemini:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/google-gemini.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/google-gemini.mrs
-    geosite-ruleset-google-play:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/google-play.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/google-play.mrs
-    geosite-ruleset-instagram:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/instagram.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/instagram.mrs
-    geosite-ruleset-intel:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/intel.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/intel.mrs
-    geosite-ruleset-linkedin:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/linkedin.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/linkedin.mrs
-    geosite-ruleset-microsoft:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/microsoft.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/microsoft.mrs
-    geosite-ruleset-netflix:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/netflix.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/netflix.mrs
-    geosite-ruleset-notion:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/notion.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/notion.mrs
-    geosite-ruleset-ookla-speedtest:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/ookla-speedtest.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/ookla-speedtest.mrs
-    geosite-ruleset-openai:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/openai.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/openai.mrs
-    geosite-ruleset-speedtest:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/speedtest.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/speedtest.mrs
-    geosite-ruleset-spotify:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/spotify.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/spotify.mrs
-    geosite-ruleset-steam:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/steam.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/steam.mrs
-    geosite-ruleset-supercell:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/supercell.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/supercell.mrs
-    geosite-ruleset-telegram:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/telegram.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/telegram.mrs
-    geosite-ruleset-tidal:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/tidal.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/tidal.mrs
-    geosite-ruleset-tiktok:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/tiktok.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/tiktok.mrs
-    geosite-ruleset-twitter:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/twitter.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/twitter.mrs
-    geosite-ruleset-viber:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/viber.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/viber.mrs
-    geosite-ruleset-whatsapp:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/whatsapp.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/whatsapp.mrs
-    geosite-ruleset-youtube:
-        behavior: domain
-        format: mrs
-        interval: 172800
-        path: ./ruleset/geosite/youtube.mrs
-        proxy: Wireguard WARP
-        type: http
-        url: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/refs/heads/meta/geo/geosite/youtube.mrs
-    hagezi_pro:
-        behavior: domain
-        format: mrs
-        interval: 86400
-        path: ./adblock/adlist.mrs
-        type: http
-        url: https://github.com/zxc-rv/ad-filter/releases/latest/download/adlist.mrs
-proxies:
-    - allowed-ips:
-        - 0.0.0.0/0
-      amnezia-wg-option:
-        h1: 1
-        h2: 2
-        h3: 4
-        h4: 3
-        i1: <b 0xc6000000010843290a47ba8ba2ed000044d0e3efd9326adb60561baa3bc4b52471b2d459ddcc9a508dffddc97e4d40d811d3de7bc98cf06ea85902361ca3ae66b2a99c7de96f0ace4ba4710658aefde6dec6837bc1a48f47bbd63c6e60ff494d3e1bea5f13927922401c40b0f4570d26be6806b506a9ff5f75ca86fae5f8175d4b6bfd418df9b922cdff8e60b06decfe66f2b07da61a47b5c8b32fa999d8feac21c8878b6e15ee03b8388b2afd9ffd3b46753b0284907b10747e526eebf287ff08735929c4c5e4784a5e2ad3dd8ac8200d0e99ad1219e54060ddc72813e8a3e2291ac713c5f3251c5d748fd68782a2e8eb0c021e437a79aafb253efae3ee72e1051b647c45b676d3b9e474d4f60c7bf7d328106cb94f67eaf2c991cd7043371debbf2b4159b8f80f5da0e1b18f4da35fca0a88026b375f1082731d1cbbe9ba3ae2bfefec250ee328ded7f8330d4cda38f74a7fe10b58ace936fc83cfcb3e1ebed520f7559549a8f20568a248e16949611057a3dd9952bae9b7be518c2b5b2568b8582c165c73a6e8f9b042ec9702704a94dd99893421310d43ffc9caf003ff5fc7bcd718f3fa99d663a8bbad6b595ec1d4cf3c0ed1668d0541c4e5b7e5ded40c6628eb64b29f514424d08d8522ddf7b856e9b820441907177a3dbd9b958172173be8c45c8c7b1816fe4d24927f9b12778153fc118194786c6cf49bc5cf09177f73be27917a239592f9acd9a21150abbd1ca93b1e305dc64d9883429a032c3179e0639592c248cbacec00c90bfb5d5eaf8920bf80c47085a490ead8d0af45f6754e8ae5692f86be02c480ca2a1e6156dccf1bcb5c911c05e3c3a946ca23461669c57d287dcfa9dd187fc6a58394f0b2878c07e1d8cb6be41725d49c118e9ddbe1ae6e5d1a04b36ad98a24f0378deea84febb60b22dc81d8377fb3f21069d83e90b9eba2b6b0ea95acf5fd0482a00d064a9b73e0b3732fde45404e22349a514151381fc6095a8204234359c28765e360a57eb222418b11be704651e4da1b52b135d31ba63a7f06a0f7b8b6177f9bd02fb517877a1340e59d8dbe52ea8135bc80b2aa1959539803a31720ac949c7bf0785c2e413e8b83dd4fd40d8a63fbd832ecb727d0c0df04ce10dac6a7d6d75e264aaf856e7485cc2c4e1749f169e5ad4de6f89a2333e362910dd0d962e3bf59a353df5760fd15956fe32e40f863ea020e9709aa9a9ebeffc885e64231dc6fc384bc6a9e7e5c64c0eaf39f9f14a13658883ee8dd94737cb3a8c2f7020bfacb80f0122866635873e248e22b5a5abc84d507e1720d3fb5f827d75c1d39235a361a217eb0587d1639b0b31aef1fe91958220fcf934c2517dea2f1afe51cd63ac31b5f9323a427c36a5442f8a89b7494f1592666f62be0d8cf67fdf5ef38fafc55b7b4f569a105dfa9925f0a41913c6ee13064d4b83f9ee1c3231c402d68a624e2388e357144be99197dcafb92118d9a9ec6fe832771e12448a146fb5b9620a4718070b368aab646b03cce41ec4d5d9a9c880a9cff06aba991cc0845030abbac87c67255f0373eb38444a51d0958e57c7a33042697465c84abe6791cb8f28e484c4cd04f10791ad911b0dcc217f66cb3aa5fcdbb1e2be88139c4ac2652e469122408feba59ad04f66eb8ab8c80aaf10c2ec1f80b5be111d3ccc832df2395a947e335e7908fda5dcdaa14a61f0fa7156c94b1c96e5c191d850e341adc2e22c8f69fcfa5c3e403eadc933f18be3734bc345def4f40ea3e12>
-        jc: 4
-        jmax: 70
-        jmin: 40
-        s1: 0
-        s2: 0
-      dns:
-        - 1.1.1.1
-        - 1.0.0.1
-        - 2606:4700:4700::1111
-        - 2606:4700:4700::1001
-      ip: 172.16.0.2
-      ipv6: 2606:4700:110:8964:bca4:4830:e1dd:f7f9
-      mtu: 1280
-      name: AWG 1.5 (1 Вариант)
-      persistent-keepalive: 15
-      port: 500
-      private-key: GC4g9Bb32jd2a9VZSSHLpwL7BvIxvyF//AmDlvxrlG0=
-      public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-      remote-dns-resolve: true
-      reserved:
-        - 224
-        - 189
-        - 155
-      server: 162.159.195.10
-      type: wireguard
-      udp: true
-    - allowed-ips:
-        - 0.0.0.0/0
-      amnezia-wg-option:
-        h1: 1
-        h2: 2
-        h3: 4
-        h4: 3
-        i1: <b 0xc10000000114367096bb0fb3f58f3a3fb8aaacd61d63a1c8a40e14f7374b8a62dccba6431716c3abf6f5afbcfb39bd008000047c32e268567c652e6f4db58bff759bc8c5aaca183b87cb4d22938fe7d8dca22a679a79e4d9ee62e4bbb3a380dd78d4e8e48f26b38a1d42d76b371a5a9a0444827a69d1ab5872a85749f65a4104e931740b4dc1e2dd77733fc7fac4f93011cd622f2bb47e85f71992e2d585f8dc765a7a12ddeb879746a267393ad023d267c4bd79f258703e27345155268bd3cc0506ebd72e2e3c6b5b0f005299cd94b67ddabe30389c4f9b5c2d512dcc298c14f14e9b7f931e1dc397926c31fbb7cebfc668349c218672501031ecce151d4cb03c4c660b6c6fe7754e75446cd7de09a8c81030c5f6fb377203f551864f3d83e27de7b86499736cbbb549b2f37f436db1cae0a4ea39930f0534aacdd1e3534bc87877e2afabe959ced261f228d6362e6fd277c88c312d966c8b9f67e4a92e757773db0b0862fb8108d1d8fa262a40a1b4171961f0704c8ba314da2482ac8ed9bd28d4b50f7432d89fd800c25a50c5e2f5c0710544fef5273401116aa0572366d8e49ad758fcb29e6a92912e644dbe227c247cb3417eabfab2db16796b2fba420de3b1dc94e8361f1f324a331ddaf1e626553138860757fd0bf687566108b77b70fb9f8f8962eca599c4a70ed373666961a8cb506b96756d9e28b94122b20f16b54f118c0e603ce0b831efea614ad836df6cf9affbdd09596412547496967da758cec9080295d853b0861670b71d9abde0d562b1a6de82782a5b0c14d297f27283a895abc889a5f6703f0e6eb95f67b2da45f150d0d8ab805612d570c2d5cb6997ac3a7756226c2f5c8982ffbd480c5004b0660a3c9468945efde90864019a2b519458724b55d766e16b0da25c0557c01f3c11ddeb024b62e303640e17fdd57dedb3aeb4a2c1b7c93059f9c1d7118d77caac1cd0f6556e46cbc991c1bb16970273dea833d01e5090d061a0c6d25af2415cd2878af97f6d0e7f1f936247b394ecb9bd484da6be936dee9b0b92dc90101a1b4295e97a9772f2263eb09431995aa173df4ca2abd687d87706f0f93eaa5e13cbe3b574fa3cfe94502ace25265778da6960d561381769c24e0cbd7aac73c16f95ae74ff7ec38124f7c722b9cb151d4b6841343f29be8f35145e1b27021056820fed77003df8554b4155716c8cf6049ef5e318481460a8ce3be7c7bfac695255be84dc491c19e9dedc449dd3471728cd2a3ee51324ccb3eef121e3e08f8e18f0006ea8957371d9f2f739f0b89e4db11e5c6430ada61572e589519fbad4498b460ce6e4407fc2d8f2dd4293a50a0cb8fcaaf35cd9a8cc097e3603fbfa08d9036f52b3e7fcce11b83ad28a4ac12dba0395a0cc871cefd1a2856fffb3f28d82ce35cf80579974778bab13d9b3578d8c75a2d196087a2cd439aff2bb33f2db24ac175fff4ed91d36a4cdbfaf3f83074f03894ea40f17034629890da3efdbb41141b38368ab532209b69f057ddc559c19bc8ae62bf3fd564c9a35d9a83d14a95834a92bae6d9a29ae5e8ece07910d16433e4c6230c9bd7d68b47de0de9843988af6dc88b5301820443bd4d0537778bf6b4c1dd067fcf14b81015f2a67c7f2a28f9cb7e0684d3cb4b1c24d9b343122a086611b489532f1c3a26779da1706c6759d96d8ab>
-        jc: 4
-        jmax: 70
-        jmin: 40
-        s1: 0
-        s2: 0
-      dns:
-        - 1.1.1.1
-        - 1.0.0.1
-        - 2606:4700:4700::1111
-        - 2606:4700:4700::1001
-      ip: 172.16.0.2
-      ipv6: 2606:4700:110:8964:bca4:4830:e1dd:f7f9
-      mtu: 1280
-      name: AWG 1.5 (2 Вариант)
-      persistent-keepalive: 15
-      port: 4500
-      private-key: GC4g9Bb32jd2a9VZSSHLpwL7BvIxvyF//AmDlvxrlG0=
-      public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-      remote-dns-resolve: true
-      reserved:
-        - 224
-        - 189
-        - 155
-      server: 162.159.195.10
-      type: wireguard
-      udp: true
-    - allowed-ips:
-        - 0.0.0.0/0
-      amnezia-wg-option:
-        h1: 1
-        h2: 2
-        h3: 4
-        h4: 3
-        i1: <b 0x123401000001000000000000076578616d706c6503636f6d0000010001>
-        jc: 4
-        jmax: 70
-        jmin: 40
-        s1: 0
-        s2: 0
-      dns:
-        - 1.1.1.1
-        - 1.0.0.1
-        - 2606:4700:4700::1111
-        - 2606:4700:4700::1001
-      ip: 172.16.0.2
-      ipv6: 2606:4700:110:8964:bca4:4830:e1dd:f7f9
-      mtu: 1280
-      name: AWG 1.5 (3 Вариант)
-      persistent-keepalive: 15
-      port: 4500
-      private-key: GC4g9Bb32jd2a9VZSSHLpwL7BvIxvyF//AmDlvxrlG0=
-      public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-      remote-dns-resolve: true
-      reserved:
-        - 224
-        - 189
-        - 155
-      server: 162.159.195.10
-      type: wireguard
-      udp: true
-    - allowed-ips:
-        - 0.0.0.0/0
-      amnezia-wg-option:
-        h1: 1
-        h2: 2
-        h3: 4
-        h4: 3
-        i1: <b 0x494e56495445207369703a626f624062696c6f78692e636f6d205349502f322e300d0a5669613a205349502f322e302f55445020706333332e61746c616e74612e636f6d3b6272616e63683d7a39684734624b3737366173646864730d0a4d61782d466f7277617264733a2037300d0a546f3a20426f62203c7369703a626f624062696c6f78692e636f6d3e0d0a46726f6d3a20416c696365203c7369703a616c6963654061746c616e74612e636f6d3e3b7461673d313932383330313737340d0a43616c6c2d49443a20613834623463373665363637313040706333332e61746c616e74612e636f6d0d0a435365713a2033313431353920494e564954450d0a436f6e746163743a203c7369703a616c69636540706333332e61746c616e74612e636f6d3e0d0a436f6e74656e742d547970653a206170706c69636174696f6e2f7364700d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
-        i2: <b 0x5349502f322e302031303020547279696e670d0a5669613a205349502f322e302f55445020706333332e61746c616e74612e636f6d3b6272616e63683d7a39684734624b3737366173646864730d0a546f3a20426f62203c7369703a626f624062696c6f78692e636f6d3e0d0a46726f6d3a20416c696365203c7369703a616c6963654061746c616e74612e636f6d3e3b7461673d313932383330313737340d0a43616c6c2d49443a20613834623463373665363637313040706333332e61746c616e74612e636f6d0d0a435365713a2033313431353920494e564954450d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
-        jc: 4
-        jmax: 70
-        jmin: 40
-        s1: 0
-        s2: 0
-      dns:
-        - 1.1.1.1
-        - 1.0.0.1
-        - 2606:4700:4700::1111
-        - 2606:4700:4700::1001
-      ip: 172.16.0.2
-      ipv6: 2606:4700:110:8964:bca4:4830:e1dd:f7f9
-      mtu: 1280
-      name: AWG 1.5 (4 Вариант)
-      persistent-keepalive: 15
-      port: 4500
-      private-key: GC4g9Bb32jd2a9VZSSHLpwL7BvIxvyF//AmDlvxrlG0=
-      public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-      remote-dns-resolve: true
-      reserved:
-        - 224
-        - 189
-        - 155
-      server: 162.159.195.10
-      type: wireguard
-      udp: true
-proxy-groups:
-    - icon: https://www.svgrepo.com/show/444392/gui-form-radio.svg
-      interval: 60
-      name: Белые списки
-      proxies: []
-      timeout: 3000
-      tolerance: 50
-      type: url-test
-      url: https://www.gstatic.com/generate_204
-      use:
-        - WHITE-CIDR-RU
-    - icon: https://www.svgrepo.com/show/444393/gui-form-radio-checked.svg
-      interval: 60
-      name: Черные списки
-      proxies: []
-      timeout: 3000
-      tolerance: 50
-      type: url-test
-      url: https://www.gstatic.com/generate_204
-      use:
-        - BLACK_VLESS_RUS
-    - filter: "^(?!.*(?i)(ru$|rus$|russia|россия|moscow|москва|spb|питер|sankt|казань|novosibirsk|yekaterinburg|chelyabinsk|ufa|rostov|volgograd|perm|krasnoyarsk|voronezh|sar)|%F0%9F%87%B7%F0%9F%87%BA|\U0001F1F7\U0001F1FA).*"
-      icon: https://www.svgrepo.com/show/293111/maps-and-flags-global.svg
-      interval: 60
-      name: Черные списки GEO
-      proxies: []
-      timeout: 3000
-      tolerance: 50
-      type: url-test
-      url: https://www.gstatic.com/generate_204
-      use:
-        - BLACK_VLESS_RUS
-    - icon: https://www.vectorlogo.zone/logos/cloudflare/cloudflare-icon.svg
-      interval: 60
-      name: Wireguard WARP
-      proxies:
-        - AWG 1.5 (1 Вариант)
-        - AWG 1.5 (2 Вариант)
-        - AWG 1.5 (3 Вариант)
-        - AWG 1.5 (4 Вариант)
-      timeout: 1000
-      type: url-test
-      url: http://speed.cloudflare.com/
-    - icon: https://www.svgrepo.com/show/300290/sign-roadblock.svg
-      name: Блокировка рекламы
-      proxies:
-        - REJECT
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/462111/netflix.svg
-      name: other
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/443377/brand-roblox.svg
-      name: Roblox
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/475634/amazon-color.svg
-      name: Amazon
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/530357/peach.svg
-      name: 18+
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/125448/viber.svg
-      name: Viber
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/353730/fastly.svg
-      name: Akamai
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/353730/fastly.svg
-      name: Fastly
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/171491/compass.svg
-      name: Grok
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/415672/address-location-map.svg
-      name: 2IP.IO
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/361558/notion-logo.svg
-      name: Notion
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/504993/tidal.svg
-      name: Tidal
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/349511/spotify.svg
-      name: Spotify
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/303341/netflix-1-logo.svg
-      name: Netflix
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/448251/twitch.svg
-      name: Twitch
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/306500/openai.svg
-      name: OpenAI
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/331406/gemini.svg
-      name: Gemini
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/349530/tiktok.svg
-      name: TikTok
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/501448/apple.svg
-      name: Apple
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/349412/intel.svg
-      name: intel
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/452062/microsoft.svg
-      name: Microsoft
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/452107/steam.svg
-      name: Steam
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/344880/github.svg
-      name: GitHub
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/448234/linkedin.svg
-      name: Linkedin
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/353828/google-play-icon.svg
-      name: Google Play
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/475656/google-color.svg
-      name: Google
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/355484/speed.svg
-      name: Speedtest
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/452121/twitter-1.svg
-      name: Twitter
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/331368/discord-v2.svg
-      name: Discord
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/349563/whatsapp.svg
-      name: Whatsapp
-      proxies:
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-        - DIRECT
-      type: select
-    - icon: https://www.svgrepo.com/show/354443/telegram.svg
-      name: Telegram
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/475647/facebook-color.svg
-      name: Facebook
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/452229/instagram-1.svg
-      name: Instagram
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/13671/youtube.svg
-      name: YouTube
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки
-        - Черные списки GEO
-        - Белые списки
-      type: select
-    - exclude-filter: (?i)Russia|RU
-      icon: https://www.svgrepo.com/show/293111/maps-and-flags-global.svg
-      name: Остальной трафик
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - icon: https://www.svgrepo.com/show/508628/flag-ru.svg
-      name: RU трафик
-      proxies:
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-    - hidden: true
-      name: GLOBAL
-      proxies:
-        - RU трафик
-        - Остальной трафик
-        - YouTube
-        - Instagram
-        - Facebook
-        - Telegram
-        - Whatsapp
-        - Discord
-        - Twitter
-        - Speedtest
-        - Google
-        - Google Play
-        - Linkedin
-        - GitHub
-        - Steam
-        - Microsoft
-        - intel
-        - Apple
-        - TikTok
-        - Gemini
-        - OpenAI
-        - Twitch
-        - Netflix
-        - Spotify
-        - Tidal
-        - Notion
-        - 2IP.IO
-        - Grok
-        - Fastly
-        - Akamai
-        - Viber
-        - 18+
-        - Amazon
-        - Roblox
-        - other
-        - Блокировка рекламы
-        - DIRECT
-        - Wireguard WARP
-        - Черные списки GEO
-        - Черные списки
-        - Белые списки
-      type: select
-rules:
-    - GEOSITE,category-ads-all,Блокировка рекламы
-    - RULE-SET,hagezi_pro,Блокировка рекламы
-    - GEOIP,private,DIRECT,no-resolve
-    - DOMAIN-SUFFIX,avito.ru,DIRECT
-    - DOMAIN-SUFFIX,avito.st,DIRECT
-    - GEOSITE,category-ru,RU трафик
-    - DOMAIN-SUFFIX,ru,RU трафик
-    - DOMAIN-SUFFIX,by,RU трафик
-    - DOMAIN-SUFFIX,xn--p1ai,RU трафик
-    - DOMAIN-SUFFIX,yandex-pogoda.static-storage.net,RU трафик
-    - GEOSITE,category-gov-ru,RU трафик
-    - GEOIP,RU,RU трафик,no-resolve
-    - OR,((DOMAIN-SUFFIX,gql.twitch.tv),(DOMAIN-SUFFIX,usher.ttvnw.net)),Twitch
-    - GEOSITE,openai,OpenAI
-    - RULE-SET,discord,Discord
-    - GEOSITE,tidal,Tidal
-    - GEOSITE,linkedin,Linkedin
-    - GEOSITE,facebook,Facebook
-    - GEOSITE,netflix,Netflix
-    - GEOIP,netflix,Netflix
-    - GEOSITE,spotify,Spotify
-    - GEOSITE,speedtest,Speedtest
-    - GEOSITE,ookla-speedtest,Speedtest
-    - GEOSITE,category-speedtest,Speedtest
-    - GEOSITE,instagram,Instagram
-    - GEOSITE,steam,Steam
-    - IP-ASN,714,Apple
-    - GEOSITE,apple,Apple
-    - GEOSITE,youtube,YouTube
-    - GEOSITE,twitter,Twitter
-    - GEOSITE,tiktok,TikTok
-    - GEOSITE,intel,intel
-    - GEOSITE,notion,Notion
-    - GEOSITE,google,Google
-    - GEOSITE,google-play,Google Play
-    - GEOSITE,google-gemini,Gemini
-    - GEOSITE,github,GitHub
-    - GEOSITE,microsoft,Microsoft
-    - GEOSITE,telegram,Telegram
-    - GEOIP,telegram,Telegram
-    - DOMAIN-SUFFIX,grok.com,Grok
-    - IP-ASN,16509,Amazon
-    - GEOIP,fastly,Fastly
-    - IP-ASN,12222,Akamai
-    - IP-ASN,16625,Akamai
-    - IP-ASN,16702,Akamai
-    - IP-ASN,17204,Akamai
-    - IP-ASN,17334,Akamai
-    - IP-ASN,18680,Akamai
-    - IP-ASN,18717,Akamai
-    - IP-ASN,20189,Akamai
-    - IP-ASN,20940,Akamai
-    - IP-ASN,21342,Akamai
-    - IP-ASN,22207,Akamai
-    - IP-ASN,22452,Akamai
-    - IP-ASN,23454,Akamai
-    - IP-ASN,23455,Akamai
-    - IP-ASN,23903,Akamai
-    - IP-ASN,24319,Akamai
-    - IP-ASN,26008,Akamai
-    - IP-ASN,31107,Akamai
-    - IP-ASN,31108,Akamai
-    - IP-ASN,31109,Akamai
-    - IP-ASN,31110,Akamai
-    - IP-ASN,31377,Akamai
-    - IP-ASN,32787,Akamai
-    - IP-ASN,33905,Akamai
-    - IP-ASN,34164,Akamai
-    - IP-ASN,34850,Akamai
-    - IP-ASN,35204,Akamai
-    - IP-ASN,35993,Akamai
-    - IP-ASN,35994,Akamai
-    - IP-ASN,36183,Akamai
-    - AND,((IP-ASN,22697),(DST-PORT,49152-65535)),Roblox
-    - DOMAIN-SUFFIX,roblox.com,Roblox
-    - DOMAIN-SUFFIX,rbxcdn.com,Roblox
-    - DOMAIN-SUFFIX,rbxinfra.net,Roblox
-    - GEOSITE,viber,Viber
-    - IP-ASN,16509,Viber
-    - GEOSITE,whatsapp,Whatsapp
-    - IP-ASN,32934,Whatsapp
-    - IP-ASN,11917,Whatsapp
-    - IP-ASN,9002,Whatsapp
-    - GEOSITE,supercell,other
-    - DOMAIN-KEYWORD,supercell,other
-    - AND,((IP-ASN,14618),(DST-PORT,9339)),other
-    - AND,((IP-ASN,16509),(DST-PORT,9339)),other
-    - DOMAIN-SUFFIX,2ip.io,2IP.IO
-    - DOMAIN-SUFFIX,onlyfans.com,other
-    - DOMAIN-SUFFIX,fansly.com,other
-    - DOMAIN-SUFFIX,patreon.com,other
-    - DOMAIN-SUFFIX,rockblack.su,other
-    - DOMAIN-SUFFIX,rockblack.pro,other
-    - DOMAIN-SUFFIX,rockblack.info,other
-    - GEOSITE,category-porn,18+
-    - DOMAIN-SUFFIX,firebase-settings.crashlytics.com,other
-    - DOMAIN-SUFFIX,firebaseinstallations.googleapis.com,other
-    - DOMAIN-SUFFIX,kp-pro.cloud,other
-    - DOMAIN-SUFFIX,firebaseremoteconfigrealtime.googleapis.com,other
-    - DOMAIN-SUFFIX,firebaseremoteconfig.googleapis.com,other
-    - DOMAIN-SUFFIX,cdn32.lol,other
-    - DOMAIN-SUFFIX,kino.pub,other
-    - MATCH,Остальной трафик
-sub-rules: {}
-listeners: []
-hosts: {}
-dns:
-    enable: true
-    prefer-h3: true
-    ipv6: true
-    ipv6-timeout: 300
-    use-hosts: true
-    use-system-hosts: true
-    respect-rules: false
-    nameserver:
-        - 223.5.5.5
-        - 119.29.29.29
-        - 8.8.8.8
-        - 8.8.4.4
-        - 1.0.0.1
-        - 1.1.1.1
-        - tls://223.5.5.5:853
-        - tls://8.8.8.8
-        - tls://8.8.4.4
-        - tls://1.0.0.1
-        - tls://1.1.1.1
-        - https://dns.alidns.com/dns-query#h3=true
-        - https://mozilla.cloudflare-dns.com/dns-query#DNS&h3=true
-        - quic://dns.adguard.com:784
-        - system
-    fallback: []
-    fallback-filter:
-        geoip: true
-        geoip-code: CN
-        ipcidr: []
-        domain: []
-        geosite: []
-    listen: 0.0.0.0:7874
-    enhanced-mode: fake-ip
-    fake-ip-range: 172.19.0.1/16
-    fake-ip-range6: ""
-    fake-ip-filter:
-        - '*.lan'
-        - '*.local'
-        - time.*.com
-        - time.*.gov
-        - time.*.edu.cn
-        - time.*.apple.com
-        - time-ios.apple.com
-        - time1.*.com
-        - time2.*.com
-        - time3.*.com
-        - time4.*.com
-        - time5.*.com
-        - time6.*.com
-        - time7.*.com
-        - ntp.*.com
-        - ntp1.*.com
-        - ntp2.*.com
-        - ntp3.*.com
-        - ntp4.*.com
-        - ntp5.*.com
-        - ntp6.*.com
-        - ntp7.*.com
-        - '*.time.edu.cn'
-        - '*.ntp.org.cn'
-        - '*.pool.ntp.org'
-        - +.services.googleapis.cn
-        - +.push.apple.com
-        - time1.cloud.tencent.com
-        - localhost.ptlogin2.qq.com
-        - +.stun.*.*
-        - +.stun.*.*.*
-        - +.stun.*.*.*.*
-        - +.stun.*.*.*.*.*
-        - lens.l.google.com
-        - '*.n.n.srv.nintendo.net'
-        - +.stun.playstation.net
-        - xbox.*.*.microsoft.com
-        - '*.*.xboxlive.com'
-        - '*.msftncsi.com'
-        - '*.msftconnecttest.com'
-        - '*.mcdn.bilivideo.cn'
-        - +.bilibili.com
-        - +.bilicdn.com
-        - +.bilivideo.com
-        - +.market.xiaomi.com
-        - WORKGROUP
-    fake-ip-filter-mode: blacklist
-    fake-ip-ttl: 1
-    default-nameserver:
-        - 223.5.5.5
-        - 119.29.29.29
-        - 8.8.8.8
-        - 8.8.4.4
-        - 1.0.0.1
-        - 1.1.1.1
-        - system
-    cache-algorithm: arc
-    cache-max-size: 0
-    nameserver-policy:
-        +.supercell.net: https://dns.google/dns-query
-        +.brawlstarsgame.com: https://dns.google/dns-query
-    proxy-server-nameserver: []
-    direct-nameserver: []
-    direct-nameserver-follow-policy: false
-ntp:
-    enable: false
-    server: time.apple.com
-    port: 123
-    interval: 30
-    dialer-proxy: ""
-    write-to-system: false
-tun:
-    enable: false
-    device: Clash Mi
-    stack: System
-    dns-hijack:
-        - 0.0.0.0:53
-    auto-route: true
-    auto-detect-interface: true
-    mtu: 4064
-    gso: false
-    gso-max-size: 0
-    inet4-address:
-        - 172.19.0.1/30
-    inet6-address: []
-    iproute2-table-index: 0
-    iproute2-rule-index: 0
-    auto-redirect: false
-    auto-redirect-input-mark: 0
-    auto-redirect-output-mark: 0
-    loopback-address: []
-    strict-route: false
-    route-address: []
-    route-address-set: []
-    route-exclude-address: []
-    route-exclude-address-set: []
-    include-interface: []
-    exclude-interface: []
-    include-uid: []
-    include-uid-range: []
-    exclude-uid: []
-    exclude-uid-range: []
-    exclude-src-port: []
-    exclude-src-port-range: []
-    exclude-dst-port: []
-    exclude-dst-port-range: []
-    include-android-user: []
-    include-package: []
-    exclude-package: []
-    endpoint-independent-nat: false
-    udp-timeout: 0
-    disable-icmp-forwarding: false
-    file-descriptor: 0
-    inet4-route-address: []
-    inet6-route-address: []
-    inet4-route-exclude-address: []
-    inet6-route-exclude-address: []
-    recvmsgx: true
-    sendmsgx: false
-tuic-server:
-    enable: false
-    listen: ""
-    token: []
-    users: {}
-    certificate: ""
-    private-key: ""
-    congestion-controller: ""
-    max-idle-time: 15000
-    authentication-timeout: 1000
-    alpn:
-        - h3
-    max-udp-relay-packet-size: 1500
-    cwnd: 0
-iptables:
-    enable: false
-    inbound-interface: lo
-    bypass: []
-    dns-redirect: true
-experimental:
-    fingerprints: []
-    quic-go-disable-gso: false
-    quic-go-disable-ecn: true
-    dialer-ip4p-convert: false
+
+# --- ПРОФИЛЬ ---
 profile:
-    store-selected: true
-    store-fake-ip: true
-geox-url:
-    geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geoip.dat
-    mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb
-    asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
-    geosite: https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat
+  store-selected: true
+find-process-mode: "off"
+
+
+# --- НАСТРОЙКИ СНИФФЕРА ---
 sniffer:
-    enable: true
-    override-destination: true
-    sniffing: []
-    force-domain: []
-    skip-src-address: []
-    skip-dst-address: []
-    skip-domain: []
-    port-whitelist: []
-    force-dns-mapping: true
-    parse-pure-ip: true
-    sniff:
-        HTTP:
-            ports:
-                - "80"
-            override-destination: true
-        QUIC:
-            ports:
-                - "443"
-            override-destination: null
-        TLS:
-            ports:
-                - "443"
-            override-destination: null
-tls:
-    certificate: ""
-    private-key: ""
-    client-auth-type: ""
-    client-auth-cert: ""
-    ech-key: ""
-    custom-certifactes: []
-clash-for-android:
-    append-system-dns: false
-    ui-subtitle-pattern: ""
+  enable: true
+  force-dns-mapping: true
+  sniff:
+    HTTP:
+      ports: [80]
+      override-destination: true
+    TLS:
+      ports: [443]
+    QUIC:
+      ports: [443]
+      
+# --- НАСТРОЙКИ DNS ---
+dns:
+  enable: true
+  listen: 0.0.0.0:7874
+  ipv6: false
+  cache-algorithm: arc
+
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+
+  use-hosts: true
+  respect-rules: true
+
+
+  # Используем ЧИСТЫЕ IP
+  proxy-server-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+
+  # Bootstrap DNS (ВСЕГДА IP)
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+
+  # Основные DNS — ТОЛЬКО DoH
+  nameserver:
+    - https://cloudflare-dns.com/dns-query
+    - https://doh.opendns.com/dns-query
+    - https://dns.google/dns-query
+
+  # Точечные политики
+  nameserver-policy:
+    '+.supercell.net': https://dns.google/dns-query
+    '+.brawlstarsgame.com': https://dns.google/dns-query
+
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - '*.lan'
+    - '*.local'
+    - 'localhost'
+
+    # Системные проверки
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - +.connectivitycheck.gstatic.com
+    - +.detectportal.firefox.com
+
+    # NTP
+    - +.pool.ntp.org
+    - +.ntp.org
+    - +.time.windows.com
+
+    # Мобильные сети
+    - +.3gppnetwork.org
+
+# --- ПРОВАЙДЕРЫ ПРОКСИ ---
+warp-common: &warp-common
+  type: wireguard
+  ip: 172.16.0.2
+  ipv6: 2606:4700:110:8964:bca4:4830:e1dd:f7f9
+  private-key: GC4g9Bb32jd2a9VZSSHLpwL7BvIxvyF//AmDlvxrlG0=
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [224, 189, 155]
+  udp: true
+  persistent-keepalive: 15
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  server: 162.159.192.1
+  port: 4500
+
+proxy-providers:
+  BLACK_VLESS_RUS:
+    type: http
+    url: "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt"
+    path: ./proxy-providers/BLACK_VLESS_RUS.yaml
+    interval: 3600
+
+  WHITE-CIDR-RU:
+    type: http
+    url: "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt"
+    path: ./proxy-providers/WHITE-CIDR-RU.yaml
+    interval: 3600
+
+# Прокси
+proxies:
+# Старые AWG прокси (WARP)
+- name: "AWG 1.5 (1 Вариант)"
+  <<: *warp-common
+  amnezia-wg-option:
+   jc: 4
+   jmin: 40
+   jmax: 70
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4
+   i1: <b 0xc6000000010843290a47ba8ba2ed000044d0e3efd9326adb60561baa3bc4b52471b2d459ddcc9a508dffddc97e4d40d811d3de7bc98cf06ea85902361ca3ae66b2a99c7de96f0ace4ba4710658aefde6dec6837bc1a48f47bbd63c6e60ff494d3e1bea5f13927922401c40b0f4570d26be6806b506a9ff5f75ca86fae5f8175d4b6bfd418df9b922cdff8e60b06decfe66f2b07da61a47b5c8b32fa999d8feac21c8878b6e15ee03b8388b2afd9ffd3b46753b0284907b10747e526eebf287ff08735929c4c5e4784a5e2ad3dd8ac8200d0e99ad1219e54060ddc72813e8a3e2291ac713c5f3251c5d748fd68782a2e8eb0c021e437a79aafb253efae3ee72e1051b647c45b676d3b9e474d4f60c7bf7d328106cb94f67eaf2c991cd7043371debbf2b4159b8f80f5da0e1b18f4da35fca0a88026b375f1082731d1cbbe9ba3ae2bfefec250ee328ded7f8330d4cda38f74a7fe10b58ace936fc83cfcb3e1ebed520f7559549a8f20568a248e16949611057a3dd9952bae9b7be518c2b5b2568b8582c165c73a6e8f9b042ec9702704a94dd99893421310d43ffc9caf003ff5fc7bcd718f3fa99d663a8bbad6b595ec1d4cf3c0ed1668d0541c4e5b7e5ded40c6628eb64b29f514424d08d8522ddf7b856e9b820441907177a3dbd9b958172173be8c45c8c7b1816fe4d24927f9b12778153fc118194786c6cf49bc5cf09177f73be27917a239592f9acd9a21150abbd1ca93b1e305dc64d9883429a032c3179e0639592c248cbacec00c90bfb5d5eaf8920bf80c47085a490ead8d0af45f6754e8ae5692f86be02c480ca2a1e6156dccf1bcb5c911c05e3c3a946ca23461669c57d287dcfa9dd187fc6a58394f0b2878c07e1d8cb6be41725d49c118e9ddbe1ae6e5d1a04b36ad98a24f0378deea84febb60b22dc81d8377fb3f21069d83e90b9eba2b6b0ea95acf5fd0482a00d064a9b73e0b3732fde45404e22349a514151381fc6095a8204234359c28765e360a57eb222418b11be704651e4da1b52b135d31ba63a7f06a0f7b8b6177f9bd02fb517877a1340e59d8dbe52ea8135bc80b2aa1959539803a31720ac949c7bf0785c2e413e8b83dd4fd40d8a63fbd832ecb727d0c0df04ce10dac6a7d6d75e264aaf856e7485cc2c4e1749f169e5ad4de6f89a2333e362910dd0d962e3bf59a353df5760fd15956fe32e40f863ea020e9709aa9a9ebeffc885e64231dc6fc384bc6a9e7e5c64c0eaf39f9f14a13658883ee8dd94737cb3a8c2f7020bfacb80f0122866635873e248e22b5a5abc84d507e1720d3fb5f827d75c1d39235a361a217eb0587d1639b0b31aef1fe91958220fcf934c2517dea2f1afe51cd63ac31b5f9323a427c36a5442f8a89b7494f1592666f62be0d8cf67fdf5ef38fafc55b7b4f569a105dfa9925f0a41913c6ee13064d4b83f9ee1c3231c402d68a624e2388e357144be99197dcafb92118d9a9ec6fe832771e12448a146fb5b9620a4718070b368aab646b03cce41ec4d5d9a9c880a9cff06aba991cc0845030abbac87c67255f0373eb38444a51d0958e57c7a33042697465c84abe6791cb8f28e484c4cd04f10791ad911b0dcc217f66cb3aa5fcdbb1e2be88139c4ac2652e469122408feba59ad04f66eb8ab8c80aaf10c2ec1f80b5be111d3ccc832df2395a947e335e7908fda5dcdaa14a61f0fa7156c94b1c96e5c191d850e341adc2e22c8f69fcfa5c3e403eadc933f18be3734bc345def4f40ea3e12>
+- name: "AWG 1.5 (2 Вариант)"
+  <<: *warp-common
+  amnezia-wg-option:
+   jc: 4
+   jmin: 40
+   jmax: 70
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4  
+   i1: <b 0xc6000000010843290a47ba8ba2ed000044d0e3efd9326adb60561baa3bc4b52471b2d459ddcc9a508dffddc97e4d40d811d3de7bc98cf06ea85902361ca3ae66b2a99c7de96f0ace4ba4710658aefde6dec6837bc1a48f47bbd63c6e60ff494d3e1bea5f13927922401c40b0f4570d26be6806b506a9ff5f75ca86fae5f8175d4b6bfd418df9b922cdff8e60b06decfe66f2b07da61a47b5c8b32fa999d8feac21c8878b6e15ee03b8388b2afd9ffd3b46753b0284907b10747e526eebf287ff08735929c4c5e4784a5e2ad3dd8ac8200d0e99ad1219e54060ddc72813e8a3e2291ac713c5f3251c5d748fd68782a2e8eb0c021e437a79aafb253efae3ee72e1051b647c45b676d3b9e474d4f60c7bf7d328106cb94f67eaf2c991cd7043371debbf2b4159b8f80f5da0e1b18f4da35fca0a88026b375f1082731d1cbbe9ba3ae2bfefec250ee328ded7f8330d4cda38f74a7fe10b58ace936fc83cfcb3e1ebed520f7559549a8f20568a248e16949611057a3dd9952bae9b7be518c2b5b2568b8582c165c73a6e8f9b042ec9702704a94dd99893421310d43ffc9caf003ff5fc7bcd718f3fa99d663a8bbad6b595ec1d4cf3c0ed1668d0541c4e5b7e5ded40c6628eb64b29f514424d08d8522ddf7b856e9b820441907177a3dbd9b958172173be8c45c8c7b1816fe4d24927f9b12778153fc118194786c6cf49bc5cf09177f73be27917a239592f9acd9a21150abbd1ca93b1e305dc64d9883429a032c3179e0639592c248cbacec00c90bfb5d5eaf8920bf80c47085a490ead8d0af45f6754e8ae5692f86be02c480ca2a1e6156dccf1bcb5c911c05e3c3a946ca23461669c57d287dcfa9dd187fc6a58394f0b2878c07e1d8cb6be41725d49c118e9ddbe1ae6e5d1a04b36ad98a24f0378deea84febb60b22dc81d8377fb3f21069d83e90b9eba2b6b0ea95acf5fd0482a00d064a9b73e0b3732fde45404e22349a514151381fc6095a8204234359c28765e360a57eb222418b11be704651e4da1b52b135d31ba63a7f06a0f7b8b6177f9bd02fb517877a1340e59d8dbe52ea8135bc80b2aa1959539803a31720ac949c7bf0785c2e413e8b83dd4fd40d8a63fbd832ecb727d0c0df04ce10dac6a7d6d75e264aaf856e7485cc2c4e1749f169e5ad4de6f89a2333e362910dd0d962e3bf59a353df5760fd15956fe32e40f863ea020e9709aa9a9ebeffc885e64231dc6fc384bc6a9e7e5c64c0eaf39f9f14a13658883ee8dd94737cb3a8c2f7020bfacb80f0122866635873e248e22b5a5abc84d507e1720d3fb5f827d75c1d39235a361a217eb0587d1639b0b31aef1fe91958220fcf934c2517dea2f1afe51cd63ac31b5f9323a427c36a5442f8a89b7494f1592666f62be0d8cf67fdf5ef38fafc55b7b4f569a105dfa9925f0a41913c6ee13064d4b83f9ee1c3231c402d68a624e2388e357144be99197dcafb92118d9a9ec6fe832771e12448a146fb5b9620a4718070b368aab646b03cce41ec4d5d9a9c880a9cff06aba991cc0845030abbac87c67255f0373eb38444a51d0958e57c7a33042697465c84abe6791cb8f28e484c4cd04f10791ad911b0dcc217f66cb3aa5fcdbb1e2be88139c4ac2652e469122408feba59ad04f66eb8ab8c80aaf10c2ec1f80b5be111d3ccc832df2395a947e335e7908fda5dcdaa14a61f0fa7156c94b1c96e5c191d850e341adc2e22c8f69fcfa5c3e403eadc933f18be3734bc345def4f40ea3e12>
+- name: "AWG 1.5 (3 Вариант)"
+  <<: *warp-common
+  amnezia-wg-option:
+   jc: 4
+   jmin: 40
+   jmax: 70
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4   
+   i1: <b 0x123401000001000000000000076578616d706c6503636f6d0000010001>
+- name: "AWG 1.5 (4 Вариант)"
+  <<: *warp-common
+  amnezia-wg-option:
+   jc: 4
+   jmin: 40
+   jmax: 70
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4   
+   i1: <b 0x494e56495445207369703a626f624062696c6f78692e636f6d205349502f322e300d0a5669613a205349502f322e302f55445020706333332e61746c616e74612e636f6d3b6272616e63683d7a39684734624b3737366173646864730d0a4d61782d466f7277617264733a2037300d0a546f3a20426f62203c7369703a626f624062696c6f78692e636f6d3e0d0a46726f6d3a20416c696365203c7369703a616c6963654061746c616e74612e636f6d3e3b7461673d313932383330313737340d0a43616c6c2d49443a20613834623463373665363637313040706333332e61746c616e74612e636f6d0d0a435365713a2033313431353920494e564954450d0a436f6e746163743a203c7369703a616c69636540706333332e61746c616e74612e636f6d3e0d0a436f6e74656e742d547970653a206170706c69636174696f6e2f7364700d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
+   i2: <b 0x5349502f322e302031303020547279696e670d0a5669613a205349502f322e302f55445020706333332e61746c616e74612e636f6d3b6272616e63683d7a39684734624b3737366173646864730d0a546f3a20426f62203c7369703a626f624062696c6f78692e636f6d3e0d0a46726f6d3a20416c696365203c7369703a616c6963654061746c616e74612e636f6d3e3b7461673d313932383330313737340d0a43616c6c2d49443a20613834623463373665363637313040706333332e61746c616e74612e636f6d0d0a435365713a2033313431353920494e564954450d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
+
+# Relay сервера CF WARP (WARP Relay)
+- name: "WARP Relay 1 (DE)"
+  type: wireguard
+  private-key: qGGC2gA7jviISCzWAf15Cl/X+481E72QYP0hPqmzDXY=
+  server: de.tribukvy.ltd
+  port: 4500
+  ip: 172.16.0.2
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [136, 0, 21]
+  udp: true
+  persistent-keepalive: 15
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  amnezia-wg-option:
+    jc: 120
+    jmin: 23
+    jmax: 911
+    s1: 0
+    s2: 0
+    h1: 1
+    h2: 2
+    h4: 3
+    h3: 4
+    i1: <b 0x5245474953544552207369703a676f6f676c652e636f6d205349502f322e300d0a5669613a205349502f322e302f554450203139322e3136382e3137392e3137363a353036303b6272616e63683d7a39684734624b3030613234313638663833626231336262366238616334330d0a4d61782d466f7277617264733a2037300d0a546f3a203c7369703a7573657240676f6f676c652e636f6d3e0d0a46726f6d3a203c7369703a7573657240676f6f676c652e636f6d3e3b7461673d626338636437653238316533383462310d0a43616c6c2d49443a2064366538653663353433643532353133353533333664336162303733666530350d0a435365713a20312052454749535445520d0a436f6e746163743a203c7369703a75736572403139322e3136382e3231322e3234363a353036303e0d0a557365722d4167656e743a205a6f6970657220352e302e300d0a457870697265733a20343035320d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
+
+- name: "WARP Relay 2 (LT)"
+  type: wireguard
+  private-key: YJQZkG80U5RmHw4ruhmxYC59dgDtzbvDbFUhDHSx93c=
+  server: lt.tribukvy.ltd
+  port: 4500
+  ip: 172.16.0.2
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [114, 73, 168]
+  udp: true
+  persistent-keepalive: 15
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  amnezia-wg-option:
+    jc: 120
+    jmin: 23
+    jmax: 911
+    s1: 0
+    s2: 0
+    h1: 1
+    h2: 2
+    h4: 3
+    h3: 4
+    i1: <b 0x5245474953544552207369703a676f6f676c652e636f6d205349502f322e300d0a5669613a205349502f322e302f554450203139322e3136382e36362e3135393a353036303b6272616e63683d7a39684734624b6663623464373738653538323563303534383130343436300d0a4d61782d466f7277617264733a2037300d0a546f3a203c7369703a7573657240676f6f676c652e636f6d3e0d0a46726f6d3a203c7369703a7573657240676f6f676c652e636f6d3e3b7461673d653435663735326561636531373162370d0a43616c6c2d49443a2032373266343639333833633965613063336634356239383330326562356561650d0a435365713a20312052454749535445520d0a436f6e746163743a203c7369703a75736572403139322e3136382e32372e3138323a353036303e0d0a557365722d4167656e743a205a657068797220322e302e300d0a457870697265733a20363937340d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
+
+- name: "WARP Relay 3 (NL)"
+  type: wireguard
+  private-key: oEykUqMqoju66FjlULd3MyG3OYapeXHegfdulpzT4UU=
+  server: nl3.tribukvy.ltd
+  port: 4500
+  ip: 172.16.0.2
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [107, 146, 137]
+  udp: true
+  persistent-keepalive: 15
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  amnezia-wg-option:
+    jc: 120
+    jmin: 23
+    jmax: 911
+    s1: 0
+    s2: 0
+    h1: 1
+    h2: 2
+    h4: 3
+    h3: 4
+    i1: <b 0xc10000000114367096bb0fb3f58f3a3fb8aaacd61d63a1c8a40e14f7374b8a62dccba6431716c3abf6f5afbcfb39bd008000047c32e268567c652e6f4db58bff759bc8c5aaca183b87cb4d22938fe7d8dca22a679a79e4d9ee62e4bbb3a380dd78d4e8e48f26b38a1d42d76b371a5a9a0444827a69d1ab5872a85749f65a4104e931740b4dc1e2dd77733fc7fac4f93011cd622f2bb47e85f71992e2d585f8dc765a7a12ddeb879746a267393ad023d267c4bd79f258703e27345155268bd3cc0506ebd72e2e3c6b5b0f005299cd94b67ddabe30389c4f9b5c2d512dcc298c14f14e9b7f931e1dc397926c31fbb7cebfc668349c218672501031ecce151d4cb03c4c660b6c6fe7754e75446cd7de09a8c81030c5f6fb377203f551864f3d83e27de7b86499736cbbb549b2f37f436db1cae0a4ea39930f0534aacdd1e3534bc87877e2afabe959ced261f228d6362e6fd277c88c312d966c8b9f67e4a92e757773db0b0862fb8108d1d8fa262a40a1b4171961f0704c8ba314da2482ac8ed9bd28d4b50f7432d89fd800c25a50c5e2f5c0710544fef5273401116aa0572366d8e49ad758fcb29e6a92912e644dbe227c247cb3417eabfab2db16796b2fba420de3b1dc94e8361f1f324a331ddaf1e626553138860757fd0bf687566108b77b70fb9f8f8962eca599c4a70ed373666961a8cb506b96756d9e28b94122b20f16b54f118c0e603ce0b831efea614ad836df6cf9affbdd09596412547496967da758cec9080295d853b0861670b71d9abde0d562b1a6de82782a5b0c14d297f27283a895abc889a5f6703f0e6eb95f67b2da45f150d0d8ab805612d570c2d5cb6997ac3a7756226c2f5c8982ffbd480c5004b0660a3c9468945efde90864019a2b519458724b55d766e16b0da25c0557c01f3c11ddeb024b62e303640e17fdd57dedb3aeb4a2c1b7c93059f9c1d7118d77caac1cd0f6556e46cbc991c1bb16970273dea833d01e5090d061a0c6d25af2415cd2878af97f6d0e7f1f936247b394ecb9bd484da6be936dee9b0b92dc90101a1b4295e97a9772f2263eb09431995aa173df4ca2abd687d87706f0f93eaa5e13cbe3b574fa3cfe94502ace25265778da6960d561381769c24e0cbd7aac73c16f95ae74ff7ec38124f7c722b9cb151d4b6841343f29be8f35145e1b27021056820fed77003df8554b4155716c8cf6049ef5e318481460a8ce3be7c7bfac695255be84dc491c19e9dedc449dd3471728cd2a3ee51324ccb3eef121e3e08f8e18f0006ea8957371d9f2f739f0b89e4db11e5c6430ada61572e589519fbad4498b460ce6e4407fc2d8f2dd4293a50a0cb8fcaaf35cd9a8cc097e3603fbfa08d9036f52b3e7fcce11b83ad28a4ac12dba0395a0cc871cefd1a2856fffb3f28d82ce35cf80579974778bab13d9b3578d8c75a2d196087a2cd439aff2bb33f2db24ac175fff4ed91d36a4cdbfaf3f83074f03894ea40f17034629890da3efdbb41141b38368ab532209b69f057ddc559c19bc8ae62bf3fd564c9a35d9a83d14a95834a92bae6d9a29ae5e8ece07910d16433e4c6230c9bd7d68b47de0de9843988af6dc88b5301820443bd4d0537778bf6b4c1dd067fcf14b81015f2a67c7f2a28f9cb7e0684d3cb4b1c24d9b343122a086611b489532f1c3a26779da1706c6759d96d8ab>
+
+- name: "WARP Relay 4 (FI)"
+  type: wireguard
+  private-key: cDD0xb4JejF6iWg6+eNGkFa88D6ZQzN94dbJoWP0bEQ=
+  server: fi.tribukvy.ltd
+  port: 4500
+  ip: 172.16.0.2
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [242, 110, 60]
+  udp: true
+  persistent-keepalive: 15
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  amnezia-wg-option:
+    jc: 120
+    jmin: 23
+    jmax: 911
+    s1: 0
+    s2: 0
+    h1: 1
+    h2: 2
+    h4: 3
+    h3: 4
+    i1: <b 0x170303016a474554202f66617669636f6e2e69636f20485454502f312e310d0a486f73743a206163636f756e74732e676f6f676c652e636f6d0d0a557365722d4167656e743a204d6f7a696c6c612f352e30202857696e646f7773204e542031302e303b2057696e36343b2078363429204170706c655765624b69742f3533372e333620284b48544d4c2c206c696b65204765636b6f29204368726f6d652f39312e302e343437322e313234205361666172692f3533372e33360d0a4163636570743a20746578742f68746d6c2c6170706c69636174696f6e2f7868746d6c2b786d6c2c6170706c69636174696f6e2f786d6c3b713d302e392c696d6167652f776562702c2a2f2a3b713d302e380d0a4163636570742d4c616e67756167653a20656e2d55532c656e3b713d302e350d0a4163636570742d456e636f64696e673a20677a69702c206465666c6174652c2062720d0a436f6e6e656374696f6e3a206b6565702d616c6976650d0a0d0a>
+
+# --- ГРУППЫ ПРОКСИ (ПОЛИТИКИ) ---
+proxy-groups:
+
+  # ТЕХНИЧЕСКИЕ ГРУППЫ С ФИЛЬТРАЦИЕЙ
+
+  - name: Wireguard WARP
+    type: url-test
+    icon: https://www.vectorlogo.zone/logos/cloudflare/cloudflare-icon.svg
+    proxies:
+      - "AWG 1.5 (1 Вариант)"
+      - "AWG 1.5 (2 Вариант)"
+      - "AWG 1.5 (3 Вариант)"
+      - "AWG 1.5 (4 Вариант)"
+    url: 'http://speed.cloudflare.com/'
+    interval: 60
+    timeout: 1000
+
+  # НОВАЯ ГРУППА: WARP Relay
+  - name: Wireguard WARP (Relay)
+    type: url-test
+    icon: https://www.vectorlogo.zone/logos/cloudflare/cloudflare-icon.svg
+    proxies:
+      - "WARP Relay 1 (DE)"
+      - "WARP Relay 2 (LT)"
+      - "WARP Relay 3 (NL)"
+      - "WARP Relay 4 (FI)"
+    url: 'http://speed.cloudflare.com/'
+    interval: 300
+    timeout: 3000
+    tolerance: 50
+
+  # Черные списки GEO (без РФ)
+  - name: 'Черные списки GEO'
+    type: url-test
+    url: 'https://www.gstatic.com/generate_204'
+    interval: 60
+    tolerance: 50
+    timeout: 3000
+    filter: "^(?!.*(?i)(ru$|rus$|russia|россия|moscow|москва|spb|питер|sankt|казань|novosibirsk|yekaterinburg|chelyabinsk|ufa|rostov|volgograd|perm|krasnoyarsk|voronezh|sar)|%F0%9F%87%B7%F0%9F%87%BA|🇷🇺).*"
+    use:
+      - BLACK_VLESS_RUS
+    proxies: []
+    icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
+
+  # Черные списки
+  - name: 'Черные списки'
+    type: url-test
+    url: 'https://www.gstatic.com/generate_204'
+    interval: 60
+    tolerance: 50
+    timeout: 3000
+    use:
+      - BLACK_VLESS_RUS
+    proxies: []
+    icon: "https://www.svgrepo.com/show/444393/gui-form-radio-checked.svg"
+
+  # Белые списки
+  - name: 'Белые списки'
+    type: url-test
+    url: 'https://www.gstatic.com/generate_204'
+    interval: 60
+    tolerance: 50
+    timeout: 3000
+    use:
+      - WHITE-CIDR-RU
+    proxies: []
+    icon: "https://www.svgrepo.com/show/444392/gui-form-radio.svg"
+
+  # СЕРВИСНЫЕ ГРУППЫ
+  
+  # RU трафик
+  - name: 'RU трафик'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/508628/flag-ru.svg"
+
+  # Остальной трафик
+  - name: 'Остальной трафик'
+    type: select
+    exclude-filter: "(?i)Russia|RU"
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
+
+  # YouTube
+  - name: 'YouTube'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки'
+      - 'Черные списки GEO'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/13671/youtube.svg"
+
+  # Instagram
+  - name: 'Instagram'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/452229/instagram-1.svg"
+
+  # Facebook
+  - name: 'Facebook'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/475647/facebook-color.svg"
+
+  # Telegram
+  - name: 'Telegram'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/354443/telegram.svg"
+
+  # Whatsapp
+  - name: 'Whatsapp'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/349563/whatsapp.svg"
+
+  # Discord
+  - name: 'Discord'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/331368/discord-v2.svg"
+
+  # Twitter
+  - name: 'Twitter'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/452121/twitter-1.svg"
+
+  # Speedtest
+  - name: 'Speedtest'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/355484/speed.svg"
+
+  # Google
+  - name: 'Google'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/475656/google-color.svg"
+
+  # Google Play
+  - name: 'Google Play'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/353828/google-play-icon.svg"
+
+  # Linkedin
+  - name: 'Linkedin'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/448234/linkedin.svg"
+
+  # GitHub
+  - name: 'GitHub'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/344880/github.svg"
+
+  # Steam
+  - name: 'Steam'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/452107/steam.svg"
+
+  # Microsoft
+  - name: 'Microsoft'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/452062/microsoft.svg"
+
+  # intel
+  - name: 'intel'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/349412/intel.svg"
+
+  # Apple
+  - name: 'Apple'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/501448/apple.svg"
+
+  # TikTok
+  - name: 'TikTok'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/349530/tiktok.svg"
+
+  # Gemini
+  - name: 'Gemini'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/331406/gemini.svg"
+
+  # OpenAI
+  - name: 'OpenAI'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/306500/openai.svg"
+
+  # Twitch
+  - name: 'Twitch'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/448251/twitch.svg"
+
+  # Netflix
+  - name: 'Netflix'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/303341/netflix-1-logo.svg"
+
+  # Spotify
+  - name: 'Spotify'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/349511/spotify.svg"
+
+  # Tidal
+  - name: 'Tidal'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/504993/tidal.svg"
+
+  # Notion
+  - name: 'Notion'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/361558/notion-logo.svg"
+
+  # 2IP.IO
+  - name: '2IP.IO'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/415672/address-location-map.svg"
+
+  # Grok
+  - name: 'Grok'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/171491/compass.svg"
+
+  # Fastly
+  - name: 'Fastly'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/353730/fastly.svg"
+
+  # Cloudflare
+  - name: 'Cloudflare'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/349320/cloudflare.svg"
+
+  # Akamai
+  - name: 'Akamai'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/353730/fastly.svg"
+
+  # Viber
+  - name: 'Viber'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/125448/viber.svg"
+
+  # 18+
+  - name: '18+'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/530357/peach.svg"
+
+  # Amazon
+  - name: 'Amazon'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/475634/amazon-color.svg"
+
+  # Roblox
+  - name: 'Roblox'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/443377/brand-roblox.svg"
+
+  # other
+  - name: 'other'
+    type: select
+    proxies:
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/462111/netflix.svg"
+
+  # Блокировка рекламы
+  - name: 'Блокировка рекламы'
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+    icon: "https://www.svgrepo.com/show/300290/sign-roadblock.svg"
+
+  - name: GLOBAL
+    type: select
+    hidden: true
+    proxies:
+      - 'RU трафик'
+      - 'Остальной трафик'
+      - 'YouTube'
+      - 'Instagram'
+      - 'Facebook'
+      - 'Telegram'
+      - 'Whatsapp'
+      - 'Discord'
+      - 'Twitter'
+      - 'Speedtest'
+      - 'Google'
+      - 'Google Play'
+      - 'Linkedin'
+      - 'GitHub'
+      - 'Steam'
+      - 'Microsoft'
+      - 'intel'
+      - 'Apple'
+      - 'TikTok'
+      - 'Gemini'
+      - 'OpenAI'
+      - 'Twitch'
+      - 'Netflix'
+      - 'Spotify'
+      - 'Tidal'
+      - 'Notion'
+      - '2IP.IO'
+      - 'Grok'
+      - 'Fastly'
+      - 'Cloudflare'
+      - 'Akamai'
+      - 'Viber'
+      - '18+'
+      - 'Amazon'
+      - 'Roblox'
+      - 'other'
+      - 'Блокировка рекламы'
+      - DIRECT
+      - 'Wireguard WARP'
+      - 'Wireguard WARP (Relay)'
+      - 'Черные списки GEO'
+      - 'Черные списки'
+      - 'Белые списки'
+
+# --- НАСТРОЙКИ GEO-ДАННЫХ ---
+geox-url:
+  geosite: "https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat"
+  geoip: "https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geoip.dat"
+
+# --- ПРОВАЙДЕРЫ ПРАВИЛ ---
+rule-providers:
+  hagezi_pro:
+    type: http
+    behavior: domain
+    format: mrs
+    url: https://github.com/zxc-rv/ad-filter/releases/latest/download/adlist.mrs
+    path: ./adblock/adlist.mrs
+    interval: 86400
+
+  discord:
+    type: inline
+    behavior: classical
+    format: text
+    payload:
+      - AND,((DOMAIN-KEYWORD,discord),(NOT,((DOMAIN-SUFFIX,ru))))
+      - AND,((IP-CIDR,34.0.192.0/18,no-resolve),(NETWORK,UDP),(DST-PORT,50000-50100))
+      - AND,((IP-CIDR,35.192.0.0/11,no-resolve),(NETWORK,UDP),(DST-PORT,50000-50100))
+      - AND,((IP-CIDR,66.22.192.0/18,no-resolve),(NETWORK,UDP),(DST-PORT,50000-50100))
+
+
+# --- ПРАВИЛА МАРШРУТИЗАЦИИ ---
+rules:
+  # ПРАВИЛО №0: Блокировка рекламы и трекеров
+  - GEOSITE,category-ads-all,Блокировка рекламы
+#  - RULE-SET,hagezi_pro,Блокировка рекламы
+
+  # ПРАВИЛО №1: Системные правила
+  - GEOIP,private,DIRECT,no-resolve
+
+
+  # ПРАВИЛО №2: Российский трафик
+  - DOMAIN-SUFFIX,avito.ru,DIRECT
+  - DOMAIN-SUFFIX,avito.st,DIRECT
+  - GEOSITE,category-ru,RU трафик
+  - DOMAIN-SUFFIX,ru,RU трафик
+  - DOMAIN-SUFFIX,by,RU трафик
+  - DOMAIN-SUFFIX,xn--p1ai,RU трафик
+  - DOMAIN-SUFFIX,yandex-pogoda.static-storage.net,RU трафик
+  - GEOSITE,category-gov-ru,RU трафик
+  - GEOIP,RU,RU трафик,no-resolve
+  
+
+  # ПРАВИЛО №3: Правила для конкретных сервисов
+  - OR,((DOMAIN-SUFFIX,gql.twitch.tv),(DOMAIN-SUFFIX,usher.ttvnw.net)),Twitch
+  - GEOSITE,openai,OpenAI
+  - RULE-SET,discord,Discord
+  - GEOSITE,tidal,Tidal
+  - GEOSITE,linkedin,Linkedin
+  - GEOSITE,facebook,Facebook
+  - GEOSITE,netflix,Netflix
+  - GEOIP,netflix,Netflix
+  - GEOSITE,spotify,Spotify
+  - GEOSITE,speedtest,Speedtest
+  - GEOSITE,ookla-speedtest,Speedtest
+  - GEOSITE,category-speedtest,Speedtest 
+  - GEOSITE,instagram,Instagram
+  - GEOSITE,steam,Steam
+  - IP-ASN,714,Apple
+  - GEOSITE,apple,Apple
+  - GEOSITE,youtube,YouTube
+  - GEOSITE,twitter,Twitter
+  - GEOSITE,tiktok,TikTok
+  - GEOSITE,intel,intel
+  - GEOSITE,notion,Notion
+  - GEOSITE,google,Google
+  - GEOSITE,google-play,Google Play
+  - GEOSITE,google-gemini,Gemini
+  - GEOSITE,github,GitHub
+  - GEOSITE,microsoft,Microsoft
+  - GEOSITE,telegram,Telegram
+  - GEOIP,telegram,Telegram
+  - DOMAIN-SUFFIX,grok.com,Grok
+  
+# CDN Fastly, Amazon
+  - IP-ASN,16509,Amazon
+  - GEOIP,fastly,Fastly
+
+
+  
+#  CDN Akamai
+  - IP-ASN,12222,Akamai
+  - IP-ASN,16625,Akamai
+  - IP-ASN,16702,Akamai
+  - IP-ASN,17204,Akamai
+  - IP-ASN,17334,Akamai
+  - IP-ASN,18680,Akamai
+  - IP-ASN,18717,Akamai
+  - IP-ASN,20189,Akamai
+  - IP-ASN,20940,Akamai
+  - IP-ASN,21342,Akamai
+  - IP-ASN,22207,Akamai
+  - IP-ASN,22452,Akamai
+  - IP-ASN,23454,Akamai
+  - IP-ASN,23455,Akamai
+  - IP-ASN,23903,Akamai
+  - IP-ASN,24319,Akamai
+  - IP-ASN,26008,Akamai
+  - IP-ASN,31107,Akamai
+  - IP-ASN,31108,Akamai
+  - IP-ASN,31109,Akamai
+  - IP-ASN,31110,Akamai
+  - IP-ASN,31377,Akamai
+  - IP-ASN,32787,Akamai
+  - IP-ASN,33905,Akamai
+  - IP-ASN,34164,Akamai
+  - IP-ASN,34850,Akamai
+  - IP-ASN,35204,Akamai
+  - IP-ASN,35993,Akamai
+  - IP-ASN,35994,Akamai
+  - IP-ASN,36183,Akamai
+  
+  
+  # Roblox открыть порты xkeen -ap 80,443,49152:65535
+  - AND,((IP-ASN,22697),(DST-PORT,49152-65535)),Roblox
+  - GEOSITE,roblox,Roblox
+  - DOMAIN-SUFFIX,roblox.com,Roblox
+  - DOMAIN-SUFFIX,rbxcdn.com,Roblox
+  - DOMAIN-SUFFIX,rbxinfra.net,Roblox
+  
+  # Viber
+  - GEOSITE,viber,Viber
+  - IP-ASN,16509,Viber
+  
+  
+  # Whatsapp // открывам порты xkeen -ap 443,3478,46420
+  - GEOSITE,whatsapp,Whatsapp
+  - IP-ASN,32934,Whatsapp
+  - IP-ASN,11917,Whatsapp
+  - IP-ASN,9002,Whatsapp
+
+  # SupperCell Открыть порт 9339 xkeen -ap 9339
+  - GEOSITE,supercell,other
+  - DOMAIN-KEYWORD,supercell,other
+  - AND,((IP-ASN,14618),(DST-PORT,9339)),other
+  - AND,((IP-ASN,16509),(DST-PORT,9339)),other
+
+  # ПРАВИЛО №5: Проверка Ip адреса
+  - DOMAIN-SUFFIX,2ip.io,2IP.IO
+  - DOMAIN-SUFFIX,2ip.ru,2IP.IO
+  - DOMAIN-SUFFIX,ipinfo.io,2IP.IO
+  - DOMAIN-SUFFIX,ip-api.com,2IP.IO
+  - DOMAIN-SUFFIX,whatismyipaddress.com,2IP.IO
+  - DOMAIN-SUFFIX,whatismyip.com,2IP.IO
+  - DOMAIN-SUFFIX,myip.com,2IP.IO
+  - DOMAIN-SUFFIX,ipleak.net,2IP.IO
+  - DOMAIN-SUFFIX,icanhazip.com,2IP.IO
+  - DOMAIN-SUFFIX,ident.me,2IP.IO
+  - DOMAIN-SUFFIX,ip.sb,2IP.IO
+  - DOMAIN-SUFFIX,wimi5.com,2IP.IO
+  - DOMAIN-SUFFIX,ip138.com,2IP.IO
+  - DOMAIN-SUFFIX,ipify.org,2IP.IO
+  - DOMAIN-SUFFIX,myexternalip.com,2IP.IO
+  - DOMAIN-SUFFIX,trackip.net,2IP.IO
+
+
+  # ПРАВИЛО №6: Необходимые сервисы с выбором
+  - DOMAIN-SUFFIX,onlyfans.com,other
+  - DOMAIN-SUFFIX,fansly.com,other
+  - DOMAIN-SUFFIX,patreon.com,other
+  - DOMAIN-SUFFIX,rockblack.su,other
+  - DOMAIN-SUFFIX,rockblack.pro,other
+  - DOMAIN-SUFFIX,rockblack.info,other
+  
+    # Торрент сайты
+  - DOMAIN-SUFFIX,rutracker.org,other
+  - DOMAIN-SUFFIX,rutor.info,other
+  - DOMAIN-SUFFIX,lostfilm.tv,other
+  - DOMAIN-SUFFIX,nnmclub.to,other
+  - DOMAIN-SUFFIX,kinozal.tv,other
+  - DOMAIN-SUFFIX,fast-torrent.ru,other
+  - DOMAIN-SUFFIX,tapochek.net,other
+  - DOMAIN-SUFFIX,rgfootball.net,other
+  - DOMAIN-SUFFIX,thepiratebay.org,other
+  - DOMAIN-SUFFIX,rarbg.to,other
+  
+  # ПРАВИЛО №7: Необходимые сервисы с выбором 18+
+  - GEOSITE,category-porn,18+
+  
+  # kino.pub  
+  - DOMAIN-SUFFIX,firebase-settings.crashlytics.com,other
+  - DOMAIN-SUFFIX,firebaseinstallations.googleapis.com,other
+  - DOMAIN-SUFFIX,kp-pro.cloud,other
+  - DOMAIN-SUFFIX,firebaseremoteconfigrealtime.googleapis.com,other
+  - DOMAIN-SUFFIX,firebaseremoteconfig.googleapis.com,other
+  - DOMAIN-SUFFIX,cdn32.lol,other
+  - DOMAIN-SUFFIX,kino.pub,other
+  
+  - IP-ASN,13335,Cloudflare
+  
+  # ПРАВИЛО №7: Весь остальной трафик
+  - MATCH,Остальной трафик
