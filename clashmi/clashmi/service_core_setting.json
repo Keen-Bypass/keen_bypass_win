@@ -111,8 +111,8 @@
     "enable": false
   },
   "tun": {
-    "overwrite": false,
-    "enable": true,
+    "overwrite": true,
+    "enable": false,
     "device": "Clash Mi",
     "stack": "system",
     "dns-hijack": [
