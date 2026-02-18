@@ -1169,7 +1169,7 @@ rem:============================================================================
     if not exist "%USER_CLASHMI_DIR%" mkdir "%USER_CLASHMI_DIR%" 2>nul
     if not exist "%USER_PROFILES_DIR%" mkdir "%USER_PROFILES_DIR%" 2>nul
     
-    :: Загружаем setting.json
+    :: Загружаем setting.json (всегда одинаковый для всех)
     echo   [ИНФО] Загрузка setting.json...
     powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL1%' -OutFile '%TEMP%\setting.json' -UseBasicParsing" >nul 2>&1
     if exist "%TEMP%\setting.json" (
@@ -1179,50 +1179,45 @@ rem:============================================================================
         echo   [FAIL] Загрузка setting.json
     )
     
-    :: Загружаем service_core_setting.json
+    :: Загружаем service_core_setting.json в зависимости от типа учетной записи
     echo   [ИНФО] Загрузка service_core_setting.json...
-    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL2%' -OutFile '%TEMP%\service_core_setting.json' -UseBasicParsing" >nul 2>&1
+    
+    if defined USER_TYPE (
+        if /i "%USER_TYPE%"=="Администратор" (
+            :: Для админа - специальная tun версия
+            set "SERVICE_CORE_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/service_core_setting_tun.json"
+        ) else (
+            :: Для обычного пользователя - стандартная версия
+            set "SERVICE_CORE_URL=%CLASHMI_CONFIG_URL2%"
+        )
+    ) else (
+        :: Если тип не определен - используем стандартную
+        set "SERVICE_CORE_URL=%CLASHMI_CONFIG_URL2%"
+    )
+    
+    powershell -Command "Invoke-WebRequest -Uri '!SERVICE_CORE_URL!' -OutFile '%TEMP%\service_core_setting.json' -UseBasicParsing" >nul 2>&1
     if exist "%TEMP%\service_core_setting.json" (
-        copy "%TEMP%\service_core_setting.json" "%USER_CLASHMI_DIR%\" >nul 2>&1
-        echo   [OK] Загрузка service_core_setting.json
+        copy "%TEMP%\service_core_setting.json" "%USER_CLASHMI_DIR%\service_core_setting.json" >nul 2>&1
+        echo   [OK] Загрузка service_core_setting.json (!USER_TYPE!)
     ) else (
         echo   [FAIL] Загрузка service_core_setting.json
     )
     
-    :: Загружаем конфиг в зависимости от типа учетной записи
-    if defined USER_TYPE (
-        if /i "%USER_TYPE%"=="Стандартная" (
-            echo   [ИНФО] Загрузка config.yaml...
-            powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%TEMP%\config.yaml' -UseBasicParsing" >nul 2>&1
-            if exist "%TEMP%\config.yaml" (
-                copy "%TEMP%\config.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
-                echo   [OK] Загрузка config.yaml
-            ) else (
-                echo   [FAIL] Загрузка config.yaml
-            )
-        ) else (
-            echo   [ИНФО] Загрузка config_tun.yaml...
-            powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL3%' -OutFile '%TEMP%\config_tun.yaml' -UseBasicParsing" >nul 2>&1
-            if exist "%TEMP%\config_tun.yaml" (
-                copy "%TEMP%\config_tun.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
-                echo   [OK] Загрузка config_tun.yaml
-            ) else (
-                echo   [FAIL] Загрузка config_tun.yaml
-            )
-        )
+    :: Загружаем config.yaml (всегда один файл для всех пользователей)
+    echo   [ИНФО] Загрузка config.yaml...
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%TEMP%\config.yaml' -UseBasicParsing" >nul 2>&1
+    if exist "%TEMP%\config.yaml" (
+        copy "%TEMP%\config.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
+        echo   [OK] Загрузка config.yaml
+    ) else (
+        echo   [FAIL] Загрузка config.yaml
     )
     
     echo   [ИНФО] Проверка созданных файлов...
     set "CHECK_OK=1"
     if not exist "%USER_CLASHMI_DIR%\setting.json" set "CHECK_OK=0"
     if not exist "%USER_CLASHMI_DIR%\service_core_setting.json" set "CHECK_OK=0"
-    if defined USER_TYPE (
-        if /i "%USER_TYPE%"=="Стандартная" (
-            if not exist "%USER_PROFILES_DIR%\config.yaml" set "CHECK_OK=0"
-        ) else (
-            if not exist "%USER_PROFILES_DIR%\config_tun.yaml" set "CHECK_OK=0"
-        )
-    )
+    if not exist "%USER_PROFILES_DIR%\config.yaml" set "CHECK_OK=0"
     
     if "!CHECK_OK!"=="1" (
         echo   [OK] Проверка созданных файлов
@@ -1670,5 +1665,6 @@ rem:============================================================================
 
 :END
 exit /b 0
+
 
 
