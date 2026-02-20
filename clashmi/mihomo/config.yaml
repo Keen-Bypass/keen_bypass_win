@@ -430,12 +430,12 @@ proxy-groups:
   - name: 'Whatsapp'
     type: select
     proxies:
-      - DIRECT
-      - 'Wireguard WARP'
       - 'Wireguard WARP (Relay)'
+      - 'Wireguard WARP'
       - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - DIRECT
     icon: "https://www.svgrepo.com/show/349563/whatsapp.svg"
 
   # Discord
