@@ -634,7 +634,7 @@ exit /b 0
     powershell -Command "Invoke-WebRequest -Uri '!SERVICE_CORE_URL!' -OutFile '%TEMP%\service_core_setting.json' -UseBasicParsing" >nul 2>&1
     if exist "%TEMP%\service_core_setting.json" (
         copy "%TEMP%\service_core_setting.json" "%USER_CLASHMI_DIR%\service_core_setting.json" >nul 2>&1
-        echo   [OK] Загрузка service_core_setting.json (!USER_TYPE!)
+        echo   [OK] Загрузка service_core_setting.json
     ) else (
         echo   [FAIL] Загрузка service_core_setting.json
     )
@@ -707,116 +707,34 @@ exit /b 0
 
 :CLASHMI_AUTORUN
     echo   [ИНФО] Настройка автозапуска
-    
+
     :: Проверяем, установлен ли Clash Mi
     if not exist "%CLASHMI_EXE_FILE%" (
         echo [ОШИБКА] Clash Mi не установлен!
-        pause
-        goto CLASHMI_MENU
+        exit /b 1
     )
-    
-    :: Получаем информацию о текущем пользователе
-    setlocal enabledelayedexpansion
-    set "DETECTED_USER="
-    for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
-        for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+
+    :: Получаем информацию о текущем пользователе (если ещё не определена)
+    if not defined DETECTED_USER (
+        for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI" /v LastLoggedOnUser 2^>nul') do (
+            for /f "tokens=1 delims=\." %%j in ("%%i") do set "DETECTED_USER=%%j"
+        )
+        if not defined DETECTED_USER set "DETECTED_USER=%USERNAME%"
     )
-    if not "!DETECTED_USER!"=="" (
-        set "CHECK_USER=!DETECTED_USER!"
-    ) else (
-        set "CHECK_USER=%USERNAME%"
-    )
-    set "USER_TYPE=Стандартная"
-    net user "!CHECK_USER!" | findstr /r /c:"Администраторы" /c:"Administrators" >nul && set "USER_TYPE=Администратор"
-    
-    :: Получаем SID пользователя
-    set "USER_SID="
-    for /f "tokens=2 delims= " %%s in (
-        'powershell -NoProfile -ExecutionPolicy Bypass -Command "([System.Security.Principal.NTAccount]'%USERDOMAIN%\%DETECTED_USER%').Translate([System.Security.Principal.SecurityIdentifier]).Value" 2^>nul'
-    ) do set "USER_SID=%%s"
-    
-    if "!USER_SID!"=="" (
-        for /f "tokens=2 delims==" %%s in (
-            'wmic useraccount where name^="%DETECTED_USER%" get sid /value 2^>nul ^| find "SID="'
-        ) do set "USER_SID=%%s"
-    )
-    
-    if "!USER_SID!"=="" (
-        echo [ОШИБКА] Не удалось получить SID пользователя!
-        endlocal
-        pause
-        goto CLASHMI_MENU
-    )
-    
-    :: Создаем XML файл задачи
-    set "TASK_NAME=Clash Mi Autorun"
-    set "TASK_XML=%TEMP%\clashmi_autorun.xml"
-    
-    (
-        echo ^<?xml version="1.0" encoding="UTF-16"?^>
-        echo ^<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task"^>
-        echo   ^<RegistrationInfo^>
-        echo     ^<Author^>%USERDOMAIN%\%DETECTED_USER%^</Author^>
-        echo     ^<URI^>\Clash Mi Autorun^</URI^>
-        echo   ^</RegistrationInfo^>
-        echo   ^<Triggers^>
-        echo     ^<LogonTrigger id="Trigger1"^>
-        echo       ^<Enabled^>true^</Enabled^>
-        echo       ^<UserId^>%USERDOMAIN%\%DETECTED_USER%^</UserId^>
-        echo       ^<Delay^>PT3S^</Delay^>
-        echo     ^</LogonTrigger^>
-        echo   ^</Triggers^>
-        echo   ^<Principals^>
-        echo     ^<Principal id="Principal1"^>
-        echo       ^<UserId^>%USER_SID%^</UserId^>
-        echo       ^<LogonType^>InteractiveToken^</LogonType^>
-        echo       ^<RunLevel^>HighestAvailable^</RunLevel^>
-        echo     ^</Principal^>
-        echo   ^</Principals^>
-        echo   ^<Settings^>
-        echo     ^<MultipleInstancesPolicy^>IgnoreNew^</MultipleInstancesPolicy^>
-        echo     ^<DisallowStartIfOnBatteries^>false^</DisallowStartIfOnBatteries^>
-        echo     ^<StopIfGoingOnBatteries^>false^</StopIfGoingOnBatteries^>
-        echo     ^<AllowHardTerminate^>true^</AllowHardTerminate^>
-        echo     ^<StartWhenAvailable^>false^</StartWhenAvailable^>
-        echo     ^<RunOnlyIfNetworkAvailable^>false^</RunOnlyIfNetworkAvailable^>
-        echo     ^<IdleSettings^>
-        echo       ^<Duration^>PT10M^</Duration^>
-        echo       ^<WaitTimeout^>PT1H^</WaitTimeout^>
-        echo       ^<StopOnIdleEnd^>true^</StopOnIdleEnd^>
-        echo       ^<RestartOnIdle^>false^</RestartOnIdle^>
-        echo     ^</IdleSettings^>
-        echo     ^<AllowStartOnDemand^>true^</AllowStartOnDemand^>
-        echo     ^<Enabled^>true^</Enabled^>
-        echo     ^<Hidden^>false^</Hidden^>
-        echo     ^<RunOnlyIfIdle^>false^</RunOnlyIfIdle^>
-        echo     ^<WakeToRun^>false^</WakeToRun^>
-        echo     ^<ExecutionTimeLimit^>PT0S^</ExecutionTimeLimit^>
-        echo     ^<Priority^>4^</Priority^>
-        echo   ^</Settings^>
-        echo   ^<Actions Context="Principal1"^>
-        echo     ^<Exec^>
-        echo       ^<Command^>%CLASHMI_EXE_FILE%^</Command^>
-        echo       ^<Arguments^>--launch_startup^</Arguments^>
-        echo     ^</Exec^>
-        echo   ^</Actions^>
-        echo ^</Task^>
-    ) > "!TASK_XML!"
-    
-    :: Импортируем задачу в планировщик
-    schtasks /Create /TN "!TASK_NAME!" /XML "!TASK_XML!" /F >nul 2>&1
-    
+
+    :: Удаляем старую задачу, если есть
+    schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
+
+    :: Создаём задачу с интерактивным режимом (не требует SID)
+    schtasks /Create /TN "Clash Mi Autorun" /SC ONLOGON /DELAY 0003:00 /TR "\"%CLASHMI_EXE_FILE%\" --launch_startup" /RU "%DETECTED_USER%" /IT /F >nul 2>&1
+
     if !errorlevel! equ 0 (
-        :: Удаляем временный XML файл
-        if exist "!TASK_XML!" del "!TASK_XML!" >nul 2>&1
         echo   [OK] Настройка автозапуска
+        exit /b 0
     ) else (
-        echo [ОШИБКА] Ошибка при создании задачи!
-        if exist "!TASK_XML!" del "!TASK_XML!" >nul 2>&1
+        echo   [FAIL] Ошибка при создании задачи автозапуска
+        exit /b 1
     )
-    
-    endlocal
-    exit /b 0
 
 :CLASHMI_START_AUTO
     setlocal enabledelayedexpansion
