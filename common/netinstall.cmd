@@ -1275,8 +1275,7 @@ rem:============================================================================
     :: Проверяем, установлен ли Clash Mi
     if not exist "%CLASHMI_EXE_FILE%" (
         echo [ОШИБКА] Clash Mi не установлен!
-        pause
-        goto CLASHMI_MENU
+        exit /b 1
     )
 
     :: Получаем информацию о текущем пользователе (если ещё не определена)
@@ -1290,15 +1289,29 @@ rem:============================================================================
     :: Удаляем старую задачу, если есть
     schtasks /Delete /TN "Clash Mi Autorun" /F >nul 2>&1
 
-    :: Создаём задачу с интерактивным режимом
-    schtasks /Create /TN "Clash Mi Autorun" /SC ONLOGON /DELAY 0003:00 /TR "\"%CLASHMI_EXE_FILE%\" --launch_startup" /RU "%DETECTED_USER%" /IT /F >nul 2>&1
+    :: Создаём задачу через schtasks (задержка 3 сек, интерактивный режим, макс. права)
+    schtasks /Create /TN "Clash Mi Autorun" /SC ONLOGON /DELAY 0000:03 ^
+        /TR "\"%CLASHMI_EXE_FILE%\" --launch_startup" ^
+        /RU "%DETECTED_USER%" /IT /RL HIGHEST /F >nul 2>&1
 
-    if !errorlevel! equ 0 (
-        echo   [OK] Настройка автозапуска
-    ) else (
-        echo   [FAIL] Ошибка при создании задачи автозапуска
+    if !errorlevel! neq 0 (
+        echo   [FAIL] Ошибка при создании задачи
+        exit /b 1
     )
 
+    :: Корректируем параметры задачи через PowerShell:
+    :: - отключаем условие «Запускать только при питании от электросети»
+    :: - отключаем ограничение времени выполнения
+    powershell -Command ^
+        "$task = Get-ScheduledTask -TaskName 'Clash Mi Autorun' -ErrorAction SilentlyContinue; " ^
+        "if ($task) { " ^
+        "    $task.Settings.DisallowStartIfOnBatteries = $false; " ^
+        "    $task.Settings.StopIfGoingOnBatteries = $false; " ^
+        "    $task.Settings.ExecutionTimeLimit = 'PT0S'; " ^
+        "    Set-ScheduledTask -TaskName 'Clash Mi Autorun' -Settings $task.Settings " ^
+        "}" >nul 2>&1
+
+    echo   [OK] Настройка автозапуска
     exit /b 0
 
 :CLASHMI_START_AUTO
@@ -1584,3 +1597,4 @@ rem:============================================================================
 
 :END
 exit /b 0
+
