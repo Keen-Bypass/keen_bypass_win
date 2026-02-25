@@ -400,17 +400,17 @@ exit /b 0
     exit /b 0
 
 :CREATE_AUTOUPDATE_TASK
-    set "INTERVAL=%~1"
-    if "!INTERVAL!"=="" set "INTERVAL=5"
+    set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
     
-    call :PRINT_PROGRESS "Создание задачи автообновления (интервал: !INTERVAL! минут)..."
+    call :PRINT_PROGRESS "Проверка существующей задачи..."
+    call :REMOVE_AUTOUPDATE_TASK >nul
     
-    :: Используем cmd.exe напрямую без PowerShell
-    schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO !INTERVAL! ^
-        /TR "cmd.exe /c \"call \"%AUTOUPDATE_DIR%\autoupdate.cmd\" -silent\"" ^
-        /RU SYSTEM /RL HIGHEST /F >nul 2>&1
+    call :PRINT_PROGRESS "Загрузка скрипта автообновления..."
+    call :DOWNLOAD_FILE "!GITHUB_URL!" "%AUTOUPDATE_DIR%\autoupdate.cmd"
+    if errorlevel 1 exit /b 1
     
-    if !errorlevel! neq 0 exit /b 1
+    call :PRINT_PROGRESS "Создание задачи..."
+    call :CREATE_AUTOUPDATE_TASK 10
     call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления создана" "OK"
     exit /b 0
 
@@ -1597,4 +1597,5 @@ rem:============================================================================
 
 :END
 exit /b 0
+
 
