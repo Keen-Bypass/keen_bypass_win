@@ -183,7 +183,7 @@ proxies:
   type: wireguard
   private-key: qGGC2gA7jviISCzWAf15Cl/X+481E72QYP0hPqmzDXY=
   server: de.tribukvy.ltd
-  port: 4500
+  port: 4501
   ip: 172.16.0.2
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
   allowed-ips: ['0.0.0.0/0']
@@ -209,7 +209,7 @@ proxies:
   type: wireguard
   private-key: YJQZkG80U5RmHw4ruhmxYC59dgDtzbvDbFUhDHSx93c=
   server: lt.tribukvy.ltd
-  port: 4500
+  port: 4501
   ip: 172.16.0.2
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
   allowed-ips: ['0.0.0.0/0']
@@ -235,7 +235,7 @@ proxies:
   type: wireguard
   private-key: oEykUqMqoju66FjlULd3MyG3OYapeXHegfdulpzT4UU=
   server: nl3.tribukvy.ltd
-  port: 4500
+  port: 4501
   ip: 172.16.0.2
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
   allowed-ips: ['0.0.0.0/0']
@@ -261,7 +261,7 @@ proxies:
   type: wireguard
   private-key: cDD0xb4JejF6iWg6+eNGkFa88D6ZQzN94dbJoWP0bEQ=
   server: fi.tribukvy.ltd
-  port: 4500
+  port: 4501
   ip: 172.16.0.2
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
   allowed-ips: ['0.0.0.0/0']
