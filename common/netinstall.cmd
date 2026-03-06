@@ -400,18 +400,14 @@ exit /b 0
     exit /b 0
 
 :CREATE_AUTOUPDATE_TASK
-    set "GITHUB_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/main/common/autoupdate.cmd"
-    
-    call :PRINT_PROGRESS "Проверка существующей задачи..."
-    call :REMOVE_AUTOUPDATE_TASK >nul
-    
-    call :PRINT_PROGRESS "Загрузка скрипта автообновления..."
-    call :DOWNLOAD_FILE "!GITHUB_URL!" "%AUTOUPDATE_DIR%\autoupdate.cmd"
-    if errorlevel 1 exit /b 1
-    
-    call :PRINT_PROGRESS "Создание задачи..."
-    call :CREATE_AUTOUPDATE_TASK 10
-    call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления создана" "OK"
+    set "INTERVAL=%~1"
+    if "%INTERVAL%"=="" set "INTERVAL=10"
+    schtasks /Create /TN "%AUTOUPDATE_TASK%" /SC MINUTE /MO %INTERVAL% /TR "%AUTOUPDATE_DIR%\autoupdate.cmd" /RU SYSTEM /F >nul 2>&1
+    if errorlevel 1 (
+        call :PRINT_ERROR "Не удалось создать задачу автообновления"
+        exit /b 1
+    )
+    call :PRINT_PROGRESS_WITH_STATUS "Задача автообновления создана (интервал %INTERVAL% мин)" "OK"
     exit /b 0
 
 :DOWNLOAD_FILE
@@ -1597,5 +1593,6 @@ rem:============================================================================
 
 :END
 exit /b 0
+
 
 
