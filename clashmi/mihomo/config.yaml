@@ -399,7 +399,7 @@ proxy-groups:
     type: url-test
     icon: https://www.vectorlogo.zone/logos/cloudflare/cloudflare-icon.svg
     proxies:
-      - "OZON"
+      - "APTEKA"
       - "YANDEX"
       - "DNS"
       - "SIP"
