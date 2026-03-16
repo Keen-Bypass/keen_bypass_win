@@ -513,12 +513,12 @@ proxy-groups:
   - name: 'Telegram'
     type: select
     proxies:
-      - DIRECT
-      - 'WARP'
       - 'WARP (Relay)'
+      - 'WARP'
       - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - DIRECT
     icon: "https://www.svgrepo.com/show/354443/telegram.svg"
 
   # Whatsapp
