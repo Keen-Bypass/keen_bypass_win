@@ -198,7 +198,7 @@ proxies:
   type: wireguard
   private-key: qHzz22vd6JP8jo1Lt9QIUJpMS/9L3w1J60Z3sTWA/V8=
   server: nl0.tribukvy.ltd
-  port: 4501
+  port: 4500
   ip: 172.16.0.2
   ipv6: 2606:4700:110:840a:e54f:c41:10ba:31b8
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
@@ -250,7 +250,7 @@ proxies:
   type: wireguard
   private-key: eNubVNStY2GAAV6xmG/LzEu7hJ2DIMhNT4ssZ4WXrXk=
   server: fi0.tribukvy.ltd
-  port: 4501
+  port: 4500
   ip: 172.16.0.2
   ipv6: 2606:4700:110:8097:a39c:f14a:6827:3231
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
@@ -276,7 +276,7 @@ proxies:
   type: wireguard
   private-key: OCvaxmDw4NjAQj8GGaXLOt4PFQAUqWX/O4oPIMdgCUc=
   server: pl.tribukvy.ltd
-  port: 4501
+  port: 4500
   ip: 172.16.0.2
   ipv6: 2606:4700:110:85e1:b8f9:bb65:1f50:8f80
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
@@ -302,7 +302,7 @@ proxies:
   type: wireguard
   private-key: 2FGf6wWG+nWNW11I27XISx243+4+4pm3wZdj+4f/WE4=
   server: ee.tribukvy.ltd
-  port: 4501
+  port: 4500
   ip: 172.16.0.2
   ipv6: 2606:4700:110:82f3:37a4:1998:eb6e:1362
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
