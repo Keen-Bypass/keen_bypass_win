@@ -1159,10 +1159,8 @@ rem:============================================================================
     )
     
     set "USER_CLASHMI_DIR=%USER_APPDATA%\clashmi\clashmi"
-    set "USER_PROFILES_DIR=%USER_CLASHMI_DIR%\profiles"
     
     if not exist "%USER_CLASHMI_DIR%" mkdir "%USER_CLASHMI_DIR%" 2>nul
-    if not exist "%USER_PROFILES_DIR%" mkdir "%USER_PROFILES_DIR%" 2>nul
     
     :: Загружаем setting.json (всегда одинаковый для всех)
     echo   [ИНФО] Загрузка setting.json...
