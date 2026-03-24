@@ -1,0 +1,26 @@
+{
+  "current_id": "config.yaml",
+  "profiles": [
+    {
+      "id": "config.yaml",
+      "remark": "Keen Bypass",
+      "patch": "",
+      "update_interval": 18000,
+      "update_interval_by_profile": null,
+      "update": "2026-03-24 13:32:34.575599",
+      "url": "https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config.yaml",
+      "user_agent": "ClashMeta/1.19.20; mihomo/1.19.20",
+      "xhwid": false,
+      "decrypt_password": "",
+      "upload": 0,
+      "download": 0,
+      "total": 0,
+      "expire": "",
+      "overwrite_rules": false,
+      "overwrite_proxy_groups": false,
+      "proxy_groups": {},
+      "rules": {},
+      "rules_for_proxy_groups": {}
+    }
+  ]
+}
