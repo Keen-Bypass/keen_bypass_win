@@ -26,11 +26,10 @@ set "CLASHMI_EXE_FILE=%CLASHMI_INSTALL_DIR%\clashmi.exe"
 set "CLASHMI_SERVICE_EXE=%CLASHMI_INSTALL_DIR%\clashmiService.exe"
 set "CLASHMI_SHORTCUT_NAME=Clash Mi"
 set "CLASHMI_APPDATA_DIR=%APPDATA%\clashmi\clashmi"
-set "CLASHMI_PROFILES_DIR=%CLASHMI_APPDATA_DIR%\profiles"
 set "CLASHMI_CONFIG_URL1=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/setting.json"
 set "CLASHMI_CONFIG_URL2=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/service_core_setting.json"
-set "CLASHMI_CONFIG_URL3=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config_tun.yaml"
-set "CLASHMI_CONFIG_URL4=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config.yaml"
+set "CLASHMI_CONFIG_URL3=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/service_core_setting_tun.json"
+set "CLASHMI_CONFIG_URL4=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/profiles.json"
 
 set "LINES=50"
 if %LINES% gtr 85 set "LINES=85"
@@ -1181,7 +1180,7 @@ rem:============================================================================
     if defined USER_TYPE (
         if /i "%USER_TYPE%"=="Администратор" (
             :: Для админа - специальная tun версия
-            set "SERVICE_CORE_URL=https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/clashmi/service_core_setting_tun.json"
+            set "SERVICE_CORE_URL=%CLASHMI_CONFIG_URL3%"
         ) else (
             :: Для обычного пользователя - стандартная версия
             set "SERVICE_CORE_URL=%CLASHMI_CONFIG_URL2%"
@@ -1199,21 +1198,21 @@ rem:============================================================================
         echo   [FAIL] Загрузка service_core_setting.json
     )
     
-    :: Загружаем config.yaml (всегда один файл для всех пользователей)
-    echo   [ИНФО] Загрузка config.yaml...
-    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%TEMP%\config.yaml' -UseBasicParsing" >nul 2>&1
-    if exist "%TEMP%\config.yaml" (
-        copy "%TEMP%\config.yaml" "%USER_PROFILES_DIR%\" >nul 2>&1
-        echo   [OK] Загрузка config.yaml
+    :: Загружаем profiles.json (всегда один файл для всех пользователей)
+    echo   [ИНФО] Загрузка profiles.json...
+    powershell -Command "Invoke-WebRequest -Uri '%CLASHMI_CONFIG_URL4%' -OutFile '%TEMP%\profiles.json' -UseBasicParsing" >nul 2>&1
+    if exist "%TEMP%\profiles.json" (
+        copy "%TEMP%\profiles.json" "%USER_CLASHMI_DIR%\" >nul 2>&1
+        echo   [OK] Загрузка profiles.json
     ) else (
-        echo   [FAIL] Загрузка config.yaml
+        echo   [FAIL] Загрузка profiles.json
     )
     
     echo   [ИНФО] Проверка созданных файлов...
     set "CHECK_OK=1"
     if not exist "%USER_CLASHMI_DIR%\setting.json" set "CHECK_OK=0"
     if not exist "%USER_CLASHMI_DIR%\service_core_setting.json" set "CHECK_OK=0"
-    if not exist "%USER_PROFILES_DIR%\config.yaml" set "CHECK_OK=0"
+    if not exist "%USER_CLASHMI_DIR%\profiles.json" set "CHECK_OK=0"
     
     if "!CHECK_OK!"=="1" (
         echo   [OK] Проверка созданных файлов
@@ -1364,9 +1363,8 @@ rem:============================================================================
     
     for %%f in (
         "%TEMP%\setting.json"
-        "%TEMP%\service_core_setting.json"
-        "%TEMP%\config_tun.yaml"
-        "%TEMP%\config.yaml"
+        "%TEMP%\service_core_*.json"
+        "%TEMP%\profiles.json"
         "%TEMP%\clashmi_autorun.xml"
         "%TEMP%\ClashMi_OneTime_*.xml"
         "%TEMP%\clashmi_*.xml"
