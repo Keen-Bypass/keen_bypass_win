@@ -1139,5 +1139,3 @@ rules:
   
   # ПРАВИЛО №7: Весь остальной трафик
   - MATCH,Остальной трафик
-
-#url:https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config.yaml
