@@ -168,7 +168,7 @@ proxies:
    i2: <b 0x5349502f322e302031303020547279696e670d0a5669613a205349502f322e302f55445020706333332e61746c616e74612e636f6d3b6272616e63683d7a39684734624b3737366173646864730d0a546f3a20426f62203c7369703a626f624062696c6f78692e636f6d3e0d0a46726f6d3a20416c696365203c7369703a616c6963654061746c616e74612e636f6d3e3b7461673d313932383330313737340d0a43616c6c2d49443a20613834623463373665363637313040706333332e61746c616e74612e636f6d0d0a435365713a2033313431353920494e564954450d0a436f6e74656e742d4c656e6774683a20300d0a0d0a>
 
 # --- НОВЫЕ WARP RELAY ---
-- name: "🇳🇱 Netherlands"
+- name: "🇳🇱 Нидерланды"
   type: wireguard
   private-key: SLlp0wQ3J4fRW5mCAHCaI+JynSPGi4mcFDbtCuVqjF8=
   server: nl.tribukvy.ltd
@@ -194,59 +194,7 @@ proxies:
    h3: 4
    i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
 
-- name: "🇫🇮 Finland"
-  type: wireguard
-  private-key: kFGuGU4gkmEpEuLYzClF7RPrB0XcS3W8NXlv3R0BKEU=
-  server: fi.tribukvy.ltd
-  port: 4500
-  ip: 172.16.0.2
-  ipv6: 2606:4700:110:8d6d:1bd7:a746:b43c:eb3c
-  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-  allowed-ips: ['0.0.0.0/0']
-  reserved: [169, 164, 129]
-  udp: true
-  mtu: 1280
-  remote-dns-resolve: true
-  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
-  amnezia-wg-option:
-   jc: 120
-   jmin: 23
-   jmax: 911
-   s1: 0
-   s2: 0
-   h1: 1
-   h2: 2
-   h4: 3
-   h3: 4
-   i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
-
-- name: "🇫🇮 Finland #2"
-  type: wireguard
-  private-key: eNubVNStY2GAAV6xmG/LzEu7hJ2DIMhNT4ssZ4WXrXk=
-  server: fi0.tribukvy.ltd
-  port: 4500
-  ip: 172.16.0.2
-  ipv6: 2606:4700:110:8097:a39c:f14a:6827:3231
-  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-  allowed-ips: ['0.0.0.0/0']
-  reserved: [210, 243, 134]
-  udp: true
-  mtu: 1280
-  remote-dns-resolve: true
-  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
-  amnezia-wg-option:
-   jc: 120
-   jmin: 23
-   jmax: 911
-   s1: 0
-   s2: 0
-   h1: 1
-   h2: 2
-   h4: 3
-   h3: 4
-   i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
-
-- name: "🇵🇱 Poland"
+- name: "🇵🇱 Польша"
   type: wireguard
   private-key: +LQzfMEkMi8wXa1ZUA3B1MCsr/kRywmV8tzoHGZtumk=
   server: pl.tribukvy.ltd
@@ -272,7 +220,7 @@ proxies:
    h3: 4
    i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
 
-- name: "🇵🇱 Poland #2"
+- name: "🇵🇱 Польша #2"
   type: wireguard
   private-key: cA573ACfuZ7+qQ05qtty1iQYHgrCZtb2R03I9pJnf1g=
   server: pl0.tribukvy.ltd
@@ -298,7 +246,7 @@ proxies:
    h3: 4
    i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
 
-- name: "🇪🇪 Estonia"
+- name: "🇪🇪 Эстония"
   type: wireguard
   private-key: 2FGf6wWG+nWNW11I27XISx243+4+4pm3wZdj+4f/WE4=
   server: ee.tribukvy.ltd
@@ -324,7 +272,7 @@ proxies:
    h3: 4
    i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
 
-- name: "🇩🇪 Germany"
+- name: "🇩🇪 Германия"
   type: wireguard
   private-key: gLhu1cITCbMWWcXVxdAltIb9D/g3lnZCa2kE4m3L8E8=
   server: de.tribukvy.ltd
@@ -350,7 +298,7 @@ proxies:
    h3: 4
    i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
 
-- name: "🇷🇺 Russia"
+- name: "🇷🇺 Россия"
   type: wireguard
   private-key: YOzuXbZ4qfimSCziu3HwU4M9wq5WagS7/3CcMvu2a0Q=
   server: ru0.tribukvy.ltd
@@ -360,6 +308,58 @@ proxies:
   public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
   allowed-ips: ['0.0.0.0/0']
   reserved: [53, 25, 123]
+  udp: true
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  amnezia-wg-option:
+   jc: 120
+   jmin: 23
+   jmax: 911
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4
+   i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
+
+- name: "🇺🇸 США"
+  type: wireguard
+  private-key: kFGuGU4gkmEpEuLYzClF7RPrB0XcS3W8NXlv3R0BKEU=
+  server: usa.tribukvy.ltd
+  port: 4500
+  ip: 172.16.0.2
+  ipv6: 2606:4700:110:8d6d:1bd7:a746:b43c:eb3c
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [169, 164, 129]
+  udp: true
+  mtu: 1280
+  remote-dns-resolve: true
+  dns: [1.1.1.1, 1.0.0.1, 2606:4700:4700::1111, 2606:4700:4700::1001]
+  amnezia-wg-option:
+   jc: 120
+   jmin: 23
+   jmax: 911
+   s1: 0
+   s2: 0
+   h1: 1
+   h2: 2
+   h4: 3
+   h3: 4
+   i1: <b 0xc40000000108923bc1b23166621f08396b34c6f2e414f100420953e81ea2cb0f0eaa043a38eda235d9da6e20c09fdb0d7a59d842c4823ea39770be36348ca43cdff9b9861c9f14edd38952c6aa9db1861333b05bbf2fc152a88aef0c438fc631ff0910f38da54f6aaf1bb96a34103f680d4702ea9b3b31714d98e16a01bac18b784d729849cc216cbb8c34c20dadfd3280e45150c05d8789221ff0356faad2c21877e239ef41bc14fa5adabe96880606029d7625c1b4201f445d44cb58880e3a21482c45d44bff31bcf3166019c4fcf73ce41f3edf50c20e50a4abbe496d5f583dac25b136c60623575a5ec50584c8338c063b8bd75038350d2a04ec289f6814f71fed106703ea67e5e8bfc5fcf19cbe08f5a7b427314db48ebb1c40c455d7cbd193eb45431ad1e0b7d3d105bc6b732b04ca817504c3fb7bd95492270c60323bf5143833a1757372bda2cc71cc8dfbd690e21316e9c863e3a8df6bb345002a08fe0bb68636a814a7ab1f9586617d6cdcef52f624b0de0479a4d0f210b82ff0761a2a7b2dc0407a5e322733b25c1588b93bbba1d218f75f6fc21c20077c9cec1cfa68ce100d11c216ffe6f0d6cc4a85ccb223b72905d163ba419d866604875165fbbd25e36dff3e4227f112b158b77568bd0035144f83b4642a2437882a013a068de2d946b6f350c3549d4c3f0a780d5b5ddc4b11046b93c1c9f8900cdf3b4f476a5ae99b3d6e61147aa291b6aadde624a4f5bec6656cec617a1d55537df0a0b9f51761>
+
+- name: "🇫🇮 Финляндия #3"
+  type: wireguard
+  private-key: kFGuGU4gkmEpEuLYzClF7RPrB0XcS3W8NXlv3R0BKEU=
+  server: fi1.tribukvy.ltd
+  port: 4500
+  ip: 172.16.0.2
+  ipv6: 2606:4700:110:8d6d:1bd7:a746:b43c:eb3c
+  public-key: bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+  allowed-ips: ['0.0.0.0/0']
+  reserved: [169, 164, 129]
   udp: true
   mtu: 1280
   remote-dns-resolve: true
@@ -397,37 +397,24 @@ proxy-groups:
     type: url-test
     icon: https://www.vectorlogo.zone/logos/cloudflare/cloudflare-icon.svg
     proxies:
-      - "🇳🇱 Netherlands"
-      - "🇫🇮 Finland"
-      - "🇫🇮 Finland #2"
-      - "🇵🇱 Poland"
-      - "🇵🇱 Poland #2"
-      - "🇪🇪 Estonia"
-      - "🇩🇪 Germany"
-      - "🇷🇺 Russia"
+      - "🇳🇱 Нидерланды"
+      - "🇵🇱 Польша"
+      - "🇵🇱 Польша #2"
+      - "🇪🇪 Эстония"
+      - "🇩🇪 Германия"
+      - "🇷🇺 Россия"
+      - "🇺🇸 США"
+      - "🇫🇮 Финляндия #3"
     url: 'http://speed.cloudflare.com/'
     interval: 60
     timeout: 1000
-
-  # Черные списки GEO (без РФ)
-  - name: 'Черные списки GEO'
-    type: url-test
-    url: 'https://www.gstatic.com/generate_204'
-    interval: 60
-    tolerance: 50
-    timeout: 3000
-    filter: "^(?!.*(?i)(ru$|rus$|russia|россия|moscow|москва|spb|питер|sankt|казань|novosibirsk|yekaterinburg|chelyabinsk|ufa|rostov|volgograd|perm|krasnoyarsk|voronezh|sar)|%F0%9F%87%B7%F0%9F%87%BA|🇷🇺).*"
-    use:
-      - BLACK_VLESS_RUS
-    proxies: []
-    icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
 
   # Черные списки
   - name: 'Черные списки'
     type: url-test
     url: 'https://www.gstatic.com/generate_204'
     interval: 60
-    tolerance: 50
+    tolerance: 10
     timeout: 3000
     use:
       - BLACK_VLESS_RUS
@@ -439,12 +426,25 @@ proxy-groups:
     type: url-test
     url: 'https://www.gstatic.com/generate_204'
     interval: 60
-    tolerance: 50
+    tolerance: 10
     timeout: 3000
     use:
       - WHITE-CIDR-RU
     proxies: []
     icon: "https://www.svgrepo.com/show/444392/gui-form-radio.svg"
+
+  # Белые списки GEO (без РФ)
+  - name: 'Белые списки GEO'
+    type: url-test
+    url: 'https://www.gstatic.com/generate_204'
+    interval: 60
+    tolerance: 10
+    timeout: 3000
+    filter: "^(?!.*(?i)(ru$|rus$|russia|россия|moscow|москва|spb|питер|sankt|казань|novosibirsk|yekaterinburg|chelyabinsk|ufa|rostov|volgograd|perm|krasnoyarsk|voronezh|sar)|%F0%9F%87%B7%F0%9F%87%BA|🇷🇺).*"
+    use:
+      - WHITE-CIDR-RU
+    proxies: []
+    icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
 
   # СЕРВИСНЫЕ ГРУППЫ
   
@@ -455,9 +455,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/508628/flag-ru.svg"
 
   # Остальной трафик
@@ -468,9 +468,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
 
   # YouTube
@@ -481,8 +481,8 @@ proxy-groups:
       - 'WARP'
       - 'WARP (Relay)'
       - 'Черные списки'
-      - 'Черные списки GEO'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/13671/youtube.svg"
 
   # Instagram
@@ -492,9 +492,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/452229/instagram-1.svg"
 
   # Facebook
@@ -504,9 +504,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/475647/facebook-color.svg"
 
   # Telegram
@@ -514,11 +514,11 @@ proxy-groups:
     type: select
     proxies:
       - 'WARP (Relay)'
+      - DIRECT
       - 'WARP'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
-      - DIRECT
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/354443/telegram.svg"
 
   # Whatsapp
@@ -526,11 +526,11 @@ proxy-groups:
     type: select
     proxies:
       - 'WARP (Relay)'
+      - DIRECT
       - 'WARP'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
-      - DIRECT
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/349563/whatsapp.svg"
 
   # Discord
@@ -540,9 +540,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/331368/discord-v2.svg"
 
   # Twitter
@@ -552,9 +552,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/452121/twitter-1.svg"
 
   # Speedtest
@@ -564,9 +564,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/355484/speed.svg"
 
   # Google
@@ -576,9 +576,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/475656/google-color.svg"
 
   # Google Play
@@ -588,9 +588,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/353828/google-play-icon.svg"
 
   # Linkedin
@@ -600,9 +600,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/448234/linkedin.svg"
 
   # GitHub
@@ -612,9 +612,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/344880/github.svg"
 
   # Steam
@@ -624,9 +624,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/452107/steam.svg"
 
   # Microsoft
@@ -636,9 +636,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/452062/microsoft.svg"
 
   # intel
@@ -648,9 +648,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/349412/intel.svg"
 
   # Apple
@@ -660,9 +660,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/501448/apple.svg"
 
   # TikTok
@@ -672,9 +672,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/349530/tiktok.svg"
 
   # Gemini
@@ -684,9 +684,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/331406/gemini.svg"
 
   # OpenAI
@@ -696,9 +696,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/306500/openai.svg"
 
   # Twitch
@@ -708,9 +708,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/448251/twitch.svg"
 
   # Netflix
@@ -720,9 +720,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/303341/netflix-1-logo.svg"
 
   # Spotify
@@ -732,9 +732,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/349511/spotify.svg"
 
   # Tidal
@@ -744,9 +744,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/504993/tidal.svg"
 
   # Notion
@@ -756,9 +756,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/361558/notion-logo.svg"
 
   # 2IP.IO
@@ -768,9 +768,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/415672/address-location-map.svg"
 
   # Grok
@@ -780,9 +780,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/171491/compass.svg"
 
   # Fastly
@@ -792,9 +792,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/353730/fastly.svg"
 
   # Cloudflare
@@ -804,9 +804,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/349320/cloudflare.svg"
 
   # Akamai
@@ -816,9 +816,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/353730/fastly.svg"
 
   # Viber
@@ -828,9 +828,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/125448/viber.svg"
 
   # 18+
@@ -840,9 +840,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/530357/peach.svg"
 
   # Amazon
@@ -852,9 +852,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/475634/amazon-color.svg"
 
   # Roblox
@@ -864,9 +864,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/443377/brand-roblox.svg"
 
   # other
@@ -876,9 +876,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/462111/netflix.svg"
 
   # Блокировка рекламы
@@ -889,9 +889,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
     icon: "https://www.svgrepo.com/show/300290/sign-roadblock.svg"
 
   - name: GLOBAL
@@ -938,9 +938,9 @@ proxy-groups:
       - DIRECT
       - 'WARP'
       - 'WARP (Relay)'
-      - 'Черные списки GEO'
       - 'Черные списки'
       - 'Белые списки'
+      - 'Белые списки GEO'
 
 # --- НАСТРОЙКИ GEO-ДАННЫХ ---
 geox-url:
@@ -1139,3 +1139,5 @@ rules:
   
   # ПРАВИЛО №7: Весь остальной трафик
   - MATCH,Остальной трафик
+
+#url:https://raw.githubusercontent.com/Keen-Bypass/keen_bypass_win/refs/heads/main/clashmi/mihomo/config.yaml
