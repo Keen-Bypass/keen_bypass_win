@@ -111,14 +111,14 @@ warp-common: &warp-common
 proxy-providers:
   BLACK_VLESS_RUS:
     type: http
-    url: "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS_mobile.txt"
+    url: "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/BLACK_VLESS_RUS.txt"
     path: ./proxy-providers/BLACK_VLESS_RUS.yaml
     interval: 3600
 
-  WHITE-CIDR-RU:
+  WHITE-CIDR-RU-all:
     type: http
-    url: "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt"
-    path: ./proxy-providers/WHITE-CIDR-RU.yaml
+    url: "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt"
+    path: ./proxy-providers/WHITE-CIDR-RU-all.yaml
     interval: 3600
 
 # Прокси
@@ -429,7 +429,7 @@ proxy-groups:
     tolerance: 10
     timeout: 3000
     use:
-      - WHITE-CIDR-RU
+      - WHITE-CIDR-RU-all
     proxies: []
     icon: "https://www.svgrepo.com/show/444392/gui-form-radio.svg"
 
@@ -442,7 +442,7 @@ proxy-groups:
     timeout: 3000
     filter: "^(?!.*(?i)(ru$|rus$|russia|россия|moscow|москва|spb|питер|sankt|казань|novosibirsk|yekaterinburg|chelyabinsk|ufa|rostov|volgograd|perm|krasnoyarsk|voronezh|sar)|%F0%9F%87%B7%F0%9F%87%BA|🇷🇺).*"
     use:
-      - WHITE-CIDR-RU
+      - WHITE-CIDR-RU-all
     proxies: []
     icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
 
