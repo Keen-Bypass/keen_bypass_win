@@ -433,8 +433,8 @@ proxy-groups:
     proxies: []
     icon: "https://www.svgrepo.com/show/444392/gui-form-radio.svg"
 
-  # Белые списки GEO (без РФ)
-  - name: 'Белые списки GEO'
+  # Белые и черные списки GEO (без РФ)
+  - name: 'Белые и черные списки GEO'
     type: url-test
     url: 'https://www.gstatic.com/generate_204'
     interval: 60
@@ -442,6 +442,7 @@ proxy-groups:
     timeout: 3000
     filter: "^(?!.*(?i)(ru$|rus$|russia|россия|moscow|москва|spb|питер|sankt|казань|novosibirsk|yekaterinburg|chelyabinsk|ufa|rostov|volgograd|perm|krasnoyarsk|voronezh|sar)|%F0%9F%87%B7%F0%9F%87%BA|🇷🇺).*"
     use:
+      - BLACK_VLESS_RUS
       - WHITE-CIDR-RU-all
     proxies: []
     icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
@@ -457,7 +458,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/508628/flag-ru.svg"
 
   # Остальной трафик
@@ -470,7 +471,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/293111/maps-and-flags-global.svg"
 
   # YouTube
@@ -482,7 +483,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/13671/youtube.svg"
 
   # Instagram
@@ -494,7 +495,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/452229/instagram-1.svg"
 
   # Facebook
@@ -506,7 +507,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/475647/facebook-color.svg"
 
   # Telegram
@@ -518,7 +519,7 @@ proxy-groups:
       - 'WARP'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/354443/telegram.svg"
 
   # Whatsapp
@@ -530,7 +531,7 @@ proxy-groups:
       - 'WARP'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/349563/whatsapp.svg"
 
   # Discord
@@ -542,7 +543,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/331368/discord-v2.svg"
 
   # Twitter
@@ -554,7 +555,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/452121/twitter-1.svg"
 
   # Speedtest
@@ -566,7 +567,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/355484/speed.svg"
 
   # Google
@@ -578,7 +579,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/475656/google-color.svg"
 
   # Google Play
@@ -590,7 +591,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/353828/google-play-icon.svg"
 
   # Linkedin
@@ -602,7 +603,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/448234/linkedin.svg"
 
   # GitHub
@@ -614,7 +615,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/344880/github.svg"
 
   # Steam
@@ -626,7 +627,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/452107/steam.svg"
 
   # Microsoft
@@ -638,7 +639,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/452062/microsoft.svg"
 
   # intel
@@ -650,7 +651,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/349412/intel.svg"
 
   # Apple
@@ -662,7 +663,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/501448/apple.svg"
 
   # TikTok
@@ -674,7 +675,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/349530/tiktok.svg"
 
   # Gemini
@@ -686,7 +687,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/331406/gemini.svg"
 
   # OpenAI
@@ -698,7 +699,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/306500/openai.svg"
 
   # Twitch
@@ -710,7 +711,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/448251/twitch.svg"
 
   # Netflix
@@ -722,7 +723,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/303341/netflix-1-logo.svg"
 
   # Spotify
@@ -734,7 +735,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/349511/spotify.svg"
 
   # Tidal
@@ -746,7 +747,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/504993/tidal.svg"
 
   # Notion
@@ -758,7 +759,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/361558/notion-logo.svg"
 
   # 2IP.IO
@@ -770,7 +771,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/415672/address-location-map.svg"
 
   # Grok
@@ -782,7 +783,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/171491/compass.svg"
 
   # Fastly
@@ -794,7 +795,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/353730/fastly.svg"
 
   # Cloudflare
@@ -806,7 +807,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/349320/cloudflare.svg"
 
   # Akamai
@@ -818,7 +819,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/353730/fastly.svg"
 
   # Viber
@@ -830,7 +831,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/125448/viber.svg"
 
   # 18+
@@ -842,7 +843,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/530357/peach.svg"
 
   # Amazon
@@ -854,7 +855,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/475634/amazon-color.svg"
 
   # Roblox
@@ -866,7 +867,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/443377/brand-roblox.svg"
 
   # other
@@ -878,7 +879,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/462111/netflix.svg"
 
   # Блокировка рекламы
@@ -891,7 +892,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
     icon: "https://www.svgrepo.com/show/300290/sign-roadblock.svg"
 
   - name: GLOBAL
@@ -940,7 +941,7 @@ proxy-groups:
       - 'WARP (Relay)'
       - 'Черные списки'
       - 'Белые списки'
-      - 'Белые списки GEO'
+      - 'Белые и черные списки GEO'
 
 # --- НАСТРОЙКИ GEO-ДАННЫХ ---
 geox-url:
