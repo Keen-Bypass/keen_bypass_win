@@ -12,6 +12,7 @@ account.jetbrains.com
 account.protonmail.com
 accounts.spotify.com
 accounts.supercell.com
+adblockplus.org
 adguard.com
 afcs.dellcdn.com
 aftermarket.schaeffler.com
@@ -87,10 +88,12 @@ clamav.net
 claude.ai
 cloud.mongodb.com
 cloudflare-dns.com
+codeium.com
 colta.ru
 community.cisco.com
 coomer.su
 copilot-proxy.githubusercontent.com
+copilot-telemetry.githubusercontent.com
 crunchyroll.com
 cub.red
 czx.to
@@ -151,6 +154,7 @@ fork.pet
 forklog.com
 formula1.com
 forum.voynaplemyon.com
+freecodecamp.org
 fw-download.ubnt.com
 fw-update.ubnt.com
 gallery.zetalliance.org
@@ -160,6 +164,7 @@ geekyfuroshiki.com
 gemini.google.com
 geni.us
 genius.com
+githubcopilot.com
 gitlab.io
 gllto.glpals.com
 gnome-look.org
@@ -256,6 +261,7 @@ nih.gov
 nnmclub.to
 nordvpn.com
 notepad-plus-plus.org
+notion.com
 novayagazeta.eu
 novayagazeta.ru
 nsf.gov
@@ -423,6 +429,7 @@ welt.de
 wetransfer.com
 wheather.com
 windguru.cz
+windsurf.com
 wixmp.com
 wunderground.com
 www.analog.com
