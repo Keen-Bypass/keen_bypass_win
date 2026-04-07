@@ -22,7 +22,7 @@ log "Installing wireguard, nftables, and wgcf..."
 apt update
 apt install -y wireguard nftables curl
 
-# Установка wgcf (последняя версия)
+# Установка wgcf
 WGCF_URL=$(curl -s https://api.github.com/repos/ViRb3/wgcf/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f 4)
 if [ -z "$WGCF_URL" ]; then
     err "Failed to get wgcf download URL"
@@ -32,13 +32,16 @@ chmod +x /usr/local/bin/wgcf
 
 log "Registering with Cloudflare WARP..."
 cd /etc/wireguard
-# Генерируем конфиг wgcf, если ещё не существует
 if [ ! -f "wgcf-account.toml" ]; then
     yes | /usr/local/bin/wgcf register --accept-tos
 fi
-/usr/local/bin/wgcf generate
 
-# Извлекаем PrivateKey и Address из сгенерированного профиля
+log "Generating wgcf profile..."
+/usr/local/bin/wgcf generate
+if [ ! -f "wgcf-profile.conf" ]; then
+    err "wgcf generate failed to create wgcf-profile.conf"
+fi
+
 PRIV_KEY=$(grep "^PrivateKey" wgcf-profile.conf | awk '{print $3}')
 WG_ADDR=$(grep "^Address" wgcf-profile.conf | awk '{print $3}' | cut -d ',' -f1)
 
@@ -90,11 +93,10 @@ PersistentKeepalive = 15
 EOF
 
 log "Enabling IP forwarding..."
-sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-sed -i 's/#net.ipv6.conf.all.forwarding=1/net.ipv6.conf.all.forwarding=1/' /etc/sysctl.conf
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv6.conf.all.forwarding=1
 grep -q "^net.ipv4.ip_forward=1" /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 grep -q "^net.ipv6.conf.all.forwarding=1" /etc/sysctl.conf || echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
-sysctl -p
 
 log "Enabling wg-quick@wg0 service..."
 systemctl enable wg-quick@wg0
