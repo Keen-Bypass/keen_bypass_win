@@ -18,19 +18,36 @@ if [ -z "$MAIN_IF" ]; then
 fi
 log "Detected main interface: $MAIN_IF"
 
-log "Installing wireguard and nftables..."
+log "Installing wireguard, nftables, and wgcf..."
 apt update
-apt install -y wireguard nftables
+apt install -y wireguard nftables curl
 
-log "Generating WireGuard keys..."
+# Установка wgcf (последняя версия)
+WGCF_URL=$(curl -s https://api.github.com/repos/ViRb3/wgcf/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f 4)
+if [ -z "$WGCF_URL" ]; then
+    err "Failed to get wgcf download URL"
+fi
+curl -L -o /usr/local/bin/wgcf "$WGCF_URL"
+chmod +x /usr/local/bin/wgcf
+
+log "Registering with Cloudflare WARP..."
 cd /etc/wireguard
-umask 077
-wg genkey | tee privatekey | wg pubkey > publickey
-PRIV_KEY=$(cat privatekey)
+# Генерируем конфиг wgcf, если ещё не существует
+if [ ! -f "wgcf-account.toml" ]; then
+    yes | /usr/local/bin/wgcf register --accept-tos
+fi
+/usr/local/bin/wgcf generate
 
-WG_ADDR="10.10.10.1/32"
+# Извлекаем PrivateKey и Address из сгенерированного профиля
+PRIV_KEY=$(grep "^PrivateKey" wgcf-profile.conf | awk '{print $3}')
+WG_ADDR=$(grep "^Address" wgcf-profile.conf | awk '{print $3}' | cut -d ',' -f1)
+
+if [ -z "$PRIV_KEY" ] || [ -z "$WG_ADDR" ]; then
+    err "Failed to extract PrivateKey or Address from wgcf-profile.conf"
+fi
+log "Using WARP address: $WG_ADDR"
+
 CONFIG="/etc/wireguard/wg0.conf"
-
 log "Creating config at $CONFIG"
 cat > "$CONFIG" <<EOF
 [Interface]
