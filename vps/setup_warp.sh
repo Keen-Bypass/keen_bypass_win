@@ -1,177 +1,137 @@
 #!/bin/bash
 set -e
 
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# ------------------------------------------------------------
+# Автоматическая настройка WireGuard + WARP + nftables
+# Версия: 1.0
+# ------------------------------------------------------------
 
-echo -e "${GREEN}=== Warp Relay Auto-Setup Script ===${NC}"
-echo "Для VPS на базе Debian/Ubuntu (WireGuard + nftables + WARP relay)"
-echo ""
+# --- Переменные (при необходимости измените под себя) ---
+EXTERNAL_IFACE=$(ip route show default | awk '{print $5}' | head -1)  # внешний интерфейс (eth0, ens3 и т.д.)
+MTU=1360
 
+# Правила DNAT: UDP порт -> целевой адрес:порт
+declare -A DNAT_RULES=(
+    [4500]="162.159.195.2:4500"
+    [5201]="162.159.192.2:4500"
+    [500]="162.159.192.1:4500"
+)
+
+# Разрешённые IP для Peer (AllowedIPs) – из примера
+ALLOWED_IPS="162.159.192.2/32"
+
+# ------------------------------------------------------------
 # Проверка прав root
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}Пожалуйста, запустите скрипт с правами root (sudo).${NC}"
+    echo "Пожалуйста, запустите скрипт с правами root (sudo)."
     exit 1
 fi
 
-# Определение имени основного сетевого интерфейса
-DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}' | head -1)
-echo -e "${YELLOW}Обнаружен сетевой интерфейс по умолчанию: $DEFAULT_IFACE${NC}"
-read -p "Использовать его? (y/n, по умолчанию y): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Nn]$ ]]; then
-    read -p "Введите имя интерфейса (например, eth0, ens3): " CUSTOM_IFACE
-    NET_IFACE="$CUSTOM_IFACE"
-else
-    NET_IFACE="$DEFAULT_IFACE"
-fi
-echo -e "${GREEN}Будет использован интерфейс: $NET_IFACE${NC}"
+echo "=== Обновление списка пакетов и установка WireGuard, nftables, утилит ==="
+apt update
+apt install -y wireguard nftables curl unzip jq
 
-# Обновление и установка пакетов
-echo -e "${YELLOW}[1/8] Обновление системы и установка WireGuard, nftables, curl...${NC}"
-apt update && apt upgrade -y
-apt install wireguard nftables curl resolvconf -y
-
-# Загрузка модуля WireGuard
-modprobe wireguard
-echo wireguard >> /etc/modules
-
-# Установка wgcf (для получения ключей WARP)
-echo -e "${YELLOW}[2/8] Установка wgcf...${NC}"
-curl -fsSL git.io/wgcf.sh -o /tmp/wgcf.sh
-bash /tmp/wgcf.sh
-mv wgcf /usr/local/bin/
+echo "=== Установка wgcf (генератор конфигурации WARP) ==="
+curl -fsSL -o /tmp/wgcf.zip https://github.com/ViRb3/wgcf/releases/latest/download/wgcf_$(uname -s)_$(uname -m).zip
+unzip -o /tmp/wgcf.zip -d /usr/local/bin/
 chmod +x /usr/local/bin/wgcf
+rm /tmp/wgcf.zip
 
-# Получение конфига WARP
-echo -e "${YELLOW}[3/8] Регистрация в Cloudflare WARP и получение ключей...${NC}"
-cd /etc/wireguard
-wgcf register --accept-tos
+echo "=== Регистрация WARP и генерация профиля ==="
+cd /root
+# Если уже есть старые файлы, удалим
+rm -f wgcf-account.toml wgcf-profile.conf
+echo "yes" | wgcf register
 wgcf generate
+
 if [ ! -f wgcf-profile.conf ]; then
-    echo -e "${RED}Не удалось получить wgcf-profile.conf. Проверьте интернет.${NC}"
+    echo "Ошибка: не удалось сгенерировать wgcf-profile.conf"
     exit 1
 fi
 
-# Извлечение приватного ключа и IP из конфига WARP
-WARP_PRIVATE_KEY=$(grep 'PrivateKey' wgcf-profile.conf | awk '{print $3}')
-WARP_ADDRESS=$(grep 'Address' wgcf-profile.conf | awk '{print $3}' | cut -d',' -f1)
-if [ -z "$WARP_PRIVATE_KEY" ] || [ -z "$WARP_ADDRESS" ]; then
-    echo -e "${RED}Не удалось извлечь ключи из wgcf-profile.conf.${NC}"
+# Извлекаем параметры из профиля WARP
+WARP_PRIVATE_KEY=$(grep -oP 'PrivateKey\s*=\s*\K.*' wgcf-profile.conf | head -1)
+WARP_ADDRESS=$(grep -oP 'Address\s*=\s*\K.*' wgcf-profile.conf | head -1 | sed 's/,.*//')  # берём первый IPv4
+WARP_PEER_PUBKEY=$(grep -A5 '\[Peer\]' wgcf-profile.conf | grep -oP 'PublicKey\s*=\s*\K.*')
+WARP_ENDPOINT=$(grep -A5 '\[Peer\]' wgcf-profile.conf | grep -oP 'Endpoint\s*=\s*\K.*')
+
+if [ -z "$WARP_PRIVATE_KEY" ] || [ -z "$WARP_ADDRESS" ] || [ -z "$WARP_PEER_PUBKEY" ] || [ -z "$WARP_ENDPOINT" ]; then
+    echo "Ошибка: не удалось извлечь данные из wgcf-profile.conf"
     exit 1
 fi
-echo -e "${GREEN}WARP PrivateKey и Address получены.${NC}"
 
-# Создание конфига wg0.conf
-echo -e "${YELLOW}[4/8] Создание /etc/wireguard/wg0.conf...${NC}"
+echo "=== Создание конфигурации /etc/wireguard/wg0.conf ==="
+mkdir -p /etc/wireguard
+# Резервная копия существующего конфига, если есть
+[ -f /etc/wireguard/wg0.conf ] && cp /etc/wireguard/wg0.conf /etc/wireguard/wg0.conf.bak
+
+# Генерируем PostUp/PostDown правила nftables
+POSTUP_CMDS=""
+POSTDOWN_CMDS=""
+
+# Таблица IPv4 NAT
+POSTUP_CMDS+="nft add table ip wg_nat 2>/dev/null || true\n"
+POSTUP_CMDS+="nft add chain ip wg_nat prerouting { type nat hook prerouting priority -100 \\; } 2>/dev/null || true\n"
+POSTUP_CMDS+="nft add chain ip wg_nat postrouting { type nat hook postrouting priority 100 \\; } 2>/dev/null || true\n"
+
+# Таблица IPv6 NAT (только postrouting, если нужен)
+POSTUP_CMDS+="nft add table ip6 wg_nat6 2>/dev/null || true\n"
+POSTUP_CMDS+="nft add chain ip6 wg_nat6 postrouting { type nat hook postrouting priority 100 \\; } 2>/dev/null || true\n"
+
+# Таблица фильтрации inet
+POSTUP_CMDS+="nft add table inet wg_filter 2>/dev/null || true\n"
+POSTUP_CMDS+="nft add chain inet wg_filter input { type filter hook input priority 0 \\; } 2>/dev/null || true\n"
+
+# Правила INPUT – разрешить входящие UDP на нужных портах
+for port in "${!DNAT_RULES[@]}"; do
+    POSTUP_CMDS+="nft add rule inet wg_filter input udp dport $port accept\n"
+done
+
+# Правила DNAT
+for port in "${!DNAT_RULES[@]}"; do
+    target="${DNAT_RULES[$port]}"
+    POSTUP_CMDS+="nft add rule ip wg_nat prerouting udp dport $port dnat to $target\n"
+done
+
+# MASQUERADE для исходящего трафика через внешний интерфейс и wg0
+POSTUP_CMDS+="nft add rule ip wg_nat postrouting oifname \"$EXTERNAL_IFACE\" masquerade\n"
+POSTUP_CMDS+="nft add rule ip wg_nat postrouting oifname \"wg0\" masquerade\n"
+
+# PostDown – удаление таблиц
+POSTDOWN_CMDS+="nft delete table inet wg_filter 2>/dev/null || true\n"
+POSTDOWN_CMDS+="nft delete table ip wg_nat 2>/dev/null || true\n"
+POSTDOWN_CMDS+="nft delete table ip6 wg_nat6 2>/dev/null || true\n"
+
+# Запись конфигурации
 cat > /etc/wireguard/wg0.conf <<EOF
 [Interface]
 PrivateKey = $WARP_PRIVATE_KEY
 Address = $WARP_ADDRESS
-MTU = 1360
+MTU = $MTU
 
-# --- IPv4 NAT table ---
-PostUp = nft add table ip wg_nat 2>/dev/null || true
-PostUp = nft add chain ip wg_nat prerouting { type nat hook prerouting priority -100 \; } 2>/dev/null || true
-PostUp = nft add chain ip wg_nat postrouting { type nat hook postrouting priority 100 \; } 2>/dev/null || true
-
-# --- IPv6 NAT table ---
-PostUp = nft add table ip6 wg_nat6 2>/dev/null || true
-PostUp = nft add chain ip6 wg_nat6 postrouting { type nat hook postrouting priority 100 \; } 2>/dev/null || true
-
-# --- FILTER table ---
-PostUp = nft add table inet wg_filter 2>/dev/null || true
-PostUp = nft add chain inet wg_filter input { type filter hook input priority 0 \; } 2>/dev/null || true
-
-# --- INPUT rules ---
-PostUp = nft add rule inet wg_filter input udp dport 4500 accept
-PostUp = nft add rule inet wg_filter input udp dport 5201 accept
-PostUp = nft add rule inet wg_filter input udp dport 500 accept
-
-# --- DNAT to Cloudflare WARP endpoints ---
-PostUp = nft add rule ip wg_nat prerouting udp dport 4500 dnat to 162.159.195.2:4500
-PostUp = nft add rule ip wg_nat prerouting udp dport 5201 dnat to 162.159.192.2:4500
-PostUp = nft add rule ip wg_nat prerouting udp dport 500 dnat to 162.159.192.1:4500
-
-# --- MASQUERADE ---
-PostUp = nft add rule ip wg_nat postrouting oifname "$NET_IFACE" masquerade
-PostUp = nft add rule ip wg_nat postrouting oifname "wg0" masquerade
-
-# --- Cleanup ---
-PostDown = nft delete table inet wg_filter 2>/dev/null || true
-PostDown = nft delete table ip wg_nat 2>/dev/null || true
-PostDown = nft delete table ip6 wg_nat6 2>/dev/null || true
+# --- Правила nftables (IPv4 NAT, DNAT, фильтрация) ---
+PostUp = $POSTUP_CMDS
+PostDown = $POSTDOWN_CMDS
 
 [Peer]
-PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-AllowedIPs = 162.159.192.2/32
-Endpoint = [2606:4700:d0::a29f:c007]:4500
+PublicKey = $WARP_PEER_PUBKEY
+AllowedIPs = $ALLOWED_IPS
+Endpoint = $WARP_ENDPOINT
 PersistentKeepalive = 15
 EOF
 
-# Если нет IPv6, заменим endpoint на IPv4
-if [ ! -f /proc/net/if_inet6 ]; then
-    echo -e "${YELLOW}IPv6 не обнаружен, заменяем endpoint на IPv4...${NC}"
-    sed -i 's|Endpoint = \[2606:4700:d0::a29f:c007\]:4500|Endpoint = 162.159.192.1:4500|' /etc/wireguard/wg0.conf
-fi
+# Заменяем \n на реальные переносы строк (PostUp/PostDown должны быть с разделителями)
+sed -i '/PostUp = /{s/\\n/\nPostUp = /g; s/PostUp = $//g;}' /etc/wireguard/wg0.conf
+sed -i '/PostDown = /{s/\\n/\nPostDown = /g; s/PostDown = $//g;}' /etc/wireguard/wg0.conf
 
-# Сохраняем публичный ключ сервера (может пригодиться клиентам)
-wg genkey | tee /etc/wireguard/server_privatekey > /dev/null
-wg pubkey < /etc/wireguard/server_privatekey > /etc/wireguard/server_publickey
-echo -e "${GREEN}Публичный ключ вашего сервера (для клиентов): $(cat /etc/wireguard/server_publickey)${NC}"
+echo "=== Запуск WireGuard интерфейса wg0 ==="
+wg-quick down wg0 2>/dev/null || true
+wg-quick up wg0
 
-# Включение и запуск WireGuard
-echo -e "${YELLOW}[5/8] Включение автозапуска и запуск wg-quick@wg0...${NC}"
+echo "=== Включение автозапуска при загрузке ==="
 systemctl enable wg-quick@wg0
-systemctl start wg-quick@wg0
 
-# Проверка статуса
-if systemctl is-active --quiet wg-quick@wg0; then
-    echo -e "${GREEN}WireGuard успешно запущен.${NC}"
-else
-    echo -e "${RED}Ошибка запуска WireGuard. Проверьте логи: journalctl -u wg-quick@wg0${NC}"
-    exit 1
-fi
-
-# Смена порта SSH (опционально)
-echo -e "${YELLOW}[6/8] Настройка SSH...${NC}"
-read -p "Сменить стандартный порт SSH (22) на другой? (y/n, по умолчанию y): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    read -p "Введите новый номер порта (по умолчанию 22222): " NEW_SSH_PORT
-    NEW_SSH_PORT=${NEW_SSH_PORT:-22222}
-    # Проверка, что порт не занят
-    if ss -tuln | grep -q ":$NEW_SSH_PORT "; then
-        echo -e "${RED}Порт $NEW_SSH_PORT уже используется. Выберите другой.${NC}"
-        exit 1
-    fi
-    sed -i "s/^#Port 22/Port $NEW_SSH_PORT/" /etc/ssh/sshd_config
-    sed -i "s/^Port 22/Port $NEW_SSH_PORT/" /etc/ssh/sshd_config || true
-    # Добавить, если строки нет
-    if ! grep -q "^Port" /etc/ssh/sshd_config; then
-        echo "Port $NEW_SSH_PORT" >> /etc/ssh/sshd_config
-    fi
-    systemctl restart sshd
-    echo -e "${GREEN}Порт SSH изменён на $NEW_SSH_PORT. НЕ ЗАКРЫВАЙТЕ ТЕКУЩУЮ СЕССИЮ, пока не проверите новое подключение!${NC}"
-    echo -e "${YELLOW}Проверьте в новом терминале: ssh -p $NEW_SSH_PORT пользователь@$(curl -s ifconfig.me)${NC}"
-    read -p "Убедитесь, что подключение работает, затем нажмите Enter для продолжения..."
-else
-    echo -e "${YELLOW}Порт SSH оставлен 22. Рекомендуется сменить его позже.${NC}"
-fi
-
-# Финальные сообщения
-echo -e "${GREEN}[7/8] Настройка завершена.${NC}"
-echo "=== Сводка ==="
-echo "Сетевой интерфейс: $NET_IFACE"
-echo "WARP IP сервера: $WARP_ADDRESS"
-echo "Публичный ключ сервера (для клиентов): $(cat /etc/wireguard/server_publickey)"
-echo "Релейные порты: 4500, 5201, 500 (UDP)"
-echo ""
-
-echo -e "${YELLOW}[8/8] Система будет перезагружена через 10 секунд для проверки автозапуска...${NC}"
-echo "Нажмите Ctrl+C, чтобы отменить перезагрузку."
-sleep 10
-reboot
+echo "=== Готово! ==="
+echo "WireGuard интерфейс wg0 активен."
+echo "Проверить статус: wg show"
+echo "Проверить правила nftables: nft list ruleset"
