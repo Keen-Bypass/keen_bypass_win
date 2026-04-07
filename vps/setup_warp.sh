@@ -33,13 +33,16 @@ chmod +x /usr/local/bin/wgcf
 log "Registering with Cloudflare WARP..."
 cd /etc/wireguard
 if [ ! -f "wgcf-account.toml" ]; then
-    yes | /usr/local/bin/wgcf register --accept-tos
+    if ! /usr/local/bin/wgcf register --accept-tos; then
+        err "Failed to register with Cloudflare WARP"
+    fi
 fi
 
 log "Generating wgcf profile..."
 /usr/local/bin/wgcf generate
-if [ ! -f "wgcf-profile.conf" ]; then
-    err "wgcf generate failed to create wgcf-profile.conf"
+if [ ! -f "wgcf-account.toml" ]; then
+    yes | /usr/local/bin/wgcf register --accept-tos
+    echo "DEBUG: register exit code = $?" >&2   # проверка кода возврата
 fi
 
 PRIV_KEY=$(grep "^PrivateKey" wgcf-profile.conf | awk '{print $3}')
@@ -75,7 +78,7 @@ PostUp = nft add chain inet wg_filter input { type filter hook input priority 0 
 PostUp = nft add rule inet wg_filter input udp dport 500 accept
 
 # --- DNAT ---
-PostUp = nft add rule ip wg_nat prerouting udp dport 500 dnat to 162.159.192.1:4500
+PostUp = nft add rule ip wg_nat prerouting udp dport 500 dnat to 162.159.195.1:500
 
 # --- MASQUERADE ---
 PostUp = nft add rule ip wg_nat postrouting oifname "$MAIN_IF" masquerade
@@ -87,8 +90,8 @@ PostDown = nft delete table ip6 wg_nat6 2>/dev/null || true
 
 [Peer]
 PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-AllowedIPs = 162.159.192.2/32
-Endpoint = [2606:4700:d0::a29f:c007]:4500
+AllowedIPs = 162.159.195.1/32
+Endpoint = [2606:4700:d0::a29f:c007]:500
 PersistentKeepalive = 15
 EOF
 
