@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 
 # ------------------------------------------------------------
 # Цвета и функции логирования
@@ -26,31 +26,31 @@ check_root() {
 # Ожидание освобождения блокировки apt/dpkg
 # ------------------------------------------------------------
 wait_for_apt() {
-    local max_wait=30
+    local max_wait=${1:-60}
     local waited=0
     while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \
-          fuser /var/lib/dpkg/lock >/dev/null 2>&1; do
+          fuser /var/lib/dpkg/lock >/dev/null 2>&1 || \
+          pgrep -f 'apt|dpkg' >/dev/null; do
         if [ $waited -ge $max_wait ]; then
-            warn "Блокировка apt/dpkg не снята за ${max_wait} секунд. Пропускаем обновление."
+            warn "Блокировка apt/dpkg не снята за ${max_wait} секунд."
             return 1
         fi
+        echo -n "."
         sleep 5
         waited=$((waited + 5))
     done
+    echo ""
     return 0
 }
 
 # ------------------------------------------------------------
-# Вспомогательная функция для отображения прогресса подготовки
-# ------------------------------------------------------------
-show_progress() {
-    printf "\r\033[KПроцедура: %s" "$1"
-}
-
-# ------------------------------------------------------------
-# Первоначальная настройка: обновление системы и установка пакетов
+# Первоначальная настройка (обновление системы и базовые пакеты)
 # ------------------------------------------------------------
 initial_setup() {
+    show_progress() {
+        printf "\r\033[KПроцедура: %s" "$1"
+    }
+
     show_progress "ожидание освобождения apt/dpkg..."
     wait_for_apt 2>/dev/null || true
 
@@ -100,9 +100,67 @@ get_main_interface() {
 }
 
 # ------------------------------------------------------------
-# Модуль: WARP Relay
+# Модуль: WireGuard Server (заглушка)
 # ------------------------------------------------------------
-WARP_CONF="/etc/wireguard/wg0.conf"
+wg_direct_menu() {
+    while true; do
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}          WireGuard Direct${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo ""
+        echo "1. Установить"
+        echo "2. Настроить"
+        echo "3. Запустить"
+        echo "4. Остановить"
+        echo "5. Удалить"
+        echo ""
+        echo "0. Назад"
+        echo "00. Выход"
+        echo ""
+        read -p "Выберите пункт: " choice
+        case $choice in
+            1|2|3|4|5) echo -e "\n${YELLOW}Модуль в разработке.${NC}"; sleep 2 ;;
+            0) break ;;
+            00) exit 0 ;;
+            *) warn "Неверный ввод."; sleep 1 ;;
+        esac
+    done
+}
+
+# ------------------------------------------------------------
+# Модуль: WireGuard Direct (заглушка)
+# ------------------------------------------------------------
+wg_direct_menu() {
+    while true; do
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}          WireGuard Direct${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo ""
+        echo "1. Установить"
+        echo "2. Настроить"
+        echo "3. Запустить"
+        echo "4. Остановить"
+        echo "5. Удалить"
+        echo ""
+        echo "0. Назад"
+        echo "00. Выход"
+        echo ""
+        read -p "Выберите пункт: " choice
+        case $choice in
+            1|2|3|4|5) echo -e "\n${YELLOW}Модуль в разработке.${NC}"; sleep 2 ;;
+            0) break ;;
+            00) exit 0 ;;
+            *) warn "Неверный ввод."; sleep 1 ;;
+        esac
+    done
+}
+
+# ------------------------------------------------------------
+# Модуль: WireGuard WARP in WARP relay (существующий код)
+# ------------------------------------------------------------
+WARP_CONF="/etc/wireguard/wg2.conf"
 WARP_IPV4_ENDPOINT="162.159.192.7:500"
 WARP_IPV6_ENDPOINT="[2606:4700:d0::a29f:c007]:500"
 WARP_PUBKEY="bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
@@ -119,6 +177,11 @@ install_warp_relay() {
 
     log "Установка WARP Relay ($ip_version)..."
 
+    if ip link show wg2 &>/dev/null; then
+        log "Останавливаем текущий интерфейс wg2..."
+        wg-quick down wg2 || warn "Не удалось остановить wg2, продолжаем..."
+    fi
+
     if ! command -v wgcf &>/dev/null; then
         err "wgcf не установлен. Выполните установку пакетов сначала."
     fi
@@ -127,7 +190,10 @@ install_warp_relay() {
 
     if [ ! -f "wgcf-account.toml" ]; then
         log "Регистрация в Cloudflare WARP..."
-        yes | wgcf register --accept-tos || err "Ошибка регистрации wgcf."
+        yes | wgcf register --accept-tos || true
+        if [ ! -f "wgcf-account.toml" ]; then
+            err "Не удалось создать wgcf-account.toml"
+        fi
     fi
 
     if [ ! -f "wgcf-profile.conf" ]; then
@@ -181,7 +247,7 @@ PostUp = nft add rule ip wg_nat prerouting udp dport 500 dnat to ${WARP_TARGET_I
 
 # --- MASQUERADE ---
 PostUp = nft add rule ip wg_nat postrouting oifname "$main_if" masquerade
-PostUp = nft add rule ip wg_nat postrouting oifname "wg0" masquerade
+PostUp = nft add rule ip wg_nat postrouting oifname "wg2" masquerade
 
 PostDown = nft delete table inet wg_filter 2>/dev/null || true
 PostDown = nft delete table ip wg_nat 2>/dev/null || true
@@ -200,10 +266,9 @@ EOF
     grep -q "^net.ipv4.ip_forward=1" /etc/sysctl.conf || echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
     grep -q "^net.ipv6.conf.all.forwarding=1" /etc/sysctl.conf || echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf
 
-    log "Запуск интерфейса wg0..."
-    systemctl enable wg-quick@wg0 &>/dev/null || true
-    wg-quick down wg0 &>/dev/null || true
-    wg-quick up wg0 || err "Не удалось поднять интерфейс wg0."
+    log "Запуск интерфейса wg2..."
+    systemctl enable wg-quick@wg2 &>/dev/null || true
+    wg-quick up wg2 || err "Не удалось поднять интерфейс wg2."
 
     log "WARP Relay ($ip_version) успешно установлен и запущен."
     log "Проверьте статус: wg show"
@@ -211,8 +276,8 @@ EOF
 
 remove_warp_relay() {
     log "Удаление WARP Relay..."
-    wg-quick down wg0 &>/dev/null || true
-    systemctl disable wg-quick@wg0 &>/dev/null || true
+    wg-quick down wg2 &>/dev/null || true
+    systemctl disable wg-quick@wg2 &>/dev/null || true
     rm -f "$WARP_CONF"
     nft delete table inet wg_filter 2>/dev/null || true
     nft delete table ip wg_nat 2>/dev/null || true
@@ -220,16 +285,13 @@ remove_warp_relay() {
     log "WARP Relay удалён."
 }
 
-# ------------------------------------------------------------
-# Управление WireGuard интерфейсом
-# ------------------------------------------------------------
 stop_wireguard() {
     if [ ! -f "$WARP_CONF" ]; then
         warn "Конфигурация $WARP_CONF не найдена. WireGuard, вероятно, не настроен."
         return
     fi
-    log "Остановка интерфейса wg0..."
-    wg-quick down wg0 && log "Интерфейс wg0 остановлен." || warn "Не удалось остановить wg0."
+    log "Остановка интерфейса wg2..."
+    wg-quick down wg2 && log "Интерфейс wg2 остановлен." || warn "Не удалось остановить wg2."
 }
 
 start_wireguard() {
@@ -237,8 +299,8 @@ start_wireguard() {
         warn "Конфигурация $WARP_CONF не найдена. Сначала настройте WARP Relay."
         return
     fi
-    log "Запуск интерфейса wg0..."
-    wg-quick up wg0 && log "Интерфейс wg0 запущен." || warn "Не удалось запустить wg0."
+    log "Запуск интерфейса wg2..."
+    wg-quick up wg2 && log "Интерфейс wg2 запущен." || warn "Не удалось запустить wg2."
 }
 
 restart_wireguard() {
@@ -246,21 +308,71 @@ restart_wireguard() {
         warn "Конфигурация $WARP_CONF не найдена. Сначала настройте WARP Relay."
         return
     fi
-    log "Перезапуск интерфейса wg0..."
-    wg-quick down wg0 &>/dev/null || true
-    wg-quick up wg0 && log "Интерфейс wg0 перезапущен." || warn "Не удалось перезапустить wg0."
+    log "Перезапуск интерфейса wg2..."
+    wg-quick down wg2 &>/dev/null || true
+    wg-quick up wg2 && log "Интерфейс wg2 перезапущен." || warn "Не удалось перезапустить wg2."
+}
+
+warp_relay_menu() {
+    while true; do
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}    WireGuard WARP in WARP Relay${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo "1. Установить/обновить IPv4"
+        echo "2. Установить/обновить IPv6"
+        echo ""
+        echo "3. Остановить WireGuard"
+        echo "4. Запустить WireGuard"
+        echo "5. Перезапустить WireGuard"
+        echo ""
+        echo "99. Удалить"
+        echo ""
+        echo "0. Назад"
+        echo "00. Выход"
+        echo ""
+        read -p "Выберите пункт: " choice
+        case $choice in
+            1) install_warp_relay "ipv4"; press_any_key ;;
+            2) install_warp_relay "ipv6"; press_any_key ;;
+            3) stop_wireguard; press_any_key ;;
+            4) start_wireguard; press_any_key ;;
+            5) restart_wireguard; press_any_key ;;
+            99) remove_warp_relay; press_any_key ;;
+            0) break ;;
+            00) exit 0 ;;
+            *) warn "Неверный ввод."; press_any_key ;;
+        esac
+    done
 }
 
 # ------------------------------------------------------------
-# Получение внешних IP-адресов
+# Модуль: WireGuard Proton relay (заглушка)
 # ------------------------------------------------------------
-get_external_ips() {
-    local ipv4 ipv6
-
-    ipv4=$(curl -s --max-time 3 https://api.ipify.org 2>/dev/null || echo "не определён")
-    ipv6=$(curl -s --max-time 3 https://api6.ipify.org 2>/dev/null || echo "не доступен")
-
-    echo -e "Ваш IPv4: ${GREEN}${ipv4}${NC}\t\tВаш IPv6: ${GREEN}${ipv6}${NC}"
+proton_relay_menu() {
+    while true; do
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}       WireGuard Proton Relay${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo ""
+        echo "1. Установить"
+        echo "2. Настроить"
+        echo "3. Запустить"
+        echo "4. Остановить"
+        echo "5. Удалить"
+        echo ""
+        echo "0. Назад"
+        echo "00. Выход"
+        echo ""
+        read -p "Выберите пункт: " choice
+        case $choice in
+            1|2|3|4|5) echo -e "\n${YELLOW}Модуль в разработке.${NC}"; sleep 2 ;;
+            0) break ;;
+            00) exit 0 ;;
+            *) warn "Неверный ввод."; sleep 1 ;;
+        esac
+    done
 }
 
 # ------------------------------------------------------------
@@ -325,16 +437,56 @@ stop_iperf_server() {
     fi
 }
 
-# ------------------------------------------------------------
-# Меню
-# ------------------------------------------------------------
-show_header() {
-    clear
-    echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}          PhotonSBP Manager${NC}"
-    echo -e "${GREEN}========================================${NC}"
+diag_menu() {
+    while true; do
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}            Диагностика${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo "1. iPerf"
+        echo ""
+        echo "0. Назад"
+        echo "00. Выход"
+        echo ""
+        read -p "Выберите пункт: " choice
+        case $choice in
+            1) iperf_menu ;;
+            0) break ;;
+            00) exit 0 ;;
+            *) warn "Неверный ввод."; press_any_key ;;
+        esac
+    done
 }
 
+iperf_menu() {
+    while true; do
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}              iPerf${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo "1. Установить/обновить"
+        echo ""
+        echo "2. Остановить сервер"
+        echo "3. Запустить сервер"
+        echo ""
+        echo "0. Назад"
+        echo "00. Выход"
+        echo ""
+        read -p "Выберите пункт: " choice
+        case $choice in
+            1) install_iperf; press_any_key ;;
+            2) stop_iperf_server; press_any_key ;;
+            3) start_iperf_server; wait_for_key ;;
+            0) break ;;
+            00) exit 0 ;;
+            *) warn "Неверный ввод."; press_any_key ;;
+        esac
+    done
+}
+
+# ------------------------------------------------------------
+# Главное меню
+# ------------------------------------------------------------
 press_any_key() {
     echo
     read -n 1 -s -r -p "Нажмите любую клавишу для продолжения..."
@@ -349,92 +501,27 @@ wait_for_key() {
 
 main_menu() {
     while true; do
-        show_header
-        echo "1. WARP in WARP Relay"
-        echo "2. Диагностика"
-        echo
+        clear
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}          PhotonSBP Manager${NC}"
+        echo -e "${GREEN}========================================${NC}"
+        echo "1. WireGuard Server"
+        echo "2. WireGuard Direct (в разработке)"
+        echo "3. WireGuard WARP in WARP relay"
+        echo "4. WireGuard Proton relay (в разработке)"
+        echo "5. Диагностика"
+        echo ""
         echo "0. Выход"
-        echo
+        echo ""
         read -p "Выберите пункт: " choice
         case $choice in
-            1) warp_menu ;;
-            2) diag_menu ;;
+            1) WIREGUARD_SERVER_MENU ;;
+            2) wg_direct_menu ;;
+            3) warp_relay_menu ;;
+            4) proton_relay_menu ;;
+            5) diag_menu ;;
             0) exit 0 ;;
             *) warn "Неверный ввод. Попробуйте снова."; press_any_key ;;
-        esac
-    done
-}
-
-warp_menu() {
-    while true; do
-        show_header
-        echo "--- WARP in WARP Relay ---"
-        echo "1. Установить/обновить IPv4"
-        echo "2. Установить/обновить IPv6"
-        echo
-        echo "3. Остановить WireGuard"
-        echo "4. Запустить WireGuard"
-        echo "5. Перезапустить WireGuard"
-        echo
-        echo "99. Удалить"
-        echo
-        echo "0. Назад"
-        echo "00. Выход"
-        echo
-        read -p "Выберите пункт: " choice
-        case $choice in
-            1) install_warp_relay "ipv4"; press_any_key ;;
-            2) install_warp_relay "ipv6"; press_any_key ;;
-            3) stop_wireguard; press_any_key ;;
-            4) start_wireguard; press_any_key ;;
-            5) restart_wireguard; press_any_key ;;
-            99) remove_warp_relay; press_any_key ;;
-            0) break ;;
-            00) exit 0 ;;
-            *) warn "Неверный ввод."; press_any_key ;;
-        esac
-    done
-}
-
-diag_menu() {
-    while true; do
-        show_header
-        echo "--- Диагностика ---"
-        echo "1. iPerf"
-        echo
-        echo "0. Назад"
-        echo "00. Выход"
-        echo
-        read -p "Выберите пункт: " choice
-        case $choice in
-            1) iperf_menu ;;
-            0) break ;;
-            00) exit 0 ;;
-            *) warn "Неверный ввод."; press_any_key ;;
-        esac
-    done
-}
-
-iperf_menu() {
-    while true; do
-        show_header
-        echo "--- iPerf ---"
-        echo "1. Установить/обновить"
-        echo
-        echo "2. Остановить сервер"
-        echo "3. Запустить сервер"
-        echo
-        echo "0. Назад"
-        echo "00. Выход"
-        echo
-        read -p "Выберите пункт: " choice
-        case $choice in
-            1) install_iperf; press_any_key ;;
-            2) stop_iperf_server; press_any_key ;;
-            3) start_iperf_server; wait_for_key ;;
-            0) break ;;
-            00) exit 0 ;;
-            *) warn "Неверный ввод."; press_any_key ;;
         esac
     done
 }
@@ -444,10 +531,8 @@ iperf_menu() {
 # ------------------------------------------------------------
 main() {
     check_root
-
     echo -e "${GREEN}Выполняется подготовка... Это может занять некоторое время.${NC}"
     initial_setup
-
     main_menu
 }
 
