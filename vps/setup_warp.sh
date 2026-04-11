@@ -61,7 +61,6 @@ initial_setup() {
     apt upgrade -y > /dev/null 2>&1 || true
 
     local packages=(
-        iperf3
         mtr
         nano
         curl
@@ -265,14 +264,22 @@ get_external_ips() {
 }
 
 # ------------------------------------------------------------
-# Модуль: Диагностика / iPerf
+# Модуль: Диагностика (iPerf)
 # ------------------------------------------------------------
 IPERF_PORT=5201
 IPERF_PID_FILE="/var/run/iperf3.pid"
 IPERF_LOG="/var/log/iperf3.log"
 
+get_external_ips() {
+    local ipv4 ipv6
+    ipv4=$(curl -s --max-time 3 https://api.ipify.org 2>/dev/null || echo "не определён")
+    ipv6=$(curl -s --max-time 3 https://api6.ipify.org 2>/dev/null || echo "не доступен")
+    echo -e "Ваш IPv4: ${GREEN}${ipv4}${NC}\t\tВаш IPv6: ${GREEN}${ipv6}${NC}"
+}
+
 install_iperf() {
     log "Установка iperf3..."
+    wait_for_apt 2>/dev/null || true
     apt install -y iperf3 || err "Не удалось установить iperf3."
     log "iperf3 установлен."
 }
